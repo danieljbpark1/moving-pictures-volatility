@@ -175,8 +175,62 @@ q.m3 +
   geom_line(data = m3.otu.disappearance, aes(x = median.clr, y = zi.asymp.fitted), color="blue", size=1)
 ```
 
+# Model Comparison
+How do the performances of piecewise linear regression and zero-inflated asymptotic regression compare?
+
+## Subject F4
+
+```{r}
+set.seed(0)
+
+n.f4 <- nrow(f4.otu.disappearance)
+# these are the indices for OTUs predicted to be zeros
+zero.inflated.f4 <- rbinom(n = n.f4, size = 1, prob = zero.logistic.f4$fitted.values)
+
+# zero-inflated asymptotic regression predicted probabilities
+# if zero.inflated == 1: ziar.predicted := 0
+# else: ziar.predicted := zi.asymp.fitted
+f4.otu.disappearance$ziar.predicted <- f4.otu.disappearance$zi.asymp.fitted
+f4.otu.disappearance$ziar.predicted[zero.inflated.f4 == 1] <- 0
+
+models <- c("ziar.predicted", "zi.asymp.fitted", "asymp.fitted", "piecewise.fitted")
+
+for (model in models) {
+  correlation <- cor(f4.otu.disappearance$prob.disappear, f4.otu.disappearance[ , model])
+  print(paste("Pearson correlation between observed and", model, ":", correlation))
+}
+
+for (model in models) {
+  mse <- mean((f4.otu.disappearance$prob.disappear - f4.otu.disappearance[ , model])^2)
+  print(paste("MSE between of", model, ":", mse))
+}
+```
 
 
+## Subject M3
+```{r}
+set.seed(0)
+
+n.m3 <- nrow(m3.otu.disappearance)
+# these are the indices for OTUs predicted to be zeros
+zero.inflated.m3 <- rbinom(n = n.m3, size = 1, prob = zero.logistic.m3$fitted.values)
+
+# zero-inflated asymptotic regression predicted probabilities
+# if zero.inflated == 1: ziar.predicted := 0
+# else: ziar.predicted := zi.asymp.fitted
+m3.otu.disappearance$ziar.predicted <- m3.otu.disappearance$zi.asymp.fitted
+m3.otu.disappearance$ziar.predicted[zero.inflated.m3 == 1] <- 0
+
+for (model in models) {
+  correlation <- cor(m3.otu.disappearance$prob.disappear, m3.otu.disappearance[ , model])
+  print(paste("Pearson correlation between observed and", model, ":", correlation))
+}
+
+for (model in models) {
+  mse <- mean((m3.otu.disappearance$prob.disappear - m3.otu.disappearance[ , model])^2)
+  print(paste("MSE between of", model, ":", mse))
+}
+```
 
 
 
