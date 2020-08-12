@@ -1,0 +1,369 @@
+library(boot)
+
+# function for calculating fold-difference between consecutive samples
+# inputs: OTU table with samples ordered by time 
+# returns: table of fold-differences
+fold_difference_table <- function(otu.table, taxa_are_rows = TRUE, logRatio = FALSE) {
+  if (taxa_are_rows) {
+    num.samples <- ncol(otu.table)
+    fold.difference.table <- otu.table[ , 2:num.samples] / otu.table[ , 1:(num.samples-1)]  
+  }
+  else {
+    num.samples <- nrow(otu.table)
+    fold.difference.table <- otu.table[2:num.samples, ] / otu.table[1:(num.samples-1), ]
+  }
+  
+  if (logRatio) {
+    fold.difference.table <- log(fold.difference.table)
+  }
+  
+  return(fold.difference.table)
+}
+
+# function for formatting reappearance data for regression
+# inputs: 
+#   OTU table with samples ordered by time and OTUs in order
+#   time when samples taken ordered by time
+#   median abundances (either raw, relative, or clr-transformed) of OTUs in order
+#   sampling depths from samples ordered by time
+# returns: data frame with response y being the magnitude of a reappeared count, including zeroes
+format_reappearance_data <- function(otutab, otu.median.abs, read.depths, otu_id, taxa_are_rows = TRUE) {
+  if (!taxa_are_rows) {
+    otutab = t(otutab)
+  }
+  
+  num.samples <- ncol(otutab)
+  num.otus <- nrow(otutab)
+  
+  reappearance.candidate.samples <- otutab[ , 2:num.samples]
+  fold.diff.tab <- fold_difference_table(otu.table = otutab) 
+  reappearance.indices <- is.infinite(fold.diff.tab) | is.nan(fold.diff.tab)
+  read.depths <- read.depths[2:num.samples]
+  
+  y <- numeric(); median.abundance <- numeric(); sample.read.depth <- numeric(); otu_ids <- character()
+  for (i in 1:num.otus) {
+    otu.reappearance.samples <- reappearance.indices[i, ]
+    if (!any(otu.reappearance.samples)) {
+      next
+    }
+    
+    otu.reappearance.magnitudes <- reappearance.candidate.samples[i, names(otu.reappearance.samples[otu.reappearance.samples==TRUE])]
+    
+    y <- append(y, as.numeric(otu.reappearance.magnitudes))
+    median.abundance <- append(median.abundance, rep(otu.median.abs[i], length(otu.reappearance.magnitudes)))
+    sample.read.depth <- append(sample.read.depth, read.depths[otu.reappearance.samples])
+    otu_ids <- append(otu_ids, rep(otu_id[i], length(otu.reappearance.magnitudes)))
+  }
+  
+  
+  return(data.frame(y, median.abundance, sample.read.depth, otu_ids, row.names = NULL))
+}
+
+# function for predicting reappearance counts from negative binomial model
+# inputs: 
+#   array for 
+predict_reappearance <- function(X_count, X_zero=NULL, negbin_model, zero_inflated=FALSE, seed = 0){
+  set.seed(seed)
+  n <- length(X_count[[1]])
+  # calculate predicted probability of Y = 0
+  if (zero_inflated) {
+    negbin_coeffs <- negbin_model$coefficients$count
+    if (!is.na(negbin_model$coefficients$zero[2])) {
+      lambda <- negbin_model$coefficients$zero[1]
+      for (i in 1:length(X_zero)) {
+        lambda <- lambda + negbin_model$coefficients$zero[i+1]*X_zero[[i]]
+      }
+      pr.zero <- inv.logit(lambda)
+    }
+    else {
+      pr.zero <- inv.logit(negbin_model$coefficients$zero[1])
+    }
+    # simulate n Bernoulli trials using p = pr.zero
+    pred.zero <- rbinom(n = n, size = 1, prob = pr.zero)
+  }
+  else {
+    negbin_coeffs <- negbin_model$coefficients
+    pred.zero <- 0
+  }
+  
+  # predicted NegBin distribution means are linked by log
+  pred.nbinom.means <- exp(negbin_coeffs[1])
+  for (i in 1:length(X_count)) {
+    pred.nbinom.means <- pred.nbinom.means * exp(negbin_coeffs[i+1]*X_count[[i]])
+  }
+
+  dispersion <- negbin_model$theta
+  pred.y <- numeric()
+  for (i in 1:n) {
+    mu <- pred.nbinom.means[i]
+    p <- dispersion / (mu + dispersion)
+    pred.y[i] <- rnbinom(n = 1, size = dispersion, prob = p)
+  }
+  
+  pred.y[pred.zero == 1] <- 0
+  return(pred.y)
+}
+
+# function for calculating probability of reappearance for each OTU
+# inputs: OTU table with samples ordered by time 
+# returns: vector of reappearance probabilities for each OTU
+reappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE){
+  fold.difference.table <- fold_difference_table(otu.table = otu.table, taxa_are_rows = taxa_are_rows)
+  
+  if (taxa_are_rows) {
+    dimension <- 1
+  } 
+  else {
+    dimension <- 2
+  }
+  
+  reappearances <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a)))
+  absences <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a) | is.nan(a)))
+  return(reappearances / absences)
+}
+
+# function for simulating inflated beta distribution 
+# inputs: coefficients for Beta mean and dispersion, coefficients for probability of one-inflation
+# returns: draws from one-inflated Beta distribution with probability of one, Beta mean and dispersion regressed on predictors
+sim.zoib <- function(zoib.model, beta.mean.coefs, beta.disp.coefs, infl.coefs, infl = 0, seed = 0){
+  set.seed(seed)
+  n <- nrow(zoib.model$Xb)
+  
+  # calculate predicted probability of Y = infl
+  # probability of inflation uses logit link function
+  if (infl == 0) {
+    pr.infl <- inv.logit(as.matrix(zoib.model$Xb0) %*% infl.coefs)
+  }
+  else {
+    pr.infl <- inv.logit(as.matrix(zoib.model$Xb1) %*% infl.coefs)
+  }
+  
+  # simulate n Bernoulli trials using p = pr.infl
+  pred.infl <- rbinom(n = n, size = 1, prob = pr.infl)
+  
+  # predicted Beta distribution means are linked by logit link function
+  pred.beta.mean <- inv.logit(as.matrix(zoib.model$Xb) %*% beta.mean.coefs)
+  
+  # predicted Beta distribution dispersions are linked by log
+  pred.beta.disp <- exp(as.matrix(zoib.model$Xd) %*% beta.disp.coefs)
+  
+  pred.alpha <- pred.beta.mean * pred.beta.disp
+  pred.beta <- pred.beta.disp * (1 - pred.beta.mean)
+  
+  pred.y <- numeric()
+  for (i in 1:n) {
+    pred.y[i] <- rbeta(n = 1, shape1 = pred.alpha[i], shape2 = pred.beta[i])
+  }
+  # set inflated values
+  pred.y[pred.infl == 1] <- infl
+  return(pred.y)
+}
+
+# function for simulating one-inflated beta distribution 
+# inputs: coefficients for Beta mean and dispersion, coefficients for probability of one-inflation
+# returns: draws from one-inflated Beta distribution with probability of one, Beta mean and dispersion regressed on predictors
+predicted_reappearance_probs <- function(arr, b.int, b.slope, d.int, d.slope, b1.int, b1.slope=NULL, prob_one_regress_covariate=FALSE, seed = 0){
+  set.seed(seed)
+  n <- length(arr)
+  # calculate predicted probability of Y = 1
+  if (prob_one_regress_covariate){
+    pr.one <- inv.logit(b1.int + b1.slope*arr)
+  }
+  else {
+    pr.one <- inv.logit(b1.int)
+  }
+  
+  # simulate n Bernoulli trials using p = pr.one
+  pred.one <- rbinom(n = n, size = 1, prob = pr.one)
+  # predicted Beta distribution means are linked by logit 
+  pred.beta.mean <- inv.logit(b.int + b.slope*arr)
+  # predicted Beta distribution dispersions are linked by log
+  pred.beta.disperson <- exp(d.int + d.slope*arr)
+  
+  pred.alpha <- pred.beta.mean * pred.beta.disperson
+  pred.beta <- pred.beta.disperson * (1 - pred.beta.mean)
+  
+  pred.y <- numeric()
+  for (i in 1:n) {
+    pred.y[i] <- rbeta(n = 1, shape1 = pred.alpha[i], shape2 = pred.beta[i])
+  }
+  
+  pred.y[pred.one == 1] <- 1
+  return(pred.y)
+}
+
+# inputs: OTU table with samples ordered by time 
+# returns: vector of disappearance probabilities named by OTU
+disappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE) {
+  fold.difference.table <- fold_difference_table(otu.table = otu.table, taxa_are_rows = taxa_are_rows)
+  
+  if (taxa_are_rows) {
+    dimension <- 1
+  } 
+  else {
+    dimension <- 2
+  }
+  
+  disappearances <- apply(fold.difference.table, dimension, function(a) sum(a == 0, na.rm = TRUE))
+  presences <- apply(fold.difference.table, dimension, function(a) sum(a > 0, na.rm = TRUE))
+  return(disappearances / presences)
+}
+
+# format 1 for disappeared, 0 for continued presence
+format_disappearance_data <- function(otutab, t.sample, otu.median.abs, read.depths, otu_id, taxa_are_rows = TRUE) {
+  if (!taxa_are_rows) {
+    otutab = t(otutab)
+  }
+  
+  num.samples <- ncol(otutab)
+  num.otus <- nrow(otutab)
+  
+  fold.diff.tab <- fold_difference_table(otu.table = otutab) 
+  candidate.indices <- is.finite(fold.diff.tab) 
+  delta.time <- t.sample[2:num.samples] - t.sample[1:(num.samples-1)]
+  read.depths <- read.depths[2:num.samples]
+  
+  disappeared <- numeric(); median.abundance <- numeric(); sample.read.depth <- numeric(); time.diff <- numeric(); otu_ids <- character()
+  for (i in 1:num.otus) {
+    otu.candidate.indices <- candidate.indices[i, ]
+    if (!any(otu.candidate.indices)) {
+      next
+    }
+    
+    otu.candidate.samples <- fold.diff.tab[i, otu.candidate.indices]
+    
+    disappeared <- append(disappeared, ifelse(otu.candidate.samples == 0, 1, 0))
+    median.abundance <- append(median.abundance, rep(otu.median.abs[i], length(otu.candidate.samples)))
+    sample.read.depth <- append(sample.read.depth, read.depths[otu.candidate.indices])
+    time.diff <- append(time.diff, delta.time[otu.candidate.indices])
+    otu_ids <- append(otu_ids, rep(otu_id[i], length(otu.candidate.samples)))
+  }
+  
+  
+  return(data.frame(disappeared, median.abundance, sample.read.depth, time.diff, otu_ids, row.names = NULL))
+}
+
+# function for predicting an asymptotic regression
+predict_AsympReg <- function(arr, NLSstAsymptotic_params) {
+  b0 <- NLSstAsymptotic_params[1]
+  b1 <- NLSstAsymptotic_params[2]
+  lrc <- NLSstAsymptotic_params[3]
+  return(b0 + b1*(1-exp(-exp(lrc)*arr)))
+}
+
+# function to forecast an ARMA(1,1)
+# older lags come first in the formula
+predictArma <- function(arma.model, n.predict) {
+  num.ar <- arma.model$arma[1]
+  num.ma <- arma.model$arma[2]
+  
+  x.lags = as.vector(tail(arma.model$fitted, num.ar))
+  e.lags = as.vector(tail(arma.model$residuals, num.ma))
+  
+  arma.coefs <- arma.model$coef
+  
+  intercept = arma.coefs["intercept"]
+  ar.coefs = rev(arma.coefs[grep("ar", names(arma.coefs))])
+  ma.coefs = rev(arma.coefs[grep("ma", names(arma.coefs))])
+  
+  start.t <- num.ar + 1
+  i <- num.ma + 1
+  x.pred <- x.lags
+  e.pred <- e.lags
+  
+  for (t in start.t:(start.t + n.predict - 1) ) {
+    e.pred[i] <- rnorm(n=1, mean=0, sd=sqrt(arma.model$sigma2))
+    x.pred[t] <- intercept + as.numeric(ar.coefs %*% x.pred[(t-num.ar):(t-1)]) + as.numeric(ma.coefs %*% e.pred[(i-num.ma):(i-1)]) + e.pred[i]
+    i <- i+1
+  }
+  
+  return(x.pred[start.t:length(x.pred)])
+}
+
+# function to forecast a GARCH(1,1)
+predictGarch <- function(garch.model, n.predict) {
+  cond.dist <- garch.model@fit$params$cond.dist
+  if (cond.dist == "norm") {
+    rDist <- function() { return(rnorm(n = 1, mean = 0, sd = 1)) }
+  }
+  else if (cond.dist == "std") {
+    cond.dist.shape <- garch.model@fit$params$shape
+    rDist <- function() { return(rt(n = 1, df = cond.dist.shape)) }
+  }
+
+  model.coefs <- garch.model@fit$coef
+  
+  omega = model.coefs["omega"]
+  alpha.coefs = rev(model.coefs[grep("alpha", names(model.coefs))])
+  beta.coefs = rev(model.coefs[grep("beta", names(model.coefs))])
+  
+  num.alpha <- length(alpha.coefs)
+  num.beta <- length(beta.coefs)
+  
+  start.t <- num.alpha + 1
+  i <- num.beta + 1
+  
+  e.lags = as.vector(tail(garch.model@residuals, num.alpha))
+  sigma.lags = as.vector(tail(garch.model@sigma.t, num.beta))
+  
+  sigma.pred <- sigma.lags
+  e.pred <- e.lags
+  for (t in start.t:(start.t + n.predict - 1) ) {
+    sigma.pred[i] <- sqrt( omega + as.numeric(alpha.coefs %*% (e.pred[(t-num.alpha):(t-1)])^2) + as.numeric(beta.coefs %*% (sigma.pred[(i-num.beta):(i-1)])^2))
+    e.pred[t] <- sigma.pred[i] * rDist()
+    i <- i+1
+  }
+  
+  return(e.pred[start.t:length(e.pred)])
+}
+
+# function to forecast a ARMA(1,1) / GARCH(1,1)
+predictArmaGarch <- function(arma.garch, n.predict) {
+  model.coefs <- arma.garch@fit$coef
+  mu = model.coefs["mu"]
+  ar.coefs = rev(model.coefs[grep("ar", names(model.coefs))])
+  ma.coefs = rev(model.coefs[grep("ma", names(model.coefs))])
+  
+  num.ar <- length(ar.coefs)
+  num.ma <- length(ma.coefs)
+  
+  x.lags = as.vector(tail(arma.garch@fitted, num.ar))
+  e.lags = as.vector(tail(arma.garch@residuals, num.ma))
+  
+  start.t <- num.ar + 1
+  i <- num.ma + 1
+  x.pred <- x.lags
+  e.pred <- c(e.lags, predictGarch(arma.garch, n.predict))
+  
+  for (t in start.t:(start.t + n.predict - 1) ) {
+    x.pred[t] <- mu + as.numeric(ar.coefs %*% x.pred[(t-num.ar):(t-1)]) + as.numeric(ma.coefs %*% e.pred[(i-num.ma):(i-1)]) + e.pred[i]
+    i <- i+1
+  }
+  
+  return(x.pred[start.t:length(x.pred)])
+}
+
+forecastArmaGarch <- function(arma.model, garch.model, n.predict) {
+  num.ar <- arma.model$arma[1]
+  num.ma <- arma.model$arma[2]
+  
+  arma.coefs <- arma.model$coef
+  intercept = arma.coefs["intercept"]
+  ar.coefs = rev(arma.coefs[grep("ar", names(arma.coefs))])
+  ma.coefs = rev(arma.coefs[grep("ma", names(arma.coefs))])
+  
+  x.lags = as.vector(tail(arma.model$fitted, num.ar))
+  e.lags = as.vector(tail(arma.model$residuals, num.ma))
+  
+  start.t <- num.ar + 1
+  i <- num.ma + 1
+  x.pred <- x.lags
+  e.pred <- c(e.lags, predictGarch(garch.model, n.predict))
+  
+  for (t in start.t:(start.t + n.predict - 1) ) {
+    x.pred[t] <- intercept + as.numeric(ar.coefs %*% x.pred[(t-num.ar):(t-1)]) + as.numeric(ma.coefs %*% e.pred[(i-num.ma):(i-1)]) + e.pred[i]
+    i <- i+1
+  }
+  
+  return(x.pred[start.t:length(x.pred)])
+}

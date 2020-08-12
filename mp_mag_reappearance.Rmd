@@ -1,0 +1,494 @@
+---
+title: "Moving Pictures Magnitude Reappearance"
+author: "Daniel J. Park"
+date: "7/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MicrobeDS)
+library(microbiome)  
+library(ggplot2)
+library(dplyr)
+library(zoib)
+library(boot)
+require(foreign)
+require(MASS)
+require(Hmisc)
+require(reshape2)
+source("mp_analysis_functions.R")
+```
+
+```{r}
+# f4.metadata : metadata sorted by time
+# otu.counts.f4 : OTU counts
+# otu.relabs.f4 : OTU relative abundances
+# otu.clrabs.f4 : OTU clr-transformed abundances
+# median.otu.relabs.f4 : OTU's median relative abundance across all samples
+# median.otu.clrabs.f4 : OTU's median clr-transformed abundance across all samples
+# coverage.f4 : the total number of reads by sample
+load("~/Downloads/mp_F4_data.Rdata")
+load("~/Downloads/mp_M3_data.Rdata")
+
+```
+
+# Magnitude of reappearance
+
+Set up a regression problem for predicting the magnitude of a reappearing OTU count (the positive count for OTU $k$ at time $t$ given a zero count for OTU $k$ at time $t-1$).
+
+```{r}
+mag.reapp.f4 <- format_reappearance_data(otutab = otu.counts.f4, 
+                                         t.sample = f4.metadata$days_since_experiment_start, 
+                                         otu.median.abs = median.otu.clrabs.f4,
+                                         read.depths = coverage.f4,
+                                         otu_id = names(median.otu.clrabs.f4))
+
+head(mag.reapp.f4); tail(mag.reapp.f4); summary(mag.reapp.f4); dim(mag.reapp.f4)
+
+mag.reapp.f4
+```
+
+
+For a pretty rare OTU, is there a difference in the distributions of sample depth (total read count) for reappearance and non-reappearance samples?
+
+```{r}
+rare.otus <- c("174950", "183207", "495451")
+median.otu.relabs.f4[which(names(median.otu.relabs.f4) == "174950" )]
+median.otu.relabs.f4[which(names(median.otu.relabs.f4) == "183207" )]
+median.otu.relabs.f4[which(names(median.otu.relabs.f4) == "495451" )]
+
+rare.reapps <- subset(mag.reapp.f4, otu_ids %in% rare.otus)
+dim(rare.reapps)
+
+rare.reapps <- rare.reapps %>% 
+  mutate(isReappearance = case_when(y == 0 ~ "non-reappearance", y > 0 ~ "reappearance"))
+
+rare.reapps
+
+ggplot(rare.reapps) +
+  geom_boxplot(aes(x = isReappearance, y = sample.read.depth, fill = as.factor(otu_ids)))
+ 
+```
+
+
+The frequency table looks like the distribution of reappearance counts is highly zero-inflated.
+
+```{r}
+ggplot(mag.reapp.f4, aes(y)) +
+  geom_histogram(binwidth = 1)
+
+ggplot(mag.reapp.f4, aes(x=median.abundance, y)) +
+  geom_point()
+
+ggplot(mag.reapp.f4, aes(x=sample.read.depth, y)) +
+  geom_point()
+
+ggplot(mag.reapp.f4, aes(x=time.diff, y)) +
+  geom_point()
+
+as.data.frame(table(mag.reapp.f4$y))
+```
+
+
+0) (Zero-inflated?) Negative Binomial Regression
+
+```{r}
+require(pscl)
+require(MASS)
+require(boot)
+```
+
+A first pass zero-inflated negative binomial model predicting the reappearance count.
+
+```{r}
+m1 <- zeroinfl(y ~ median.abundance | median.abundance,
+               data = mag.reapp.f4, dist = "negbin")
+
+summary(m1)
+m1$coefficients
+m1$theta
+```
+
+Compared to a model with just an intercept, m1 is statistically significant.
+```{r}
+m0 <- update(m1, . ~ 1)
+
+pchisq(2 * (logLik(m1) - logLik(m0)), df = 2, lower.tail=FALSE)
+```
+
+Model 2 is not zero-inflated.
+
+```{r}
+m2 <- glm.nb(y ~ median.abundance, data = mag.reapp.f4)
+
+summary(m2)
+m2$coefficients
+m2$theta
+```
+
+
+Compare the zero-inflated vs. not-inflated negative binomial regression models. Is the Vuong test an appropriate method?
+```{r}
+vuong(m1, m2)
+```
+
+Add time between consecutive samples into the mix, but only an intercept for zero-inflation binomial with logit link.
+```{r}
+m3 <- zeroinfl(y ~ median.abundance + time.diff | 1,
+               data = mag.reapp.f4, dist = "negbin")
+
+summary(m3)
+```
+
+The negative binomial part depends on abundance ranking and log sample depth.
+
+```{r}
+m4 <- zeroinfl(y ~ median.abundance + log(sample.read.depth) | 1,
+               data = mag.reapp.f4, dist = "negbin")
+
+summary(m4)
+```
+
+
+No zero-inflation, but include all the covariates in the negative binomial regression.
+
+```{r}
+m5 <- glm.nb(y ~ median.abundance + log(sample.read.depth) + time.diff, data = mag.reapp.f4)
+
+summary(m5)
+```
+
+Compare predictions from zero-inflated vs. not-inflated negative binomial regression models.
+
+```{r}
+new.data <- mag.reapp.f4 %>% dplyr::select( median.abundance, sample.read.depth, time.diff)
+
+new.data$pred.m1 <- predict_reappearance(X_count = list(new.data$median.abundance), 
+                                         X_zero = list(new.data$median.abundance), 
+                                         negbin_model = m1, zero_inflated = TRUE, seed=0)
+
+new.data$pred.m2 <- predict_reappearance(X_count = list(new.data$median.abundance), 
+                                         negbin_model = m2, zero_inflated = FALSE, seed=0)
+
+new.data$pred.m3 <- predict_reappearance(X_count = list(new.data$median.abundance, new.data$time.diff), 
+                                         negbin_model = m3, zero_inflated = TRUE, seed=0)
+
+new.data$pred.m4 <- predict_reappearance(X_count = list(new.data$median.abundance, log(new.data$sample.read.depth)),
+                                         negbin_model = m4, zero_inflated = TRUE, seed=0)
+
+new.data$pred.m5 <- predict_reappearance(X_count = list(new.data$median.abundance, log(new.data$sample.read.depth), new.data$time.diff),
+                                         negbin_model = m5, zero_inflated = FALSE, seed=0)
+```
+
+```{r}
+ggplot(mag.reapp.f4)+
+  geom_point(aes(x = median.abundance, y = y), color="purple") +
+  labs(x = "OTU median clr-transformed abundance", y = "Observed Reappearance Counts")
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.m1), color="sienna") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (model 1)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.m2), color="gold") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (model 2)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.m3), color="seagreen") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (model 3)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.m4), color="turquoise") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (model 4)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.m5), color="tomato") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (model 5)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+
+as.data.frame(table(mag.reapp.f4$y))
+as.data.frame(table(new.data$pred.m1))
+as.data.frame(table(new.data$pred.m2))
+as.data.frame(table(new.data$pred.m3))
+as.data.frame(table(new.data$pred.m4))
+as.data.frame(table(new.data$pred.m5))
+
+```
+
+
+# Magnitude of Reappearance Counts without high outliers
+
+```{r}
+# don't include any observed reappearance counts above 1000
+nonoutlier.reapp.counts <- subset(mag.reapp.f4, y < 1000)
+
+head(nonoutlier.reapp.counts)
+```
+
+```{r}
+new.m1 <- update(m1, data = nonoutlier.reapp.counts)
+new.m2 <- update(m2, data = nonoutlier.reapp.counts)
+new.m3 <- update(m3, data = nonoutlier.reapp.counts)
+new.m4 <- update(m4, data = nonoutlier.reapp.counts)
+new.m5 <- update(m5, data = nonoutlier.reapp.counts)
+
+new.data$pred.new.m1 <- predict_reappearance(X_count = list(new.data$median.abundance), 
+                                         X_zero = list(new.data$median.abundance), 
+                                         negbin_model = new.m1, zero_inflated = TRUE, seed=0)
+
+new.data$pred.new.m2 <- predict_reappearance(X_count = list(new.data$median.abundance), 
+                                         negbin_model = new.m2, zero_inflated = FALSE, seed=0)
+
+new.data$pred.new.m3 <- predict_reappearance(X_count = list(new.data$median.abundance, new.data$time.diff), 
+                                         negbin_model = new.m3, zero_inflated = TRUE, seed=0)
+
+new.data$pred.new.m4 <- predict_reappearance(X_count = list(new.data$median.abundance, log(new.data$sample.read.depth)),
+                                         negbin_model = new.m4, zero_inflated = TRUE, seed=0)
+
+new.data$pred.new.m5 <- predict_reappearance(X_count = list(new.data$median.abundance, log(new.data$sample.read.depth), new.data$time.diff),
+                                         negbin_model = new.m5, zero_inflated = FALSE, seed=0)
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.new.m1), color="sienna") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (new model 1)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.new.m2), color="gold") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (new model 2)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.new.m3), color="seagreen") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (new model 3)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.new.m4), color="turquoise") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (new model 4)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+
+ggplot(new.data) +
+  geom_point(aes(x = median.abundance, y = pred.new.m5), color="tomato") +
+  labs(x = "OTU median clr-transformed abundance", y = "Simulated Reappearance Counts (new model 5)") +
+  ylim(0, max(mag.reapp.f4$y))
+
+as.data.frame(table(new.data$pred.new.m1))
+as.data.frame(table(new.data$pred.new.m2))
+as.data.frame(table(new.data$pred.new.m3))
+as.data.frame(table(new.data$pred.new.m4))
+as.data.frame(table(new.data$pred.new.m5))
+
+```
+
+
+```{r}
+ggplot(new.data) +
+  geom_histogram(aes(pred.m5), binwidth = 1)
+
+ggplot(new.data) +
+  geom_histogram(aes(pred.new.m5), binwidth = 1)
+
+```
+
+
+# Predict Reappearance Relative Abundances
+
+```{r}
+reapp.relabs <- format_reappearance_data(otutab = otu.relabs.f4, 
+                                         t.sample = f4.metadata$days_since_experiment_start, 
+                                         otu.median.abs = median.otu.clrabs.f4,
+                                         read.depths = coverage.f4,
+                                         otu_id = names(median.otu.clrabs.f4))
+
+head(reapp.relabs); tail(reapp.relabs); summary(reapp.relabs); dim(reapp.relabs)
+
+reapp.relabs
+```
+
+
+The large raw counts are coming from samples with large read counts, which is why we're seeing a similar distribution of reappearing relative abundances. I think the best model to use is a zero-inflated negative binomial regression $y \sim x_1 + x_2$ where $x_1$ is the within-subject OTU median abundance and $x_2$ is log(sample read depth). Or a non-zero-inflated negative binomial regression regressing the count on within-subject OTU median abundance, log(sample read depth), and time since last sample. 
+
+```{r}
+ggplot(reapp.relabs) +
+  geom_point(aes(x = median.abundance, y = y)) +
+  labs(y = "Reappeared Relative Abundances")
+
+ggplot(reapp.relabs) +
+  geom_point(aes(x = sample.read.depth, y = y)) +
+  labs(y = "Reappeared Relative Abundances")
+
+d <- subset(reapp.relabs, y < 0.04)
+
+ggplot(d) +
+  geom_point(aes(x = median.abundance, y = y)) +
+  labs(y = "Reappeared Relative Abundances")
+
+ggplot(d) +
+  geom_point(aes(x = sample.read.depth, y = y)) +
+  labs(y = "Reappeared Relative Abundances")
+
+```
+
+
+Setting up a zero-inflated beta regression for reappeared relative abundance. 
+```{r}
+# GENERATE PREDICTED RELATIVE ABUNDANCES AFTER AN ABSENCE
+for (i in 1:2) {
+  zoib.model <- zoib.list[[i]]
+  coef.summary <- summary(zoib.model$coeff)
+  coefs <- coef.summary$statistics[ , 1]
+  
+  # select the dataframe
+  df <- df.list[[i]]
+  # predicted zero-inflated reappeared relative abundances
+  df$pred <- sim.zoib(zoib.model = zoib.model, beta.mean.coefs = coefs[1:3], infl.coefs = coefs[4], beta.disp.coefs = coefs[5:6], infl = 0, seed = 0)
+  # update the list of dataframes
+  df.list[[i]] <- df
+}
+
+# Coefficients are presented in the order of b, b0 (if zero.inflation=TRUE), b1 (if one.inflation=TRUE), and d
+z <- zoib(model = y ~ median.abundance + log(sample.read.depth) | median.abundance | 1, 
+          data = new.reapp.relabs.f4, joint = FALSE, n.response = 1,
+          zero.inflation = TRUE, one.inflation = FALSE, 
+          EUID = 1:nrow(new.reapp.relabs.f4),
+          n.iter = 500)
+
+# ggplot(reapp.relabs.f4) +
+#   geom_point(aes(x = median.abundance, y = y)) +
+#   labs(y = "Reappeared Relative Abundances")
+# 
+# ggplot(reapp.relabs.m3) +
+#   geom_point(aes(x = median.abundance, y = y)) +
+#   labs(y = "Reappeared Relative Abundances")
+# 
+# ggplot(reapp.relabs.m3) +
+#   geom_point(aes(x = log(sample.read.depth), y = y)) +
+#   labs(y = "Reappeared Relative Abundances")
+# 
+# ggplot(reapp.relabs.f4) +
+#   geom_boxplot(aes(y)) +
+#   labs(title = "F4", x = "Reappeared Relative Abundances")
+# 
+# ggplot(reapp.relabs.m3) +
+#   geom_boxplot(aes(y)) +
+#   labs(title = "M3", x = "Reappeared Relative Abundances")
+
+```
+
+
+
+2) Ordinal logistic regression
+
+```{r}
+positive.reappearances.f4 <- subset(mag.reapp.f4, y > 0)
+
+positive.y <- positive.reappearances.f4$y
+# singeton
+# doubleton
+# 3 or 4
+# 5 or greater
+positive.reappearances.f4$y.factor <- factor(case_when(positive.y == 1 ~ 1,
+                                                       positive.y == 2 ~ 2,
+                                                       positive.y == 3 | positive.y == 4 ~ 3,
+                                                       positive.y >= 5 & positive.y <= 10 ~ 5,
+                                                       positive.y > 10 ~ 11
+                                                       ), 
+                                             ordered = TRUE,
+                                             levels = c(1, 2, 3, 5, 11))
+as.data.frame(table(positive.reappearances.f4$y.factor))
+
+```
+
+
+The magnitude of reappearance looks associated the OTU's median clr-transformed abundance and the sample's log total read count.
+```{r}
+ggplot(positive.reappearances.f4, aes(x = median.abundance, y = y.factor , fill = y.factor)) +
+  geom_boxplot() +
+  labs(x = "OTU median clr-transformed abundance", y = "Reappearance Count Class")
+
+ggplot(positive.reappearances.f4, aes(x = log(sample.read.depth), y = y.factor , fill = y.factor)) +
+  geom_boxplot() +
+  labs(x = "log Sample Read Depth", y = "Reappearance Count Class")
+
+ggplot(positive.reappearances.f4, aes(x = time.diff, y = y.factor , fill = y.factor)) +
+  geom_boxplot() + 
+  labs(x = "Difference in Time between Reappearance and Previous Sample", y = "Reappearance Count Class")
+```
+
+
+
+```{r}
+m.olr <- polr(y.factor ~ median.abundance + log(sample.read.depth), 
+              data = positive.reappearances.f4, Hess = TRUE)
+
+summary(m.olr)
+```
+
+
+$logit(\hat{P}(Y \leq 1)) = 11.9915 - 0.7849*med.abund - 1.2671*log(read.depth)$
+$logit(\hat{P}(Y \leq 2)) = 12.9508 - 0.7849*med.abund - 1.2671*log(read.depth)$
+$logit(\hat{P}(Y \leq 3)) = 14.0641 - 0.7849*med.abund - 1.2671*log(read.depth)$
+
+Approximate the t-distribution with a standard normal (good for large sample sizes) and calculate p-values for the coefficients. All the coefficients have significant p-values.
+```{r}
+olr.ctable <- coef(summary(m.olr))
+
+olr.pvals <- pnorm(abs(olr.ctable[ , "t value"]), lower.tail = FALSE) * 2
+(olr.ctable <- cbind(olr.ctable, "p value" = olr.pvals))
+```
+
+
+Approximate CIs with profiling the likelihood function and by assuming a normal distribution. Neither method gives a CI for a coefficient that contains 0.
+```{r}
+(olr.profiled.ci <- confint(m.olr)) # profiled CIs
+confint.default(m.olr) # assuming normality
+```
+
+By exponentiating the coefficients, we obtain odds ratios.
+
+For every one unit increase in median clr-transformed abundance, the odds of the reappearance count being greater is multiplied by 2.192, holding the log sample read depth constant.
+
+```{r}
+exp(cbind(oddsRatio = coef(m.olr), olr.profiled.ci))
+```
+
+Yeah, not a great prediction. Very 1-heavy.
+```{r}
+summary(predict(m.olr, positive.reappearances.f4))
+```
+
+What about an interaction betwee median abundance and log sample read depth? 
+median abundance is not so significant a predictor.
+Again, the predictions are not great.
+```{r}
+olr.interact <- polr(y.factor ~ median.abundance*log(sample.read.depth), 
+                     data = positive.reappearances.f4, Hess = TRUE)
+
+summary(olr.interact)
+
+olr.interact.ctable <- coef(summary(olr.interact))
+
+olr.interact.pvals <- pnorm(abs(olr.interact.ctable[ , "t value"]), lower.tail = FALSE) * 2
+(olr.interact.ctable <- cbind(olr.interact.ctable, "p value" = olr.interact.pvals))
+(olr.interact.profiled.ci <- confint(olr.interact)) # profiled CIs
+confint.default(olr.interact) # assuming normality
+
+summary(predict(olr.interact, positive.reappearances.f4))
+```
+
+
+
+
+

@@ -1,0 +1,658 @@
+---
+title: "MP Time Series Volatility"
+author: "Daniel J. Park"
+date: "7/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MicrobeDS)
+library(microbiome)  
+library(ggplot2)
+library(dplyr)
+library(boot)
+library(nlme)
+library(fGarch)
+library(tseries)
+library(forecast)
+source("mp_analysis_functions.R")
+```
+
+```{r}
+# f4.metadata : metadata sorted by time
+# otu.counts.f4 : OTU counts
+# otu.relabs.f4 : OTU relative abundances
+# otu.clrabs.f4 : OTU clr-transformed abundances
+# median.otu.relabs.f4 : OTU's median relative abundance across all samples
+# median.otu.clrabs.f4 : OTU's median clr-transformed abundance across all samples
+# coverage.f4 : the total number of reads by sample
+load("~/Downloads/mp_F4_data.Rdata")
+load("~/Downloads/mp_M3_data.Rdata")
+
+```
+
+
+```{r}
+shared.otu.names <- intersect(names(median.otu.relabs.f4), names(median.otu.relabs.m3))
+head(shared.otu.names)
+tail(shared.otu.names)
+head(median.otu.relabs.m3)
+tail(median.otu.relabs.m3)
+head(median.otu.relabs.f4)
+tail(median.otu.relabs.f4)
+```
+
+
+# Volatility of OTU relative abundance as in Shenhav et al.
+
+```{r}
+otu.4468234.ts <- otu.relabs.f4["4468234", ]
+plot(f4.metadata$days_since_experiment_start, otu.4468234.ts, type="l",
+     xlab = "days since experiment start", ylab = "OTU 4468234 relative abundance")
+
+m3.4468234.ts <- otu.relabs.m3["4468234", ]
+plot(m3.metadata$days_since_experiment_start, m3.4468234.ts, type="l",
+     main = "M3", xlab = "days since experiment start", ylab = "OTU 4468234 relative abundance")
+
+otu.4358527.ts <- otu.relabs.f4["4358527", ]
+plot(f4.metadata$days_since_experiment_start, otu.4358527.ts, type="l",
+     xlab = "days since experiment start", ylab = "OTU 4358527 relative abundance")
+
+m3.4358527.ts <- otu.relabs.m3["4358527", ]
+plot(m3.metadata$days_since_experiment_start, m3.4358527.ts, type="l",
+     main = "M3", xlab = "days since experiment start", ylab = "OTU 4358527 relative abundance")
+```
+
+# Volatility of fold-change
+
+Calculate the fold-change from one sample to the next for each OTU.
+```{r}
+f4.fold.diff <- fold_difference_table(otu.relabs.f4)
+
+m3.fold.diff <- fold_difference_table(otu.relabs.m3)
+```
+
+Plot the finite, positive fold-changes and log fold-changes over time for OTUs from the most common to the very rare as measured by median relative abundance. In general, it appears that median relative abundance and volatility of log fold-change over time are positively related. The time series may be heteroskedastic, so perhaps a GARCH model can estimate changing variance. 
+
+```{r}
+f4.num.samples <- ncol(f4.fold.diff)
+f4.num.otus <- nrow(f4.fold.diff)
+
+m3.num.samples <- ncol(m3.fold.diff)
+m3.num.otus <- nrow(m3.fold.diff)
+
+otu.names <- rownames(f4.fold.diff)
+m3.otu.names <- rownames(m3.fold.diff)
+
+# OTU with highest median relative abundance around 0.32
+otu.1 <- "4468234"
+# OTU with median relative abundance around 0.11
+otu.2 <- "4467447"
+# OTU with median relative abundance around 0.05
+otu.3 <- "4447072"
+# OTU with median relative abundance around 0.01
+otu.4 <- "215097"
+# even rarer OTUs
+otu.5 <- "4358527"
+otu.6 <- "174489"
+
+otu.select.list <- c(otu.1, otu.2, otu.3, otu.4, otu.5, otu.6)
+
+# appends rows (OTUs) one after another
+f4.flattened.fold.diff <- as.vector(t(f4.fold.diff))
+f4.flattened.otuIDs <- rep(otu.names, each=f4.num.samples)
+f4.flattened.sampIDs <- rep(colnames(f4.fold.diff), f4.num.otus)
+f4.flattened.t <- rep(f4.metadata$days_since_experiment_start[2:nrow(f4.metadata)], f4.num.otus)
+
+fold.diff.df <- data.frame(otu.id = f4.flattened.otuIDs, samp.id = f4.flattened.sampIDs, 
+                           days = f4.flattened.t, fold.difference = f4.flattened.fold.diff)
+
+# select only the rows containing finite and positive fold changes
+# no disappearances, no reappearances, no absence to absences
+fold.diff.df <- subset(fold.diff.df, is.finite(fold.difference) & fold.difference > 0)
+
+fold.diff.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.rarity = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  labs(title="F4", y = "Observed log fold change in relative abundance") +
+  geom_line(aes(x=days, y=log(fold.difference), color=otu.rarity)) +
+  facet_wrap(~ otu.rarity)
+
+m3.flattened.fold.diff <- as.vector(t(m3.fold.diff))
+m3.flattened.otuIDs <- rep(m3.otu.names, each = m3.num.samples)
+m3.flattened.sampIDs <- rep(colnames(m3.fold.diff), m3.num.otus)
+m3.flattened.t <- rep(m3.metadata$days_since_experiment_start[2:nrow(m3.metadata)], m3.num.otus)
+
+m3.fold.diff.df <- data.frame(otu.id = m3.flattened.otuIDs, samp.id = m3.flattened.sampIDs,
+                              days = m3.flattened.t, fold.difference = m3.flattened.fold.diff)
+m3.fold.diff.df <- subset(m3.fold.diff.df, is.finite(fold.difference) & fold.difference > 0)
+
+m3.fold.diff.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  labs(title="M3", y = "Observed log fold change in relative abundance") +
+  geom_line(aes(x=days, y=log(fold.difference), color=otu.id)) +
+  facet_wrap(~ otu.id)
+
+```
+
+
+
+```{r}
+# first pass: we can include all samples
+# second pass: filter out samples that are one day apart. still gonna have gaps between these chunks tho
+fold.diff.df$log.change <- log(fold.diff.df$fold.difference)
+head(fold.diff.df)
+
+m3.fold.diff.df$log.change <- log(m3.fold.diff.df$fold.difference)
+head(m3.fold.diff.df)
+
+num.samples <- nrow(f4.metadata)
+# sampTimeInterval <- f4.metadata$days_since_experiment_start[2:num.samples] - f4.metadata$days_since_experiment_start[1:(num.samples-1)]
+# names(sampTimeInterval) <- rownames(f4.metadata)[2:num.samples]
+# table(sampTimeInterval)
+```
+
+
+Generally, the log fold changes are mean 0, although for rarer OTUs, there's greater variation in the mean. 
+The standard deviation of log fold changes is generally smaller for more common OTUs.
+```{r}
+# sd.logchange <- unlist(by(fold.diff.df, fold.diff.df$OTU_id, function(x) sd(x$log.change)))[names(median.otu.relabs.f4)]
+# mean.logchange <- unlist(by(fold.diff.df$log.change, fold.diff.df$OTU_id, mean))[names(median.otu.relabs.f4)]
+# cv.logchange <- sd.logchange / abs(mean.logchange)
+# 
+# plot(median.otu.clrabs.f4, sd.logchange, pch=20, col="seagreen",
+#      title="F4", xlab = "OTU median clr(abundance)", ylab = "standard deviation of log fold-change")
+# plot(median.otu.clrabs.f4, mean.logchange, pch=20, col="pink",
+#      title="F4", xlab = "OTU median clr(abundance)", ylab = "mean of log fold-change")
+# plot(median.otu.clrabs.f4, log(cv.logchange), pch=20, col="gold",
+#      title="F4", xlab = "OTU median clr(abundance)", ylab = "log coefficient of variation of log fold-change")
+```
+
+# Time Series
+## Log fold-change for most abundance OTU
+Assume all sample times are equally spaced, and look only at fold-changes that are not disappearances, reappearances, or consecutive absences. 
+
+```{r}
+f4.otu.1 <- subset(fold.diff.df, otu.id == otu.1, select = c(log.change, days))
+f4.otu.1.ts <- ts(f4.otu.1$log.change, start = min(f4.otu.1$days), end = max(f4.otu.1$days), frequency = 1)
+
+plot(f4.otu.1.ts, main = "F4",  ylab = "log(fold-change) for OTU 4468234", ylim = c(min(f4.otu.1.ts), max(f4.otu.1.ts)))
+acf(f4.otu.1.ts)
+pacf(f4.otu.1.ts)
+
+m3.otu.1 <- subset(m3.fold.diff.df, otu.id == otu.1, select = c(log.change, days))
+m3.otu.1.ts <- ts(m3.otu.1$log.change)
+
+plot(m3.otu.1.ts, main = "M3",  ylab = "log(fold-change) for OTU 4468234", ylim = c(min(m3.otu.1.ts), max(m3.otu.1.ts)))
+acf(m3.otu.1.ts)
+pacf(m3.otu.1.ts)
+
+```
+
+
+
+## Trying ARMA(1, 1), then GARCH(1, 1) on the residuals.
+
+The ma1 and beta1 coefficients are significant. 
+The Box-Ljung tests on the ARMA residuals and squared residuals are non-significant. We have no evidence to conclude that the ARMA model is lack of fit to the time series. 
+LM ARCH Test is also non-significant, so there is no evidence to conclude that there is not an autoregressive conditional heteroskedasticity effect in the time series.
+
+```{r}
+f4.otu.1.armagarch <- garchFit(formula = ~ arma(1, 1) + garch(1, 1), data = f4.otu.1.ts, 
+                                  cond.dist = "std", trace = FALSE)
+m3.otu.1.armagarch <- garchFit(formula = ~ arma(1, 1) + garch(1, 1), data = m3.otu.1.ts, 
+                               cond.dist = "std", trace = FALSE)
+#summary(f4.otu.1.armagarch)
+#summary(m3.otu.1.armagarch)
+```
+
+
+The assumption that the standardized residuals are from an i.i.d student t-distribution looks reasonably met for F4. Not so much for M3.
+```{r}
+n.resid <- length(f4.otu.1.ts)
+std.df <- f4.otu.1.armagarch@fit$coef["shape"]
+f4.otu.1.ag.resids <- fGarch::residuals(f4.otu.1.armagarch, standardize = TRUE)
+
+qqplot(qt(p = ppoints(n = n.resid), df = std.df), f4.otu.1.ag.resids,
+       main = "Q-Q plot for OTU 4468234 Subject F4",
+       xlab = "t-quantiles", ylab = "standardized residual quantiles")
+qqline(f4.otu.1.ag.resids, distribution = function(p) qt(p, df = std.df))
+
+n.resid <- length(m3.otu.1.ts)
+m3.otu.1.ag.resids <- fGarch::residuals(m3.otu.1.armagarch, standardize = TRUE)
+
+qqplot(qt(p = ppoints(n = n.resid), df = m3.otu.1.armagarch@fit$coef["shape"]), m3.otu.1.ag.resids,
+       main = "Q-Q plot for OTU 4468234 Subject M3",
+       xlab = "t-quantiles", ylab = "standardized residual quantiles")
+qqline(m3.otu.1.ag.resids, distribution = function(p) qt(p, df = std.df))
+```
+
+## Comparing the observed vs. the fitted log fold-changes.
+
+```{r}
+line.colors <- c("purple", "orange")
+
+ts.plot(f4.otu.1.ts, ts(f4.otu.1.armagarch@fitted), 
+        gpars = list(main="F4", xlab="days", ylab="log fold-change for OTU 4468234", col=line.colors, lwd=1.5))
+legend("topleft", legend = c("observed", "fitted"), col = line.colors, lty=1)
+
+ts.plot(m3.otu.1.ts, ts(m3.otu.1.armagarch@fitted), 
+        gpars = list(main="M3", xlab="days", ylab="log fold-change for OTU 4468234", col=line.colors, lwd=1.5))
+legend("bottomright", legend = c("observed", "fitted"), col = line.colors, lty=1)
+```
+
+## Comparing the coefficient of variation. 
+The observed and fitted cv's are quite similar, but the variance of the observed time series is almost three times greater than the variance of the fitted series.
+The fitted values for M3 also display less variance than the observed.
+
+```{r}
+observed.cv <- abs(sd(f4.otu.1.ts) / mean(f4.otu.1.ts))
+fitted.cv <- abs(sd(f4.otu.1.armagarch@fitted) / mean(f4.otu.1.armagarch@fitted))
+observed.cv; fitted.cv
+var(f4.otu.1.ts); var(f4.otu.1.armagarch@fitted)
+
+# M3 observed CV
+abs(sd(m3.otu.1.ts) / mean(m3.otu.1.ts))
+# M3 fitted CV
+abs(sd(m3.otu.1.armagarch@fitted) / mean(m3.otu.1.armagarch@fitted))
+# M3 observed and fitted variances
+var(m3.otu.1.ts); var(m3.otu.1.armagarch@fitted)
+```
+
+
+# FUNCTIONS FOR SIMULATING ARMA-GARCH MODELS
+
+```{r}
+# function for fitting and forecasting a ARMA(1,1)-GARCH(1,1) model
+simulate.garch <- function(a.series, n.sim = 365) {
+  a.ts <- ts(a.series)
+  arma.garch.model <- garchFit(formula = ~ arma(1, 1) + garch(1, 1), data = a.ts, 
+                               cond.dist = "std", trace = FALSE)
+  
+  model.coefs <- arma.garch.model@fit$coef
+  residuals <- arma.garch.model@residuals
+  innovations <- arma.garch.model@residuals / arma.garch.model@sigma.t
+  cond.vars <- arma.garch.model@h.t
+  
+  model.spec <- garchSpec(model = list(omega = model.coefs["omega"],
+                                       alpha = model.coefs["alpha1"],
+                                       beta = model.coefs["beta1"],
+                                       mu = model.coefs["mu"],
+                                       ar = model.coefs["ar1"],
+                                       ma = model.coefs["ma1"],
+                                       shape = model.coefs["shape"]
+                                       ),
+                          cond.dist = arma.garch.model@fit$params$cond.dist,
+                          presample = cbind(residuals, innovations, cond.vars)
+                          )
+
+  sim.ts <- garchSim(spec = model.spec, n = n.sim)
+  return(as.numeric(sim.ts))
+}
+
+# function for fitting and simulating an ARMA(1,1) or AR(1) model 
+simulate.arma <- function(a.series, ar.order=1, ma.order=1, n.sim = 365) {
+  a.ts <- ts(a.series)
+  arma.model <- Arima(a.ts, order = c(ar.order, 0, ma.order))
+  model.coefs <- arma.model$coef
+  
+  sim.ts <- arima.sim(model = list(ar = model.coefs["ar1"],
+                                   ma = ifelse(ma.order == 1, model.coefs["ma1"], 0)
+                                   ),
+                      sd = sqrt(arma.model$sigma2),
+                      n = n.sim
+                      ) + model.coefs["intercept"]
+  
+  return(as.numeric(sim.ts))
+}
+```
+
+# Simulating ARMA(1,1)-GARCH(1,1)
+```{r}
+n.total <- 365
+set.seed(1)
+
+f4.otu.1.garchSim <- simulate.garch(f4.otu.1.ts, n.sim = n.total)
+m3.otu.1.garchSim <- simulate.garch(m3.otu.1.ts, n.sim = n.total)
+
+plot(m3.otu.1.ts, main="M3", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="purple", ylim=c(-4,4))
+plot(ts(m3.otu.1.garchSim, start=1, end=n.total), 
+     main="M3", xlab="day", ylab="simulated ARMA-GARCH log fold-changes for OTU 4468234", col="seagreen", ylim=c(-4,4))
+
+plot(f4.otu.1.ts, main="F4", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="orange", ylim=c(-1,1))
+plot(ts(f4.otu.1.garchSim, start=1, end=n.total), 
+     main="F4", xlab="day", ylab="simulated ARMA-GARCH log fold-changes for OTU 4468234", col="brown", ylim=c(-1,1))
+```
+
+
+
+# Simulating ARMA(1,1)
+```{r}
+set.seed(0)
+
+f4.otu.1.armaSim <- simulate.arma(a.series = f4.otu.1.ts, ar.order = 1, ma.order = 1, n.sim = n.total)
+m3.otu.1.armaSim <- simulate.arma(a.series = m3.otu.1.ts, ar.order = 1, ma.order = 1, n.sim = n.total)
+
+plot(m3.otu.1.ts, main="M3", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="purple", ylim=c(-4,4))
+plot(ts(m3.otu.1.armaSim, start = 1, end = n.total), main="M3", xlab="day", ylab="simulated ARMA log fold-changes for OTU 4468234", col="seagreen", ylim=c(-4,4))
+
+plot(f4.otu.1.ts, main="F4", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="orange", ylim=c(-1,1))
+plot(ts(f4.otu.1.armaSim, start = 1, end = n.total), main="F4", xlab="day", ylab="simulated ARMA log fold-changes for OTU 4468234", col="brown", ylim=c(-1,1))
+
+```
+
+
+# Evaluating ARMA with validation
+```{r}
+n.obs <- length(m3.otu.1.ts)
+n.train <- n.obs %/% 3 * 2
+
+ts.train <- m3.otu.1.ts[1:n.train]
+ts.validation <- m3.otu.1.ts[(n.train+1):n.obs]
+
+arma.train <- Arima(ts.train, order = c(1,0,1))
+
+pred.val <- predictArma(arma.train, n.predict = (n.obs-n.train))
+
+
+ts.plot(cbind(ts.validation, pred.val), gpars = list(col=c("red", "blue")))
+legend("topleft", legend = c("validation", "predicted"), col = c("red", "blue"), lty = 1)
+
+# MSE
+sum((ts.validation - pred.val)^2) / (n.obs - n.train)
+```
+
+```{r}
+num.ar <- 1
+num.ma <- 0
+ar <- Arima(ts.train, order = c(num.ar,0,num.ma))
+
+ar.pred <- predictArma(arima.train.201, n.predict = (n.obs-n.train))
+
+ts.plot(cbind(ts.validation, ar.pred), gpars = list(col=c("red", "blue")))
+legend("topleft", legend = c("validation", "predicted"), col = c("red", "blue"), lty = 1)
+
+sum((ts.validation - ar.pred)^2) / (n.obs - n.train)
+
+```
+
+
+
+```{r}
+g <- garchFit(formula = ~ arma(1, 1) + garch(1, 1), data = ts.train, cond.dist = "std", include.shape = TRUE, trace = FALSE)
+g.pred <- predictArmaGarch(g, n.predict = (n.obs - n.train))
+
+ts.plot(cbind(ts.validation, g.pred), gpars = list(col=c("red", "blue")))
+legend("topleft", legend = c("validation", "predicted"), col = c("red", "blue"), lty = 1)
+
+ts.plot(cbind(m3.otu.1.ts, c(g@fitted, g.pred)), gpars = list(col=c("red", "blue")))
+
+sum((ts.validation - g.pred)^2) / (n.obs - n.train)
+
+#predict(g, n.ahead = (n.obs - n.train), mse="uncond")
+```
+
+
+# Simulating AR(1)
+```{r}
+set.seed(0)
+
+f4.otu.1.arSim <- simulate.arma(a.series = f4.otu.1.ts, ar.order = 1, ma.order = 0, n.sim = n.total)
+m3.otu.1.arSim <- simulate.arma(a.series = m3.otu.1.ts, ar.order = 1, ma.order = 0, n.sim = n.total)
+
+plot(m3.otu.1.ts, main="M3", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="purple", ylim=c(-4,4))
+plot(ts(m3.otu.1.arSim, start = 1, end = n.total), main="M3", xlab="day", ylab="simulated AR log fold-changes for OTU 4468234", col="seagreen", ylim=c(-4,4))
+
+plot(f4.otu.1.ts, main="F4", xlab="day", ylab="observed log fold-changes for OTU 4468234", col="orange", ylim=c(-1,1))
+plot(ts(f4.otu.1.arSim, start = 1, end = n.total), main="F4", xlab="day", ylab="simulated AR log fold-changes for OTU 4468234", col="brown", ylim=c(-1,1))
+
+```
+
+
+
+## Fitting ARMA(1,1)-GARCH(1,1) on each OTU
+
+```{r}
+n.total <- 365
+set.seed(1)
+
+f4.sim.garch <- by(fold.diff.df, fold.diff.df$otu.id, function(g) simulate.garch(g$log.change, n.total))
+f4.sim.garch <- unlist(f4.sim.garch)
+
+f4.sim.garch.df <- data.frame(otu.id = rep(rownames(f4.fold.diff), each = n.total),
+                              sim.log.change = f4.sim.garch,
+                              day = rep(1:n.total, nrow(f4.fold.diff)))
+ 
+m3.sim.garch <- by(m3.fold.diff.df, m3.fold.diff.df$otu.id, function(g) simulate.garch(g$log.change, n.total))
+m3.sim.garch <- unlist(m3.sim.garch)
+
+m3.sim.garch.df <- data.frame(otu.id = rep(rownames(m3.fold.diff), each = n.total),
+                              sim.log.change = m3.sim.garch,
+                              day = rep(1:n.total, nrow(m3.fold.diff)))
+```
+
+
+F4: for three of the OTUs, the volatility is much higher than the observed.
+M3: for one of the OTUs, the volatility is much higher than the observed.
+
+```{r}
+f4.sim.garch.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "F4", y = "Simulated ARMA(1,1)-GARCH(1,1) log fold-change") +
+  facet_wrap(~ otu.id)
+
+m3.sim.garch.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "M3", y = "Simulated ARMA(1,1)-GARCH(1,1) log fold-change") +
+  facet_wrap(~ otu.id)
+```
+
+
+```{r}
+subset(f4.sim.garch.df, is.na(sim.log.change))
+subset(m3.sim.garch.df, is.na(sim.log.change))
+```
+
+
+## Fitting ARMA(1,1) on each OTU
+
+```{r}
+n.total <- 365
+set.seed(0)
+
+f4.sim.arma <- by(fold.diff.df, fold.diff.df$otu.id, function(g) simulate.arma(a.series = g$log.change, n.sim = n.total))
+f4.sim.arma <- unlist(f4.sim.arma)
+
+f4.sim.arma.df <- data.frame(otu.id = rep(rownames(f4.fold.diff), each = n.total),
+                              sim.log.change = f4.sim.arma,
+                              day = rep(1:n.total, nrow(f4.fold.diff)))
+ 
+m3.sim.arma <- by(m3.fold.diff.df, m3.fold.diff.df$otu.id, function(g) simulate.arma(a.series = g$log.change, n.sim = n.total))
+m3.sim.arma <- unlist(m3.sim.arma)
+
+m3.sim.arma.df <- data.frame(otu.id = rep(rownames(m3.fold.diff), each = n.total),
+                              sim.log.change = m3.sim.arma,
+                              day = rep(1:n.total, nrow(m3.fold.diff)))
+```
+
+The ranges of log fold-changes is double the observed ranges, but the volatility does increase with rare OTUs as observed. 
+The simulated log fold-changes display homoskedasticity. There are not periods of heightened volatility.
+
+```{r}
+f4.sim.arma.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "F4", y = "Simulated ARMA(1,1) log fold-change") +
+  facet_wrap(~ otu.id)
+#ggsave(filename = "f4_sim_arma.png")
+
+m3.sim.arma.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "M3", y = "Simulated ARMA(1,1) log fold-change") +
+  facet_wrap(~ otu.id)
+#ggsave(filename = "m3_sim_arma.png")
+```
+
+The standard deviations, means, and coefficients of variance of the simulated OTU log fold-change time series look similar in range and shape with those observed.
+
+```{r}
+sim.sd <- unlist(by(sim.Arma.df, sim.Arma.df$otu.id, function(x) sd(x$sim.log.change)))[names(median.otu.relabs.f4)]
+sim.mean <- unlist(by(sim.Arma.df, sim.Arma.df$otu.id, function(x) mean(x$sim.log.change)))[names(median.otu.relabs.f4)]
+sim.cv <- sim.sd / abs(sim.mean)
+
+plot(median.otu.clrabs.f4, sim.sd, pch=20, col="seagreen",
+     xlab = "OTU median clr(abundance)", ylab = "standard deviation of simulated log fold-change")
+plot(median.otu.clrabs.f4, sim.mean, pch=20, col="pink",
+     xlab = "OTU median clr(abundance)", ylab = "mean of simulated log fold-change")
+plot(median.otu.clrabs.f4, log(sim.cv), pch=20, col="gold",
+     xlab = "OTU median clr(abundance)", ylab = "log coefficient of variation of simulated log fold-change")
+
+```
+
+
+## Fitting AR(1) on each OTU
+
+```{r}
+n.total <- 365
+set.seed(0)
+
+f4.sim.ar <- by(fold.diff.df, fold.diff.df$otu.id, function(g) simulate.arma(a.series = g$log.change, ar.order = 1, ma.order = 0, n.sim = n.total))
+f4.sim.ar <- unlist(f4.sim.ar)
+
+f4.sim.ar.df <- data.frame(otu.id = rep(rownames(f4.fold.diff), each = n.total),
+                          sim.log.change = f4.sim.ar,
+                          day = rep(1:n.total, nrow(f4.fold.diff)))
+ 
+m3.sim.ar <- by(m3.fold.diff.df, m3.fold.diff.df$otu.id, function(g) simulate.arma(a.series = g$log.change, ar.order = 1, ma.order = 0, n.sim = n.total))
+m3.sim.ar <- unlist(m3.sim.ar)
+
+m3.sim.ar.df <- data.frame(otu.id = rep(rownames(m3.fold.diff), each = n.total),
+                          sim.log.change = m3.sim.ar,
+                          day = rep(1:n.total, nrow(m3.fold.diff)))
+```
+
+```{r}
+f4.sim.ar.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "F4", y = "Simulated AR(1) log fold-change") +
+  facet_wrap(~ otu.id)
+#ggsave(filename = "f4_sim_ar1.png")
+
+m3.sim.ar.df %>%
+  dplyr::filter(otu.id %in% otu.select.list) %>%
+  mutate(otu.id = factor(otu.id, ordered = TRUE, levels = otu.select.list)) %>%
+  ggplot() +
+  geom_line(aes(x=day, y=sim.log.change, color=otu.id)) +
+  labs(title = "M3", y = "Simulated AR(1) log fold-change") +
+  facet_wrap(~ otu.id)
+#ggsave(filename = "m3_sim_ar1.png")
+```
+
+
+
+
+```{r}
+# turns out that this ratio of ratio is equal to the sum of simulated relative abundances before normalization
+ratio.ratio <- function(time.points, rel.abundance.table, sim.log.change.table, total.sims) {
+  y <- rel.abundance.table[ , 1]
+
+  t.indices <- 1:nrow(sim.log.change.table) %% total.sims
+  
+  ratio.ratios <- numeric(length = time.points-1)
+  for (t in 2:time.points) {
+    rhat <- exp(sim.log.change.table[t.indices == (t-1), "sim.log.change"])
+    y.next <- y * rhat
+    ratio.ratios[t-1] <- sum(y.next)
+    y <- y.next / sum(y.next)
+  }
+  return(ratio.ratios)
+}
+
+vis.ratio.of.ratio <- function(n.sim, rel.abundance.table, sim.log.change.table, total.sims, subjID, threshold, method) {
+  rr <- ratio.ratio(n.sim, rel.abundance.table, sim.log.change.table, n.total)
+  
+  hist(rr, breaks = 30, 
+       main = subjID, xlab = paste("ratios of simulated fold-change by", method, "to fold-change after normalization"))
+  
+  hist(rr[rr < threshold], breaks = 30,
+       main = subjID, xlab = paste("ratios of simulated fold-change by", method, "to fold-change after normalization below", threshold))
+
+  paste("Proportion of ratio-ratios greater than", threshold, ":", mean(rr > threshold))
+}
+```
+
+
+General observations: ARMA-GARCH produces the highest outlier simulation inflation ratios, but all three models produce distributions with similar medians.
+
+
+```{r}
+f4.garch.rr <- ratio.ratio(131, otu.relabs.f4, f4.sim.garch.df, n.total)
+f4.arma.rr <- ratio.ratio(131, otu.relabs.f4, f4.sim.arma.df, n.total)
+f4.ar.rr <- ratio.ratio(131, otu.relabs.f4, f4.sim.ar.df, n.total)
+summary(f4.garch.rr); summary(f4.arma.rr); summary(f4.ar.rr)
+
+f <- cbind(f4.garch.rr, f4.arma.rr, f4.ar.rr)
+boxplot(f, main = "F4 simulation inflation ratios")
+boxplot(f4.garch.rr[f4.garch.rr < 10], f4.arma.rr[f4.arma.rr < 10], f4.ar.rr[f4.ar.rr < 10],
+        names = c("arma-garch", "arma", "ar"), main = "F4 simulation inflation ratios (under 10)")
+
+vis.ratio.of.ratio(131, otu.relabs.f4, f4.sim.garch.df, n.total, subjID = "F4", threshold = 10, method = "ARMA(1,1)-GARCH(1,1)")
+vis.ratio.of.ratio(131, otu.relabs.f4, f4.sim.arma.df, n.total, subjID = "F4", threshold = 10, method = "ARMA(1,1)")
+vis.ratio.of.ratio(131, otu.relabs.f4, f4.sim.ar.df, n.total, subjID = "F4", threshold = 10, method = "AR(1)")
+
+```
+
+
+```{r}
+m3.garch.rr <- ratio.ratio(330, otu.relabs.m3, m3.sim.garch.df, n.total)
+m3.arma.rr <- ratio.ratio(330, otu.relabs.m3, m3.sim.arma.df, n.total)
+m3.ar.rr <- ratio.ratio(330, otu.relabs.m3, m3.sim.ar.df, n.total)
+summary(m3.garch.rr); summary(m3.arma.rr); summary(m3.ar.rr)
+
+m <- cbind(m3.garch.rr, m3.arma.rr, m3.ar.rr)
+boxplot(m, main = "M3 simulation inflation ratios")
+boxplot(m3.garch.rr[m3.garch.rr < 10], m3.arma.rr[m3.arma.rr < 10], m3.ar.rr[m3.ar.rr < 10],
+        names = c("arma-garch", "arma", "ar"), main = "M3 simulation inflation ratios (under 10)")
+
+vis.ratio.of.ratio(330, otu.relabs.m3, m3.sim.garch.df, n.total, subjID = "M3", threshold = 10, method = "ARMA(1,1)-GARCH(1,1)")
+vis.ratio.of.ratio(330, otu.relabs.m3, m3.sim.arma.df, n.total, subjID = "M3", threshold = 10, method = "ARMA(1,1)")
+vis.ratio.of.ratio(330, otu.relabs.m3, m3.sim.ar.df, n.total, subjID = "M3", threshold = 10, method = "AR(1)")
+```
+
+
+
+
+```{r}
+
+sim.AR.sd <- unlist(by(sim.AR.df, sim.AR.df$otu.id, function(x) sd(x$sim.log.change)))[names(median.otu.relabs.f4)]
+sim.AR.mean <- unlist(by(sim.AR.df, sim.AR.df$otu.id, function(x) mean(x$sim.log.change)))[names(median.otu.relabs.f4)]
+sim.AR.cv <- sim.sd / abs(sim.mean)
+
+plot(median.otu.clrabs.f4, sim.AR.sd, pch=20, col="seagreen",
+     xlab = "OTU median clr(abundance)", ylab = "standard deviation of simulated log fold-change")
+plot(median.otu.clrabs.f4, sim.AR.mean, pch=20, col="pink",
+     xlab = "OTU median clr(abundance)", ylab = "mean of simulated log fold-change")
+plot(median.otu.clrabs.f4, log(sim.AR.cv), pch=20, col="gold",
+     xlab = "OTU median clr(abundance)", ylab = "log coefficient of variation of simulated log fold-change")
+```
