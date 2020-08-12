@@ -13,8 +13,8 @@ source("mp_analysis_functions.R")
 # median.otu.relabs.<subjID> : OTU's median relative abundance across all samples
 # median.otu.clrabs.<subjID> : OTU's median clr-transformed abundance across all samples
 # coverage.<subjID> : the total number of reads by sample
-load("~/Downloads/mp_F4_data.Rdata")
-load("~/Downloads/mp_M3_data.Rdata")
+load("mp_F4_data.Rdata")
+load("mp_M3_data.Rdata")
 
 # function to format the time series dataframe
 format_fold_change_data <- function(otu.tab) {
