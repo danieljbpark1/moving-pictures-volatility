@@ -1,0 +1,470 @@
+---
+title: "Moving Pictures"
+author: "Daniel J. Park"
+date: "7/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MicrobeDS)
+library(microbiome)  
+library(ggplot2)
+library(dplyr)
+library(drc)
+library(nlme)
+library(zoib)
+library(boot)
+```
+
+```{r}
+data('MovingPictures')
+
+mp.otutab <- MovingPictures@otu_table
+mp.tree <- MovingPictures@phy_tree
+mp.metadata <- MovingPictures@sam_data
+mp.taxa.table <- MovingPictures@tax_table
+```
+
+```{r}
+# t := days_since_experiment_start 
+# site := sample_type == "stool" or common_sample_site == "feces"
+# subjID := host or host_subject_id
+# sampID := X.SampleID (anonymized_name is relabeled sampID, Description is anonymized_name + " {sample_type}")
+# remove records where mislabeled is TRUE (13 such records)
+#colnames(mp.metadata)
+dim(mp.metadata)
+
+mp.stool.metadata <- subset(mp.metadata, sample_type=="stool" & !mislabeled, select=c(host_subject_id, X.SampleID, days_since_experiment_start))
+dim(mp.stool.metadata)
+
+```
+
+Order the subjects' samples by days since experiment start.
+```{r}
+subjID <- unique(mp.stool.metadata$host_subject_id)
+
+f4.metadata <- subset(mp.stool.metadata, host_subject_id==subjID[1])
+f4.metadata <- f4.metadata[order(f4.metadata$days_since_experiment_start), ]
+
+m3.metadata <- subset(mp.stool.metadata, host_subject_id==subjID[2])
+m3.metadata <- m3.metadata[order(m3.metadata$days_since_experiment_start), ]
+
+dim(f4.metadata)
+dim(m3.metadata)
+```
+
+```{r}
+# F4 and M3 were samples pretty much daily
+summary(f4.metadata)
+head(f4.metadata)
+summary(m3.metadata)
+head(m3.metadata)
+
+plot(x=1:length(f4.metadata$days_since_experiment_start), y=f4.metadata$days_since_experiment_start,
+     xlab="1 : length(F4 samples)", ylab="t", pch=20, col="gold")
+abline(a=0, b=1, col="purple")
+
+plot(x=1:length(m3.metadata$days_since_experiment_start), y=m3.metadata$days_since_experiment_start,
+     xlab="1 : length(M3 samples)", ylab="t", pch=20, col="orange")
+abline(a=0, b=1, col="purple")
+
+```
+
+```{r}
+# rows are OTU IDs
+# cols are X.SampleID
+# values are counts
+#any(mp.otutab > 1)
+#str(mp.otutab)
+
+mp.stool.otutab <- mp.otutab[ , colnames(mp.otutab) %in% mp.stool.metadata$X.SampleID]
+
+length(mp.stool.metadata$X.SampleID)
+str(mp.stool.otutab)
+
+#mp.stool.otutab[1:5, 1:5]
+
+# total read count by sample
+sample.depths <- colSums(mp.stool.otutab)
+```
+
+```{r}
+mp.stool.abundances <- transform(mp.stool.otutab, transform = "compositional")
+
+# the abundances for each sample (column) sum to 1
+str(mp.stool.abundances)
+all(colSums(mp.stool.abundances) == 1)
+
+mp.stool.abundances[1:5, 1:5]
+```
+
+F4's OTU counts, abundances, and clr. Select OTUs with median abundances across all samples greater than 0.
+Same for M3.
+
+```{r}
+f4.otu.counts <- mp.stool.otutab[, as.character(f4.metadata$X.SampleID)]
+f4.otu.abunds <- mp.stool.abundances[, as.character(f4.metadata$X.SampleID)]
+
+m3.otu.counts <- mp.stool.otutab[, as.character(m3.metadata$X.SampleID)]
+m3.otu.abunds <- mp.stool.abundances[, as.character(m3.metadata$X.SampleID)]
+
+# row-wise (by OTU) median abundances
+f4.median.otu.abunds <- apply(f4.otu.abunds, 1, median)
+m3.median.otu.abunds <- apply(m3.otu.abunds, 1, median)
+# sort the OTU median abundances
+sorted.f4.median.otu.abunds <- sort(f4.median.otu.abunds, decreasing = FALSE)
+sorted.m3.median.otu.abunds <- sort(m3.median.otu.abunds, decreasing = FALSE)
+# select only the non-zero abundances
+non.zero.f4.median.otu.abunds <- sorted.f4.median.otu.abunds[sorted.f4.median.otu.abunds > 0]
+non.zero.m3.median.otu.abunds <- sorted.m3.median.otu.abunds[sorted.m3.median.otu.abunds > 0]
+
+# clr-transform abundances for OTUs that are non-trivial
+f4.clr <- transform(f4.otu.counts[names(non.zero.f4.median.otu.abunds), ], transform = "clr")
+m3.clr <- transform(m3.otu.counts[names(non.zero.m3.median.otu.abunds), ], transform = "clr")
+# sorted, non-zero median clr
+f4.median.clr <- apply(f4.clr, 1, median)
+m3.median.clr <- apply(m3.clr, 1, median)
+
+# f4.clr[1:5, 1:5]
+# m3.clr[1:5, 1:5]
+
+# number of OTUs with non-zero counts/abundances/clr(abundances) in at least one sample within subjects
+length(non.zero.f4.median.otu.abunds)
+length(f4.median.clr)
+all(names(non.zero.f4.median.otu.abunds)==names(f4.median.clr))
+length(non.zero.m3.median.otu.abunds)
+length(m3.median.clr)
+all(names(non.zero.m3.median.otu.abunds)==names(m3.median.clr))
+#length(nonzero.sorted.f4.clr)
+```
+
+
+# Save F4's data
+```{r}
+# f4.metadata # 130 rows, 3 cols
+otu.counts.f4 <- f4.otu.counts[names(non.zero.f4.median.otu.abunds), ]
+otu.relabs.f4 <- f4.otu.abunds[names(non.zero.f4.median.otu.abunds), ]
+otu.clrabs.f4 <- f4.clr[names(non.zero.f4.median.otu.abunds), ]
+
+median.otu.relabs.f4 <- non.zero.f4.median.otu.abunds
+median.otu.clrabs.f4 <- f4.median.clr
+
+coverage.f4 <- sample.depths[rownames(f4.metadata)] # the total number of reads by sample
+
+save(f4.metadata, otu.counts.f4, otu.relabs.f4, otu.clrabs.f4, 
+     median.otu.relabs.f4, median.otu.clrabs.f4, coverage.f4,
+     file = "~/Downloads/mp_F4_data.Rdata")
+```
+
+
+# Save M3's data
+```{r}
+# m3.metadata # 332 rows, 3 cols
+otu.counts.m3 <- m3.otu.counts[names(non.zero.m3.median.otu.abunds), ]
+otu.relabs.m3 <- m3.otu.abunds[names(non.zero.m3.median.otu.abunds), ]
+otu.clrabs.m3 <- m3.clr[names(non.zero.m3.median.otu.abunds), ]
+
+median.otu.relabs.m3 <- non.zero.m3.median.otu.abunds
+median.otu.clrabs.m3 <- m3.median.clr
+
+coverage.m3 <- sample.depths[rownames(m3.metadata)] 
+
+save(m3.metadata, otu.counts.m3, otu.relabs.m3, otu.clrabs.m3,
+     median.otu.relabs.m3, median.otu.clrabs.m3, coverage.m3,
+     file = "~/Downloads/mp_M3_data.Rdata")
+
+```
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+```{r}
+m3.disappearance.probs <- disappearance_probabilities(m3.otu.counts[names(non.zero.m3.median.otu.abunds), ])
+```
+
+Save the disappearance counts for OTUs.
+```{r}
+m3.otu.disappearance <- as.data.frame(cbind(m3.disappearance.probs, log(non.zero.m3.median.otu.abunds), m3.median.clr))
+colnames(m3.otu.disappearance) <- c("m3.disappearance.probs", "m3.log.median.abundance", "m3.median.clr.abundance")
+
+#save(f4.otu.disappearance, file = "f4_otu_disappearance.Rda")
+#load("f4_otu_disappearance.Rda")
+
+#save(m3.otu.disappearance, file = "m3_otu_disappearance.Rda")
+#load("m3_otu_disappearance.Rda")
+
+head(f4.otu.disappearance)
+tail(f4.otu.disappearance)
+summary(f4.otu.disappearance)
+
+head(m3.otu.disappearance)
+tail(m3.otu.disappearance)
+summary(m3.otu.disappearance)
+```
+
+### Plots of probability of disappearance against log median abundance and median clr-abundance for F4 and M3
+
+```{r}
+m <- ggplot(m3.otu.disappearance, aes(x = m3.log.median.abundance, y = m3.disappearance.probs)) +
+  geom_point(color="maroon") +
+  labs(ylab = "probability of disappearance", xlab = "log(median abundance)", title = "OTUs for subject M3")
+m
+
+m_clr.plot <- ggplot(m3.otu.disappearance, aes(x = m3.median.clr.abundance, y = m3.disappearance.probs)) +
+  geom_point(color="orange") +
+  labs(ylab = "probability of disappearance", xlab = "median clr-transformed abundance", title = "OTUs for subject M3")
+m_clr.plot
+```
+
+## Segmented piece-wise regression.
+```{r}
+library(segmented)
+
+# f4.full.lm <- lm(f4.disappearance.probs ~ f4.log.median.abundance, data = f4.otu.disappearance)
+
+# p +
+#   geom_smooth(method = "lm",
+#               formula = y ~ x, se = FALSE, color="orange")
+
+
+# prob_clr.plot +
+#   geom_smooth(method = "lm",
+#               formula = y ~ x, se = FALSE, color="orange")
+
+# m3.full.lm <- lm(m3.disappearance.probs ~ m3.log.median.abundance, data = m3.otu.disappearance)
+
+m3.clr_full.lm <- lm(m3.disappearance.probs ~ m3.median.clr.abundance, data = m3.otu.disappearance)
+
+# summary(f4.full.lm)
+summary(f4.clr_full.lm)
+# summary(m3.full.lm)
+summary(m3.clr_full.lm)
+```
+
+### For log median abundances.
+```{r}
+# f4.ma.seg <- segmented(f4.full.lm)
+# summary(f4.ma.seg)
+# 
+# f4.ma.seg$psi
+# slope(f4.ma.seg)
+# 
+# f4.ma.predictions <- data.frame(logMedianAbundance = f4.otu.disappearance$f4.log.median.abundance, 
+#                                 pred_probDisappear = f4.ma.seg$fitted.values)
+# p + 
+#   geom_line(data = f4.ma.predictions, aes(x = logMedianAbundance, y = pred_probDisappear), color="gold") +
+#   geom_vline(xintercept = f4.ma.seg$psi[ ,2], linetype = "dashed")
+# 
+# m3.ma.seg <- segmented(m3.full.lm)
+# summary(m3.ma.seg)
+# 
+# m3.ma.seg$psi
+# slope(m3.ma.seg)
+# 
+# m3.ma.predictions <- data.frame(logMedianAbundance = m3.otu.disappearance$m3.log.median.abundance,
+#                                 pred_probDisappear = m3.ma.seg$fitted.values)
+# m +
+#   geom_line(data = m3.ma.predictions, aes(x = logMedianAbundance, y = pred_probDisappear), color="gold") +
+#   geom_vline(xintercept = m3.ma.seg$psi[ ,2], linetype="dashed")
+```
+
+### For median clr-transformed abundances.
+```{r}
+m3.mclr.seg <- segmented(m3.clr_full.lm)
+summary(m3.mclr.seg)
+
+m3.mclr.seg$psi
+slope(m3.mclr.seg)
+
+m3.mclr.predictions <- data.frame(medianCLR = m3.otu.disappearance$m3.median.clr.abundance, 
+                                     pred_probDisappear = m3.mclr.seg$fitted.values)
+
+m_clr.plot +
+  geom_line(data = m3.mclr.predictions, aes(x = medianCLR, y = pred_probDisappear), color="darkred", size=1) +
+  geom_vline(xintercept = m3.mclr.seg$psi[ ,2], linetype = "dashed")
+```
+
+
+Idea: predict the probability of disappearance with the piecewise regression, where $\hat{y}=0$ if $f(x) < 0$. We could use this probability $p$ as a parameter to a Bernoulli random variable at each time point.
+
+Idea: use the beta-binomial conjugate relationship for a posterior Beta distribution of $p$, where $f(s|p)$ is binomial with $presences$, $s$, and $f = presences-s$ from the observed disappearance counts. The posterior is ~Beta($\alpha+s$, $\beta+f$), where $\alpha$, $\beta$, are prior parameters. (We could set them to (1,1) or adjust for log median abundance.)
+
+## F4 linear piecewise median abundance
+```{r}
+# break.point = f4.ma.seg$psi[ ,2]
+# #f4.otu.disappearance$lma_below_break <- as.numeric(f4.otu.disappearance$logMedianAbundance < break.point)
+# 
+# piecewise.reg <- lm(f4.disappearance.probs ~ f4.log.median.abundance*I(f4.log.median.abundance < break.point) , data = f4.otu.disappearance)
+# summary(piecewise.reg)
+# 
+# piecewise.predicted <- data.frame(logMedianAbundance = f4.otu.disappearance$f4.log.median.abundance, 
+#                               pred_fittedProb = piecewise.reg$fitted.values)
+# 
+# p +
+#   geom_line(data = piecewise.predicted, aes(x = logMedianAbundance, y = pred_fittedProb), color="gold") 
+# 
+# plot(piecewise.reg) 
+# 
+# AIC(piecewise.reg)
+```
+
+
+## F4 linear piecewise CLR
+```{r}
+clr_break.point <- f4.mclr.seg$psi[, 2]
+#f4.otu.disappearance$clr_below_break <- as.numeric(f4.otu.disappearance$medianCLR < clr_break.point)
+
+clr_piecewise.reg <- lm(f4.disappearance.probs ~ f4.median.clr.abundance*I(f4.median.clr.abundance < clr_break.point) , data = f4.otu.disappearance)
+summary(clr_piecewise.reg)
+
+clr_piecewise.predicted <- data.frame(medianCLR = f4.otu.disappearance$f4.median.clr.abundance, 
+                              pred_fittedProb = clr_piecewise.reg$fitted.values)
+
+prob_clr.plot +
+  geom_line(data = clr_piecewise.predicted, aes(x = medianCLR, y = pred_fittedProb), color="gold") 
+
+plot(clr_piecewise.reg) 
+
+AIC(clr_piecewise.reg)
+```
+
+## M3 linear piecewise CLR
+```{r}
+m3.clr.break <- m3.mclr.seg$psi[, 2]
+
+m3.clr_piecewise.reg <- lm(m3.disappearance.probs ~ m3.median.clr.abundance*I(m3.median.clr.abundance < m3.clr.break) , data = m3.otu.disappearance)
+summary(m3.clr_piecewise.reg)
+
+m3.clr_piecewise.predicted <- data.frame(medianCLR = m3.otu.disappearance$m3.median.clr.abundance, 
+                              predProbDisappear = m3.clr_piecewise.reg$fitted.values)
+
+m_clr.plot +
+  geom_line(data = m3.clr_piecewise.predicted, aes(x = medianCLR, y = predProbDisappear), color="darkred", size=1) 
+
+plot(m3.clr_piecewise.reg) 
+
+AIC(m3.clr_piecewise.reg)
+```
+
+## F4 piecewise quadratic median abundance
+```{r}
+# piecewise.quad.reg <- lm(probDisappear ~ logMedianAbundance*I(logMedianAbundance < break.point) + poly(logMedianAbundance, degree=2)*I(logMedianAbundance < break.point), 
+#                          data = f4.otu.disappearance)
+# summary(piecewise.quad.reg)
+# 
+# piecewise.quad.predictions <- data.frame(logMedianAbundance = f4.otu.disappearance$logMedianAbundance, 
+#                               pred_fittedProb = piecewise.quad.reg$fitted.values)
+# p +
+#   geom_line(data = piecewise.quad.predictions, aes(x = logMedianAbundance, y = pred_fittedProb), color="gold") 
+# 
+# plot(piecewise.quad.reg)
+# 
+# AIC(piecewise.quad.reg)
+```
+
+
+# F4 Piecewise quadratic with median clr.
+```{r}
+clr_piecewise.quad.reg <- lm(f4.disappearance.probs ~ f4.median.clr.abundance*I(f4.median.clr.abundance < clr_break.point) + 
+                               poly(f4.median.clr.abundance, degree=2)*I(f4.median.clr.abundance < clr_break.point), 
+                             data = f4.otu.disappearance)
+summary(clr_piecewise.quad.reg)
+
+clr_piecewise.quad.predictions <- data.frame(medianCLR = f4.otu.disappearance$f4.median.clr.abundance, 
+                                             pred_fittedProb = clr_piecewise.quad.reg$fitted.values)
+prob_clr.plot +
+  geom_line(data = clr_piecewise.quad.predictions, aes(x = medianCLR, y = pred_fittedProb), color="gold") 
+
+plot(clr_piecewise.quad.reg)
+
+AIC(clr_piecewise.quad.reg)
+
+```
+
+
+## M3 piecewise quadratic with CLR
+```{r}
+m3.clr_piecewise.quad.reg <- lm(m3.disappearance.probs ~ m3.median.clr.abundance*I(m3.median.clr.abundance < m3.clr.break) + 
+                                  poly(m3.median.clr.abundance, degree=2)*I(m3.median.clr.abundance < m3.clr.break), 
+                                data = m3.otu.disappearance)
+summary(m3.clr_piecewise.quad.reg)
+
+m3.clr_piecewise.quad.predictions <- data.frame(medianCLR = m3.otu.disappearance$m3.median.clr.abundance, 
+                                             predProbDisappear = m3.clr_piecewise.quad.reg$fitted.values)
+m_clr.plot +
+  geom_line(data = m3.clr_piecewise.quad.predictions, aes(x = medianCLR, y = predProbDisappear), color="maroon", size=1) 
+
+plot(m3.clr_piecewise.quad.reg)
+
+AIC(m3.clr_piecewise.quad.reg)
+```
+
+## Asymptotic regression
+
+## F4 asymptotic regression with CLR
+AIC is the lowest for F4
+```{r}
+library(drc)
+library(nlme)
+#library(aomisc)
+
+```
+
+
+## M3 asymptotic regression with CLR
+AIC from this model is by far the lowest for M3
+```{r}
+m3.expo.disapp.model <- nls(m3.disappearance.probs ~ SSasympOff(m3.median.clr.abundance, Asym, lrc, c0), data = m3.otu.disappearance)
+summary(m3.expo.disapp.model)
+
+m3.nls_params <- NLSstAsymptotic(sortedXyData(x=m3.otu.disappearance$m3.median.clr.abundance, y=m3.otu.disappearance$m3.disappearance.probs))
+
+m3.ar.predictions <- data.frame(medianCLR = m3.otu.disappearance$m3.median.clr.abundance, 
+                                expo_fittedProb = predict(m3.expo.disapp.model),
+                                ar_fittedProb = predict_AsympReg(m3.otu.disappearance$m3.median.clr.abundance, m3.nls_params)
+                                 )
+
+m_clr.plot +
+  geom_line(data = m3.ar.predictions, aes(x = medianCLR, y = expo_fittedProb), color="maroon", size=1) +
+  geom_line(data = m3.ar.predictions, aes(x = medianCLR, y = ar_fittedProb), color="seagreen", size =1)
+
+plot(m3.expo.disapp.model, log="", pch=20)
+
+#asymp.model <- drm(probDisappear ~ medianCLR, data = f4.otu.disappearance, fct = AR.2())
+  
+AIC(m3.expo.disapp.model)
+
+```
+
+
+
+
+
+```{r}
+p.disappear.lma.gt.break <- subset(f4.otu.disappearance, logMedAb_gt_break, select = probDisappear)
+mean(p.disappear.lma.gt.break$probDisappear)
+var(p.disappear.lma.gt.break$probDisappear)
+
+```
+
+
+Cubic regression.
+```{r}
+deg = 2
+cubic.reg <- lm(probDisappear ~ poly(logMedianAbundance, degree = deg), data = f4.otu.disappearance)
+summary(cubic.reg)
+
+p + 
+  geom_smooth(method = "lm",
+              formula = y ~ poly(x, degree = deg), se = FALSE, color="orange")
+plot(cubic.reg)
+```
+
