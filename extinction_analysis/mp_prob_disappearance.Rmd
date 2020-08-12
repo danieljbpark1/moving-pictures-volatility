@@ -1,0 +1,158 @@
+---
+title: "Moving Pictures Probability of Extinction"
+author: "Daniel J. Park"
+date: "7/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(boot)
+require(foreign)
+require(MASS)
+require(Hmisc)
+library(segmented)
+library(drc)
+library(nlme)
+source("../mp_analysis_functions.R")
+```
+
+```{r}
+# subjID: f4, m3
+# <subjID>.metadata : metadata sorted by time
+# otu.counts.<subjID> : OTU counts
+# otu.relabs.<subjID> : OTU relative abundances
+# otu.clrabs.<subjID> : OTU clr-transformed abundances
+# median.otu.relabs.<subjID> : OTU's median relative abundance across all samples
+# median.otu.clrabs.<subjID> : OTU's median clr-transformed abundance across all samples
+# coverage.<subjID> : the total number of reads by sample
+load("../mp_F4_data.Rdata")
+load("../mp_M3_data.Rdata")
+```
+
+# Probability of extinction
+Given that a taxa is present at time $t-1$, what is the probability that the taxa disappears at time $t$?
+
+```{r}
+# probability of extinction by taxa for subjects F4 and M3
+f4.disappearance.probs <- disappearance_probabilities(otu.counts.f4)
+m3.disappearance.probs <- disappearance_probabilities(otu.counts.m3)
+
+# prob.disappear: probability of extinction
+# log.median.relabs: the log of a taxon's median relative abundance across all samples
+# median.clr: a taxon's median clr-transformed abundance across all samples
+f4.otu.disappearance <- data.frame(prob.disappear = f4.disappearance.probs, 
+                                   log.median.relabs = log(median.otu.relabs.f4),
+                                   median.clr = median.otu.clrabs.f4)
+m3.otu.disappearance <- data.frame(prob.disappear = m3.disappearance.probs,
+                                   log.median.relabs = log(median.otu.relabs.m3),
+                                   median.clr = median.otu.clrabs.m3)
+
+p.f4 <- ggplot(f4.otu.disappearance, aes(x = log.median.relabs, y = prob.disappear)) +
+  geom_point(color="purple") +
+  labs(ylab = "probability of extinction", xlab = "log(median relative abundance)", title = "Subject F4: Probability of Extinction by OTU")
+p.m3 <- ggplot(m3.otu.disappearance, aes(x = log.median.relabs, y = prob.disappear)) +
+  geom_point(color="maroon") +
+  labs(ylab = "probability of extinction", xlab = "log(median relative abundance)", title = "Subject M3: Probability of Extinction by OTU")
+
+q.f4 <- ggplot(f4.otu.disappearance, aes(x = median.clr, y = prob.disappear)) +
+  geom_point(color="orchid") + 
+  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Subject F4: Probability of Extinction by OTU")
+q.m3 <- ggplot(m3.otu.disappearance, aes(x = median.clr, y = prob.disappear)) +
+  geom_point(color="tomato") + 
+  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Subject M3: Probability of Extinction by OTU")
+
+q.m3
+q.f4
+```
+
+## Piecewise linear regression 
+
+```{r}
+full.lm <- lm(prob.disappear ~ median.clr, data = f4.otu.disappearance)
+
+piece.lm <- segmented(full.lm)
+
+summary(piece.lm)
+AIC(piece.lm)
+
+
+piece.predictions <- data.frame(median.clr = f4.otu.disappearance$median.clr, 
+                                pred.prob.disappear = piece.lm$fitted.values)
+q.f4 + 
+  geom_line(data = piece.predictions, aes(x = median.clr, y = pred.prob.disappear), color="blue", size=1) +
+  geom_vline(xintercept = piece.lm$psi[ ,2], linetype = "dashed")
+```
+
+
+## Asymptotic regression 
+
+```{r}
+asymp.reg <- nls(prob.disappear ~ SSasympOff(median.clr, Asym, lrc, c0), data = f4.otu.disappearance)
+
+summary(asymp.reg)
+AIC(asymp.reg)
+
+nls_params <- NLSstAsymptotic(sortedXyData(x=f4.otu.disappearance$median.clr, 
+                                           y=f4.otu.disappearance$prob.disappear))
+
+asymp.predictions <- data.frame(median.clr = f4.otu.disappearance$median.clr, 
+                                pred.prob.disappear.ssasympoff = predict(asymp.reg),
+                                pred.prob.disappear.nls = predict_AsympReg(f4.otu.disappearance$median.clr, nls_params))
+
+prob_clr.plot +
+  geom_line(data = asymp.predictions, aes(x = median.clr, y = pred.prob.disappear.ssasympoff), color="maroon", size=1) +
+  geom_line(data = asymp.predictions, aes(x = median.clr, y = pred.prob.disappear.nls), color="gold", size=1)
+
+plot(asymp.reg, log="", pch=20)
+```
+
+## Logistic regression for zero inflation?
+
+A logistic regression for whether the probability of disappearance is zero depending on the OTU's clr-transformed abundance.
+
+```{r}
+f4.otu.disappearance$prob.disappear.equals.zero <- ifelse(f4.otu.disappearance$prob.disappear == 0, 1, 0)
+
+ggplot(f4.otu.disappearance, aes(x=median.clr, y=prob.disappear.equals.zero)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"))
+
+logit.1 <- glm(prob.disappear.equals.zero ~ median.clr, 
+                       data = f4.otu.disappearance, family = "binomial")
+summary(logit.1)
+
+
+```
+
+
+```{r}
+positive.prob.disapp <- subset(f4.otu.disappearance, prob.disappear.equals.zero == 0)
+
+nls_params <- NLSstAsymptotic(sortedXyData(x=positive.prob.disapp$median.clr, 
+                                           y=positive.prob.disapp$prob.disappear))
+
+x.range <- seq(min(f4.otu.disappearance$median.clr), max(f4.otu.disappearance$median.clr), length.out = 500)
+
+asymp.predictions <- data.frame(x = x.range, 
+                                pred.prob.disappear.nls = predict_AsympReg(x.range, nls_params)
+                                )
+
+prob_clr.plot +
+  #geom_line(data = asymp.predictions, aes(x = median.clr, y = pred.prob.disappear.ssasympoff), color="maroon", size=1) +
+  geom_line(data = asymp.predictions, aes(x = x.range, y = pred.prob.disappear.nls), color="gold", size=1)
+
+```
+
+
+
+
+
+
+
+

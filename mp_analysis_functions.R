@@ -204,9 +204,12 @@ disappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE) {
     dimension <- 2
   }
   
+  # a count of times at which the taxa goes from present to absent
   disappearances <- apply(fold.difference.table, dimension, function(a) sum(a == 0, na.rm = TRUE))
-  presences <- apply(fold.difference.table, dimension, function(a) sum(a > 0, na.rm = TRUE))
-  return(disappearances / presences)
+  # a count of time at which the taxa goes from present to present
+  presences <- apply(fold.difference.table, dimension, function(a) sum(a > 0 & is.finite(a), na.rm = TRUE))
+  # divide the disappearances by the total number of times a taxon was present
+  return(disappearances / (disappearances + presences))
 }
 
 # format 1 for disappeared, 0 for continued presence
