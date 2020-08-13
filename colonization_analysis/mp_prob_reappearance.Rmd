@@ -10,8 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library(MicrobeDS)
-library(microbiome)  
 library(ggplot2)
 library(dplyr)
 library(zoib)
@@ -19,8 +17,7 @@ library(boot)
 require(foreign)
 require(MASS)
 require(Hmisc)
-require(reshape2)
-source("mp_analysis_functions.R")
+source("../mp_analysis_functions.R")
 ```
 
 ```{r}
@@ -31,113 +28,97 @@ source("mp_analysis_functions.R")
 # median.otu.relabs.f4 : OTU's median relative abundance across all samples
 # median.otu.clrabs.f4 : OTU's median clr-transformed abundance across all samples
 # coverage.f4 : the total number of reads by sample
-load("~/Downloads/mp_F4_data.Rdata")
-load("~/Downloads/mp_M3_data.Rdata")
+load("../mp_F4_data.Rdata")
+load("../mp_M3_data.Rdata")
 ```
 
 # Probability of reappearance
 
 ```{r}
-prob.reappear <- reappearance_probabilities(otu.relabs.f4)
+# a vector of probabilities of reappearing from absence by OTU
+prob.reappear.f4 <- reappearance_probabilities(otu.relabs.f4)
+prob.reappear.m3 <- reappearance_probabilities(otu.relabs.m3)
 
-p.reappear.tab <- data.frame(prob.reappear = prob.reappear, 
-                             log.median.relabs = log(median.otu.relabs.f4), 
+# bind in a dataframe with OTUs' median clr-transformed abundance across all samples
+reappear.df.f4 <- data.frame(prob.reappear = prob.reappear.f4, 
                              median.clr = median.otu.clrabs.f4)
+reappear.df.m3 <- data.frame(prob.reappear = prob.reappear.m3,
+                             median.clr = median.otu.clrabs.m3)
 
-f4.disapp.lmra.plot <- ggplot(p.reappear.tab, aes(x = log.median.relabs, y = prob.reappear)) +
-  geom_point(color="purple") +
-  labs(ylab = "probability of reappearance", xlab = "log(median relative abundance)", title = "OTUs for subject F4")
+reappear.df.f4 <- subset(reappear.df.f4, is.finite(prob.reappear))
+reappear.df.m3 <- subset(reappear.df.m3, is.finite(prob.reappear))
 
-f4.disapp.clr.plot <- ggplot(p.reappear.tab, aes(x = median.clr, y = prob.reappear)) +
+reapp.plot.f4 <- ggplot(reappear.df.f4, aes(x = median.clr, y = prob.reappear)) +
   geom_point(color="seagreen") + 
   labs(y = "probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject F4")
-f4.disapp.clr.plot
+reapp.plot.m3 <- ggplot(reappear.df.m3, aes(x = median.clr, y = prob.reappear)) +
+  geom_point(color="purple") + 
+  labs(y = "probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject M3")
+
+reapp.plot.f4
+reapp.plot.m3
 ```
 
-### One-inflated Beta Regression
-The mean of the beta distribution, the dispersion of the beta distribution, and the probability of one depend on the median clr abundance.
+# One-inflated Beta Regression
+Model the probability of reappearance as a one-inflated beta regression. The mean and dispersion parameters of the beta distribution and  the probability of one-inflation depend on the median clr-transformed abundance.
+
 ```{r}
-# oibr.reappearance <- zoib(prob.reappear ~ median.clr | median.clr | median.clr, data = p.reappear.tab, joint = FALSE,
-#                           zero.inflation = FALSE, one.inflation = TRUE, EUID = rownames(p.reappear.tab),
-#                           n.iter = 2000)
-# 
-# save(oibr.reappearance, file = "OIBR_reappearance.Rda")
+oibr.reapp.f4 <- zoib(prob.reappear ~ median.clr | median.clr | median.clr, data = reappear.df.f4, 
+                      joint = FALSE, zero.inflation = FALSE, one.inflation = TRUE, 
+                      EUID = rownames(reappear.df.f4), n.iter = 2000)
+
+oibr.reapp.m3 <- zoib(prob.reappear ~ median.clr | median.clr | median.clr, data = reappear.df.m3, 
+                      joint = FALSE, zero.inflation = FALSE, one.inflation = TRUE, 
+                      EUID = rownames(reappear.df.f4), n.iter = 2000)
+
+save(oibr.reapp.f4, file = "oibr_reapp_f4.Rdata")
+save(oibr.reapp.m3, file = "oibr_reapp_m3.Rdata")
+
 ```
 
+The potential scale reduction factors from the Gelman plots for both subjects suggest good MCMC convergence. 
 
-The potential scale reduction factors from the Gelman plot suggest good MCMC convergence. 
 ```{r}
-load("OIBR_reappearance.Rda")
+#load("oibr_reapp_f4.Rdata")
+#load("oibr_reapp_m3.Rdata")
 
-oibr.reapp.coeffs <- oibr.reappearance$coeff
-summary(oibr.reapp.coeffs)
-traceplot(oibr.reapp.coeffs) ; autocorr.plot(oibr.reapp.coeffs) ; gelman.diag(oibr.reapp.coeffs)
+traceplot(oibr.reapp.f4$coeff) ; autocorr.plot(oibr.reapp.f4$coeff) ; gelman.diag(oibr.reapp.f4$coeff)
+traceplot(oibr.reapp.m3$coeff) ; autocorr.plot(oibr.reapp.m3$coeff) ; gelman.diag(oibr.reapp.m3$coeff)
 ```
 
+## Simulating probability of colonization by OTU
+Coefficients are presented in the order of b, b0, b1, d, where b is for the beta mean, b0 and b1 are for the 0 and 1 inflation, and d is for the beta dispersion.
 
-Predicted mean probability of reappearance.
 ```{r}
-oibr.summary <- summary(oibr.reapp.coeffs)
-b.int <- oibr.summary$statistics[1,1]
-b.slope <- oibr.summary$statistics[2,1]
-b1.int <- oibr.summary$statistics[3,1]
-b1.slope <- oibr.summary$statistics[4,1]
-d.int <- oibr.summary$statistics[5,1]
-d.slope <- oibr.summary$statistics[6,1]
+oibr.reapp.coefs.f4 <- summary(oibr.reapp.f4$coeff)
+oibr.reapp.coefs.m3 <- summary(oibr.reapp.m3$coeff)
+
+reappear.df.f4$oibr.pred <- sim.zoib(oibr.reapp.f4, 
+                                     beta.mean.coefs = oibr.reapp.coefs.f4$statistics[1:2, 1],
+                                     infl.coefs = oibr.reapp.coefs.f4$statistics[3:4, 1],
+                                     beta.disp.coefs = oibr.reapp.coefs.f4$statistics[5:6, 1],
+                                     infl = 1)
+reappear.df.m3$oibr.pred <- sim.zoib(oibr.reapp.m3,
+                                     beta.mean.coefs = oibr.reapp.coefs.m3$statistics[1:2, 1],
+                                     infl.coefs = oibr.reapp.coefs.m3$statistics[3:4, 1],
+                                     beta.disp.coefs = oibr.reapp.coefs.m3$statistics[5:6, 1],
+                                     infl = 1)
 ```
 
+## Plot of simulated probability of colonization by OTU
 
 ```{r}
-p.reappear.tab$oibr.v1.pred.prob <- predicted_reappearance_probs(p.reappear.tab$median.clr, 
-                                                                 b.int, b.slope, d.int, d.slope, b1.int, b1.slope, 
-                                                                 prob_one_regress_covariate = TRUE, seed = 0)
+require(gridExtra)
 
-ggplot(p.reappear.tab, aes(x = median.clr, y = oibr.v1.pred.prob)) +
+sim.reapp.f4 <- ggplot(reappear.df.f4, aes(x = median.clr, y = oibr.pred)) +
   geom_point(color="sienna") + 
-  labs(y = "OIBR predicted probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject F4")
-```
+  labs(y = "OIBR simulated probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject F4")
+sim.reapp.m3 <- ggplot(reappear.df.m3, aes(x = median.clr, y = oibr.pred)) +
+  geom_point(color="turquoise") + 
+  labs(y = "OIBR simulated probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject M3")
 
-
-Where the $Pr(Y=1)$ does not depend on median clr abundance. 
-```{r}
-# oibr.reappearance.v2 <- zoib(prob.reappear ~ median.clr | median.clr | 1, data = f4.otu.reappearance, joint = FALSE,
-#                           zero.inflation = FALSE, one.inflation = TRUE, EUID = rownames(f4.otu.reappearance),
-#                           n.iter = 2000)
-# 
-# save(oibr.reappearance.v2, file = "OIBR_reappearance_v2.Rda")
-```
-
-```{r}
-load("OIBR_reappearance_v2.Rda")
-
-oibr.v2.coeffs <- oibr.reappearance.v2$coeff
-summary(oibr.v2.coeffs)
-traceplot(oibr.v2.coeffs) ; autocorr.plot(oibr.v2.coeffs) ; gelman.diag(oibr.v2.coeffs)
-```
-
-```{r}
-oibr.v2.summary <- summary(oibr.v2.coeffs)
-b.int2 <- oibr.v2.summary$statistics[1,1]
-b.slope2 <- oibr.v2.summary$statistics[2,1]
-b1.int2 <- oibr.v2.summary$statistics[3,1]
-d.int2 <- oibr.v2.summary$statistics[4,1]
-d.slope2 <- oibr.v2.summary$statistics[5,1]
-
-p.reappear.tab$oibr.v2.pred.prob <- predicted_reappearance_probs(p.reappear.tab$median.clr, 
-                                                                 b.int2, b.slope2, d.int2, d.slope2, b1.int2,
-                                                                 prob_one_regress_covariate = FALSE, seed = 0)
-
-ggplot(p.reappear.tab, aes(x = median.clr, y = oibr.v2.pred.prob)) +
-  geom_point(color="blue") + 
-  labs(y = "OIBR model 2 predicted probability of reappearance", x = "median clr-transformed abundance", title = "OTUs for subject F4")
+grid.arrange(reapp.plot.f4, sim.reapp.f4, nrow = 1)
+grid.arrange(reapp.plot.m3, sim.reapp.m3, nrow = 1)
 
 ```
-
-
-```{r}
-summary(p.reappear.tab)
-head(p.reappear.tab[order(p.reappear.tab$oibr.v1.pred.prob), ])
-head(p.reappear.tab[order(p.reappear.tab$oibr.v2.pred.prob), ])
-```
-
 
