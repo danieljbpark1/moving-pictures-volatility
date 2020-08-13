@@ -117,7 +117,9 @@ reappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE){
     dimension <- 2
   }
   
+  # number of times where taxa went from absent to present
   reappearances <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a)))
+  # number of times where taxa were absent at time t-1
   absences <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a) | is.nan(a)))
   return(reappearances / absences)
 }
@@ -156,39 +158,6 @@ sim.zoib <- function(zoib.model, beta.mean.coefs, beta.disp.coefs, infl.coefs, i
   }
   # set inflated values
   pred.y[pred.infl == 1] <- infl
-  return(pred.y)
-}
-
-# function for simulating one-inflated beta distribution 
-# inputs: coefficients for Beta mean and dispersion, coefficients for probability of one-inflation
-# returns: draws from one-inflated Beta distribution with probability of one, Beta mean and dispersion regressed on predictors
-predicted_reappearance_probs <- function(arr, b.int, b.slope, d.int, d.slope, b1.int, b1.slope=NULL, prob_one_regress_covariate=FALSE, seed = 0){
-  set.seed(seed)
-  n <- length(arr)
-  # calculate predicted probability of Y = 1
-  if (prob_one_regress_covariate){
-    pr.one <- inv.logit(b1.int + b1.slope*arr)
-  }
-  else {
-    pr.one <- inv.logit(b1.int)
-  }
-  
-  # simulate n Bernoulli trials using p = pr.one
-  pred.one <- rbinom(n = n, size = 1, prob = pr.one)
-  # predicted Beta distribution means are linked by logit 
-  pred.beta.mean <- inv.logit(b.int + b.slope*arr)
-  # predicted Beta distribution dispersions are linked by log
-  pred.beta.disperson <- exp(d.int + d.slope*arr)
-  
-  pred.alpha <- pred.beta.mean * pred.beta.disperson
-  pred.beta <- pred.beta.disperson * (1 - pred.beta.mean)
-  
-  pred.y <- numeric()
-  for (i in 1:n) {
-    pred.y[i] <- rbeta(n = 1, shape1 = pred.alpha[i], shape2 = pred.beta[i])
-  }
-  
-  pred.y[pred.one == 1] <- 1
   return(pred.y)
 }
 
