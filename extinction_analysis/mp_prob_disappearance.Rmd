@@ -19,6 +19,8 @@ require(Hmisc)
 library(segmented)
 library(drc)
 library(nlme)
+library(gridExtra)
+library(cowplot)
 source("../mp_analysis_functions.R")
 ```
 
@@ -62,13 +64,21 @@ p.m3 <- ggplot(m3.otu.disappearance, aes(x = log.median.relabs, y = prob.disappe
 
 q.f4 <- ggplot(f4.otu.disappearance, aes(x = median.clr, y = prob.disappear)) +
   geom_point(color="orchid") + 
-  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Subject F4: Probability of Extinction by OTU")
+  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Probability of Extinction by OTU")
 q.m3 <- ggplot(m3.otu.disappearance, aes(x = median.clr, y = prob.disappear)) +
   geom_point(color="tomato") + 
-  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Subject M3: Probability of Extinction by OTU")
+  labs(ylab = "probability of extinction", xlab = "median clr-transformed abundance", title = "Probability of Extinction by OTU")
 
 ggsave("f4_otu_prob_extinction.png", q.f4)
 ggsave("m3_otu_prob_extinction.png", q.m3)
+```
+
+```{r}
+grid.arrange(q.f4, q.m3, ncol=2)
+
+observed.grid <- plot_grid(q.f4, q.m3, ncol = 2, labels = c("F4", "M3"))
+
+save_plot("prob_extinction_observed_sbs.png", observed.grid, ncol = 2)
 ```
 
 # Piecewise linear regression 
