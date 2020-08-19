@@ -128,11 +128,15 @@ m3.otu.disappearance$asymp.fitted <- predict(asymp.reg.m3)
 f4.otu.disappearance$asymp.fitted[f4.otu.disappearance$asymp.fitted < 0] <- 0
 m3.otu.disappearance$asymp.fitted[m3.otu.disappearance$asymp.fitted < 0] <- 0
 
-q.f4 + 
+asymp.reg.plot.f4 <- q.f4 + 
   geom_line(data = f4.otu.disappearance, aes(x = median.clr, y = asymp.fitted), color="blue", size=1)
 
-q.m3 + 
+asymp.reg.plot.m3 <- q.m3 + 
   geom_line(data = m3.otu.disappearance, aes(x = median.clr, y = asymp.fitted), color="blue", size=1)
+
+asymp.reg.grid <- plot_grid(asymp.reg.plot.f4, asymp.reg.plot.m3, ncol = 2, labels = c("F4", "M3"))
+
+save_plot("prob_extinction_asymp_reg_sbs.png", asymp.reg.grid, ncol = 2)
 ```
 
 # Zero-inflated Asymptotic Regression
@@ -243,6 +247,18 @@ for (model in models) {
 ```
 
 
+```{r}
+m3.piecewise.mse <- mean((m3.otu.disappearance$prob.disappear - m3.otu.disappearance[ , "piecewise.fitted"])^2)
+f4.piecewise.mse <- mean((f4.otu.disappearance$prob.disappear - f4.otu.disappearance[ , "piecewise.fitted"])^2)
+mean(m3.piecewise.mse, f4.piecewise.mse)
 
+m3.asymp.mse <- mean((m3.otu.disappearance$prob.disappear - m3.otu.disappearance[ , "asymp.fitted"])^2)
+f4.asymp.mse <- mean((f4.otu.disappearance$prob.disappear - f4.otu.disappearance[ , "asymp.fitted"])^2)
+mean(m3.asymp.mse, f4.asymp.mse)
+
+m3.ziar.mse <- mean((m3.otu.disappearance$prob.disappear - m3.otu.disappearance[ , "ziar.predicted"])^2)
+f4.ziar.mse <- mean((f4.otu.disappearance$prob.disappear - f4.otu.disappearance[ , "ziar.predicted"])^2)
+mean(m3.ziar.mse, f4.ziar.mse)
+```
 
 
