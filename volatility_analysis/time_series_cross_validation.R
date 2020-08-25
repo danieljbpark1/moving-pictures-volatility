@@ -16,36 +16,13 @@ source("mp_analysis_functions.R")
 load("mp_F4_data.Rdata")
 load("mp_M3_data.Rdata")
 
-# function to format the time series dataframe
-format_fold_change_data <- function(otu.tab) {
-  # calculate consecutive fold changes
-  fold.change.tab <- fold_difference_table(otu.tab)
-  num.samples <- ncol(fold.change.tab)
-  num.otus <- nrow(fold.change.tab)
-  otu.names <- rownames(fold.change.tab)
-  
-  # appends rows (OTUs) one after another
-  flat.fold.change <- as.vector(t(fold.change.tab))
-  flat.otu.names <- rep(otu.names, each = num.samples)
-  
-  formatted.fold.change.df <- data.frame(otu.id = flat.otu.names, fold.change = flat.fold.change)
-  
-  # select only the rows containing finite and positive fold changes
-  # no disappearances, no reappearances, no absence to absences
-  formatted.fold.change.df <- subset(formatted.fold.change.df, is.finite(fold.change) & fold.change > 0)
-  
-  # create column for log fold change
-  formatted.fold.change.df$log.fold.change <- log(formatted.fold.change.df$fold.change)
-  return(formatted.fold.change.df)
-}
-
 # function to calculate MSE
 mse <- function(v.1, v.2) {
   n <- length(v.1)
   return(sum((v.1-v.2)^2)/n)
 }
 
-# function to calculate MSE of time series model on validation set
+# currently a function to calculate MSE of time series model on training set
 evaluate_model <- function(data, model) {
   fitted.model <- model(data)
   if (class(fitted.model) == "fGARCH") {
@@ -56,6 +33,7 @@ evaluate_model <- function(data, model) {
   }
 }
 
+# function does not work right now
 validate_model <- function(ts.data, model.function) {
   n.obs <- length(ts.data)
   # split train : validation by 2 : 1
@@ -88,23 +66,12 @@ fit.model.2 <- function(time.series) { return(Arima(time.series, order = c(1,0,1
 fit.model.3 <- function(time.series) { return(Arima(time.series, order = c(1,0,0))) }
 
 # TEST VALIDATION MSE
-model.function.1 <- function(time.series) {
-  arma.model <- Arima(time.series, order = c(1,0,1), include.mean = TRUE, method="ML")
-  garch.model <- garchFit(formula = ~ garch(1,1), data = arma.model$residuals, cond.dist = "std", include.shape = TRUE, trace = FALSE)
-  return(list(arma.model, garch.model))
-}
+# model.function.1 <- function(time.series) {
+#   arma.model <- Arima(time.series, order = c(1,0,1), include.mean = TRUE, method="ML")
+#   garch.model <- garchFit(formula = ~ garch(1,1), data = arma.model$residuals, cond.dist = "std", include.shape = TRUE, trace = FALSE)
+#   return(list(arma.model, garch.model))
+# }
 
-otu.list <- f4.fold.change.df %>% distinct(otu.id)
-
-for (i in 1:nrow(otu.list)) {
-  otu <- otu.list[i,1]
-  print(otu)
-  
-  df <- subset(f4.fold.change.df, otu.id == otu)
-  print(validate_model(df$log.fold.change))
-}
-
-model.1.validation <- as.vector(unlist(by(f4.fold.change.df, f4.fold.change.df$otu.id, function(otu.data) validate_model(otu.data$log.fold.change, model.function.1))))
 
 # dataframes of MSE across models
 f4.mse.df <- data.frame(otu.id <- as.vector(f4.fold.change.df %>% distinct(otu.id)),
