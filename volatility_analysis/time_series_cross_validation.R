@@ -72,21 +72,21 @@ fit.model.3 <- function(time.series) { return(Arima(time.series, order = c(1,0,0
 #   return(list(arma.model, garch.model))
 # }
 
-
+# TRAINING MSE
 # dataframes of MSE across models
 f4.mse.df <- data.frame(otu.id <- as.vector(f4.fold.change.df %>% distinct(otu.id)),
                         mse.model.1 = as.vector(unlist(by(f4.fold.change.df, f4.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.1)))),
                         mse.model.2 = as.vector(unlist(by(f4.fold.change.df, f4.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.2)))),
                         mse.model.3 = as.vector(unlist(by(f4.fold.change.df, f4.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.3))))
                         )
-save(f4.mse.df, "f4_mse_df.Rdata")
+save(f4.mse.df, file = "f4_mse_df.Rdata")
 
 m3.mse.df <- data.frame(otu.id <- as.vector(m3.fold.change.df %>% distinct(otu.id)),
                         mse.model.1 = as.vector(unlist(by(m3.fold.change.df, m3.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.1)))),
                         mse.model.2 = as.vector(unlist(by(m3.fold.change.df, m3.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.2)))),
                         mse.model.3 = as.vector(unlist(by(m3.fold.change.df, m3.fold.change.df$otu.id, function(otu.data) evaluate_model(otu.data$log.fold.change, fit.model.3))))
                         )
-save(m3.mse.df, "m3_mse_df.Rdata")
+save(m3.mse.df, file = "m3_mse_df.Rdata")
 
 # Model 1 and 2 have lower median and mean training MSE than Model 3
 summary(f4.mse.df)
