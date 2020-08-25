@@ -94,12 +94,13 @@ summary(f4.mse.df)
 # same trend for subject M3
 summary(m3.mse.df)
 
+# VISUALIZATION
 f4.mse.long <- f4.mse.df %>% 
   pivot_longer(., cols = c("mse.model.1", "mse.model.2", "mse.model.3"),
                names_to = "model", values_to = "training.mse")
 
-f4.mse.long %>%
-  ggplot(aes(x = model, y = training.mse, fill = model)) +
+f4.training.boxplot <- f4.mse.long %>%
+  ggplot(aes(x = training.mse , y = model, fill = model)) +
   geom_boxplot() +
   labs(title = "Subject F4 time series models", y = "Training MSE for each OTU") +
   scale_fill_discrete(name = "model", labels = c("ARMA-GARCH(1,1,1,1)", "ARMA(1,1)", "AR(1)"))
@@ -108,11 +109,15 @@ m3.mse.long <- m3.mse.df %>%
   pivot_longer(., cols = c("mse.model.1", "mse.model.2", "mse.model.3"),
                names_to = "model", values_to = "training.mse") 
 
-m3.mse.long %>%
+m3.training.boxplot <- m3.mse.long %>%
   ggplot(aes(x = model, y = training.mse, fill = model)) +
   geom_boxplot() +
   labs(title = "Subject M3 time series models", y = "Training MSE for each OTU") +
   scale_fill_discrete(name = "model", labels = c("ARMA-GARCH(1,1,1,1)", "ARMA(1,1)", "AR(1)"))
+
+save(f4.training.boxplot, file = "f4_train_mse_boxplot.png")
+save(m3.training.boxplot, file = "m3_train_mse_boxplot.png")
+
 
 
 res.aov.f4 <- aov(training.mse ~ model, data = f4.mse.long)
