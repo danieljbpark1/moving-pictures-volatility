@@ -99,27 +99,41 @@ f4.mse.long <- f4.mse.df %>%
   pivot_longer(., cols = c("mse.model.1", "mse.model.2", "mse.model.3"),
                names_to = "model", values_to = "training.mse")
 
-f4.training.boxplot <- f4.mse.long %>%
+f4.mse.long %>%
   ggplot(aes(x = training.mse , y = model, fill = model)) +
   geom_boxplot() +
   labs(title = "Subject F4 time series models", y = "Training MSE for each OTU") +
   scale_fill_discrete(name = "model", labels = c("ARMA-GARCH(1,1,1,1)", "ARMA(1,1)", "AR(1)"))
 
+ggsave("f4_train_mse.png", width = 7, height = 4, units = "in")
+
 m3.mse.long <- m3.mse.df %>% 
   pivot_longer(., cols = c("mse.model.1", "mse.model.2", "mse.model.3"),
                names_to = "model", values_to = "training.mse") 
 
-m3.training.boxplot <- m3.mse.long %>%
-  ggplot(aes(x = model, y = training.mse, fill = model)) +
+m3.mse.long %>%
+  ggplot(aes(x = training.mse, y = model, fill = model)) +
   geom_boxplot() +
   labs(title = "Subject M3 time series models", y = "Training MSE for each OTU") +
   scale_fill_discrete(name = "model", labels = c("ARMA-GARCH(1,1,1,1)", "ARMA(1,1)", "AR(1)"))
 
-save(f4.training.boxplot, file = "f4_train_mse_boxplot.png")
-save(m3.training.boxplot, file = "m3_train_mse_boxplot.png")
+ggsave("m3_train_mse.png", width = 7, height = 4, units = "in")
 
+# NON-PARAMETRIC TESTS
 
+# non-parametric Kruskal-Wallis rank sum test produces significant p-value
+# which means there still is a difference in the group means without ANOVA assumptions
+kruskal.test(training.mse ~ model, data = f4.mse.long)
 
+kruskal.test(training.mse ~ model, data = m3.mse.long)
+
+# Only Model 1 - Model 3 and Model 2 - Model 3 are significantly different
+pairwise.wilcox.test(f4.mse.long$training.mse, f4.mse.long$model)
+
+# Only Model 1 - Model 3 and Model 2 - Model 3 are significantly different
+pairwise.wilcox.test(m3.mse.long$training.mse, m3.mse.long$model)
+
+# ANOVA TESTS
 res.aov.f4 <- aov(training.mse ~ model, data = f4.mse.long)
 # no pattern between residuals and fitted values, but there are outliers
 plot(res.aov.f4, 1)
@@ -165,16 +179,3 @@ plot(log.res.aov.m3, 2)
 # significant ANOVA p-value
 summary(log.res.aov.m3)
 
-### NON-PARAMETRIC TESTS
-
-# non-parametric Kruskal-Wallis rank sum test produces significant p-value
-# which means there still is a difference in the group means without ANOVA assumptions
-kruskal.test(training.mse ~ model, data = f4.mse.long)
-
-kruskal.test(training.mse ~ model, data = m3.mse.long)
-
-# Only Model 1 - Model 3 and Model 2 - Model 3 are significantly different
-pairwise.wilcox.test(f4.mse.long$training.mse, f4.mse.long$model)
-
-# Only Model 1 - Model 3 and Model 2 - Model 3 are significantly different
-pairwise.wilcox.test(m3.mse.long$training.mse, m3.mse.long$model)
