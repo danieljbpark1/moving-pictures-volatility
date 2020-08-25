@@ -223,6 +223,29 @@ predict_AsympReg <- function(arr, NLSstAsymptotic_params) {
   return(b0 + b1*(1-exp(-exp(lrc)*arr)))
 }
 
+# function to format the time series dataframe
+format_fold_change_data <- function(otu.tab) {
+  # calculate consecutive fold changes
+  fold.change.tab <- fold_difference_table(otu.tab)
+  num.samples <- ncol(fold.change.tab)
+  num.otus <- nrow(fold.change.tab)
+  otu.names <- rownames(fold.change.tab)
+  
+  # appends rows (OTUs) one after another
+  flat.fold.change <- as.vector(t(fold.change.tab))
+  flat.otu.names <- rep(otu.names, each = num.samples)
+  
+  formatted.fold.change.df <- data.frame(otu.id = flat.otu.names, fold.change = flat.fold.change)
+  
+  # select only the rows containing finite and positive fold changes
+  # no disappearances, no reappearances, no absence to absences
+  formatted.fold.change.df <- subset(formatted.fold.change.df, is.finite(fold.change) & fold.change > 0)
+  
+  # create column for log fold change
+  formatted.fold.change.df$log.fold.change <- log(formatted.fold.change.df$fold.change)
+  return(formatted.fold.change.df)
+}
+
 # function to forecast an ARMA(1,1)
 # older lags come first in the formula
 predictArma <- function(arma.model, n.predict) {
