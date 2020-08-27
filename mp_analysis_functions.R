@@ -60,8 +60,6 @@ format_reappearance_data <- function(otutab, otu.median.abs, read.depths, otu_id
 }
 
 # function for predicting reappearance counts from negative binomial model
-# inputs: 
-#   array for 
 predict_reappearance <- function(X_count, X_zero=NULL, negbin_model, zero_inflated=FALSE, seed = 0){
   set.seed(seed)
   n <- length(X_count[[1]])
