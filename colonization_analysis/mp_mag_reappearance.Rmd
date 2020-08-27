@@ -15,7 +15,7 @@ library(dplyr)
 library(zoib)
 require(foreign)
 require(Hmisc)
-source("mp_analysis_functions.R")
+source("../mp_analysis_functions.R")
 ```
 
 ```{r}
@@ -26,25 +26,131 @@ source("mp_analysis_functions.R")
 # median.otu.relabs.f4 : OTU's median relative abundance across all samples
 # median.otu.clrabs.f4 : OTU's median clr-transformed abundance across all samples
 # coverage.f4 : the total number of reads by sample
-load("~/Downloads/mp_F4_data.Rdata")
-load("~/Downloads/mp_M3_data.Rdata")
+load("../mp_F4_data.Rdata")
+load("../mp_M3_data.Rdata")
 
 ```
 
-# Magnitude of reappearance
+# Predict Reappearance Relative Abundances
+
+```{r}
+reapp.relabs.f4 <- format_reappearance_data(otutab = otu.relabs.f4, 
+                                         otu.median.abs = median.otu.clrabs.f4,
+                                         read.depths = coverage.f4,
+                                         otu_id = names(median.otu.clrabs.f4))
+
+head(reapp.relabs.f4); tail(reapp.relabs.f4); summary(reapp.relabs.f4); dim(reapp.relabs.f4)
+```
+
+```{r}
+reapp.relabs.m3 <- format_reappearance_data(otutab = otu.relabs.m3,
+                                            otu.median.abs = median.otu.clrabs.m3,
+                                            read.depths = coverage.m3,
+                                            otu_id = names(median.otu.clrabs.m3))
+
+head(reapp.relabs.m3); tail(reapp.relabs.m3); summary(reapp.relabs.m3); dim(reapp.relabs.m3)
+```
+
+
+The large raw counts are coming from samples with large read counts, which is why we're seeing a similar distribution of reappearing relative abundances. I think the best model to use is a zero-inflated negative binomial regression $y \sim x_1 + x_2$ where $x_1$ is the within-subject OTU median abundance and $x_2$ is log(sample read depth). Or a non-zero-inflated negative binomial regression regressing the count on within-subject OTU median abundance, log(sample read depth), and time since last sample. 
+
+```{r}
+ggplot(reapp.relabs.f4) +
+  geom_point(aes(x = median.abundance, y = y)) +
+  labs(title = "Subject F4", y = "Reappeared Relative Abundances")
+
+ggplot(reapp.relabs.f4) +
+  geom_point(aes(x = sample.read.depth, y = y)) +
+  labs(title = "Subject F4", y = "Reappeared Relative Abundances")
+
+d <- subset(reapp.relabs.f4, y < 0.04)
+
+observed.reapp.f4 <- ggplot(d) +
+  geom_point(aes(x = median.abundance, y = y)) +
+  labs(title = "F4 Observed Reappearances", y = "Relative Abundance")
+
+ggplot(d) +
+  geom_point(aes(x = sample.read.depth, y = y)) +
+  labs(title = "Subject F4 without outliers", y = "Reappeared Relative Abundances")
+
+```
+
+```{r}
+observed.reapp.m3 <- ggplot(reapp.relabs.m3) +
+  geom_point(aes(x = median.abundance, y = y)) +
+  labs(title = "M3 Observed Reappearances", y = "Relative Abundance")
+
+ggplot(reapp.relabs.m3) +
+  geom_point(aes(x = sample.read.depth, y = y)) +
+  labs(title = "Subject M3", y = "Reappeared Relative Abundances")
+```
+
+
+```{r}
+load("m3_reapp_rel_ab_ZIBR.Rda")
+load("f4_reapp_rel_ab_ZIBR.Rda")
+library(cowplot)
+```
+
+```{r}
+zibr.coefs.f4 <- summary(f4.reapp.relabs.ZIBR$coeff)$statistics[ ,1]
+zibr.coefs.m3 <- summary(m3.reapp.relabs.ZIBR$coeff)$statistics[ ,1]
+
+d$sim.y <- sim.zoib(f4.reapp.relabs.ZIBR, 
+                    beta.mean.coefs = zibr.coefs.f4[1:3], 
+                    infl.coefs = zibr.coefs.f4[4], 
+                    beta.disp.coefs = zibr.coefs.f4[5:6])
+
+reapp.relabs.m3$sim.y <- sim.zoib(m3.reapp.relabs.ZIBR,
+                                  beta.mean.coefs = zibr.coefs.m3[1:3],
+                                  infl.coefs = zibr.coefs.m3[4],
+                                  beta.disp.coefs = zibr.coefs.m3[5:6])
+```
+
+```{r}
+simulated.reapp.f4 <- ggplot(d) +
+  geom_point(aes(x = median.abundance, y = sim.y)) +
+  ylim(0, max(d$y)) +
+  labs(title = "F4 Simulated", y = "Relative Abundance")
+
+reapp.grid.f4 <- plot_grid(observed.reapp.f4, simulated.reapp.f4, ncol = 2)
+
+reapp.grid.f4
+
+save_plot("reapp_rel_abs_f4.png", reapp.grid.f4, ncol = 2)
+
+sum(d$y > 0.005)
+```
+
+```{r}
+simulated.reapp.m3 <- ggplot(reapp.relabs.m3) +
+  geom_point(aes(x = median.abundance, y = sim.y)) + 
+  ylim(0, max(reapp.relabs.m3$y)) +
+  labs(title = "M3 Simulated", y = "Relative Abundance")
+
+reapp.grid.m3 <- plot_grid(observed.reapp.m3, simulated.reapp.m3, ncol = 2)
+
+reapp.grid.m3
+
+save_plot("reapp_rel_abs_m3.png", reapp.grid.m3, ncol = 2)
+
+sum(reapp.relabs.m3$y > 0.05)
+```
+
+
+
+# Raw Abundances of reappearance
 
 Set up a regression problem for predicting the magnitude of a reappearing OTU count (the positive count for OTU $k$ at time $t$ given a zero count for OTU $k$ at time $t-1$).
 
 ```{r}
 mag.reapp.f4 <- format_reappearance_data(otutab = otu.counts.f4, 
-                                         t.sample = f4.metadata$days_since_experiment_start, 
                                          otu.median.abs = median.otu.clrabs.f4,
                                          read.depths = coverage.f4,
                                          otu_id = names(median.otu.clrabs.f4))
 
 head(mag.reapp.f4); tail(mag.reapp.f4); summary(mag.reapp.f4); dim(mag.reapp.f4)
 
-mag.reapp.f4
 ```
 
 
@@ -221,7 +327,7 @@ as.data.frame(table(new.data$pred.m5))
 ```
 
 
-# Magnitude of Reappearance Counts without high outliers
+# Raw Abundance of Reappearance Counts without high outliers
 
 ```{r}
 # don't include any observed reappearance counts above 1000
@@ -298,47 +404,7 @@ ggplot(new.data) +
 ```
 
 
-# Predict Reappearance Relative Abundances
-
-```{r}
-reapp.relabs <- format_reappearance_data(otutab = otu.relabs.f4, 
-                                         t.sample = f4.metadata$days_since_experiment_start, 
-                                         otu.median.abs = median.otu.clrabs.f4,
-                                         read.depths = coverage.f4,
-                                         otu_id = names(median.otu.clrabs.f4))
-
-head(reapp.relabs); tail(reapp.relabs); summary(reapp.relabs); dim(reapp.relabs)
-
-reapp.relabs
-```
-
-
-The large raw counts are coming from samples with large read counts, which is why we're seeing a similar distribution of reappearing relative abundances. I think the best model to use is a zero-inflated negative binomial regression $y \sim x_1 + x_2$ where $x_1$ is the within-subject OTU median abundance and $x_2$ is log(sample read depth). Or a non-zero-inflated negative binomial regression regressing the count on within-subject OTU median abundance, log(sample read depth), and time since last sample. 
-
-```{r}
-ggplot(reapp.relabs) +
-  geom_point(aes(x = median.abundance, y = y)) +
-  labs(y = "Reappeared Relative Abundances")
-
-ggplot(reapp.relabs) +
-  geom_point(aes(x = sample.read.depth, y = y)) +
-  labs(y = "Reappeared Relative Abundances")
-
-d <- subset(reapp.relabs, y < 0.04)
-
-ggplot(d) +
-  geom_point(aes(x = median.abundance, y = y)) +
-  labs(y = "Reappeared Relative Abundances")
-
-ggplot(d) +
-  geom_point(aes(x = sample.read.depth, y = y)) +
-  labs(y = "Reappeared Relative Abundances")
-
-```
-
-
-
-2) Ordinal logistic regression
+# Ordinal logistic regression
 
 ```{r}
 positive.reappearances.f4 <- subset(mag.reapp.f4, y > 0)
