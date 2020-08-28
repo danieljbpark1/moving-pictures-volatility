@@ -120,6 +120,7 @@ reapp.grid.f4
 save_plot("reapp_rel_abs_f4.png", reapp.grid.f4, ncol = 2)
 
 sum(d$y > 0.005)
+mean(d$y > 0.005)
 ```
 
 ```{r}
@@ -135,9 +136,16 @@ reapp.grid.m3
 save_plot("reapp_rel_abs_m3.png", reapp.grid.m3, ncol = 2)
 
 sum(reapp.relabs.m3$y > 0.05)
+mean(reapp.relabs.m3$y > 0.05)
 ```
 
+```{r}
+mean(d$y==0)
+mean(d$sim.y==0)
 
+mean(reapp.relabs.m3$y==0)
+mean(reapp.relabs.m3$sim.y==0)
+```
 
 # Raw Abundances of reappearance
 
