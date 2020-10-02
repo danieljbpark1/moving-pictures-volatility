@@ -4,6 +4,8 @@
 load("mp_F4_data.Rdata")
 load("mp_M3_data.Rdata")
 source("mp_analysis_functions.R")
+library(ggplot2)
+library(gridExtra)
 
 # are any OTUs present in 2 or fewer samples?
 any(rowSums(otu.relabs.f4 != 0) <= 2)
@@ -81,3 +83,63 @@ lag.quantile.f4 <- lagged.foldchange(f4.metadata, otu.relabs.f4, lag.intervals =
 lag.quantile.m3 <- lagged.foldchange(m3.metadata, otu.relabs.m3, lag.intervals = c(3, 7, 14, 30))
 
 summary(lag.quantile.f4)
+summary(lag.quantile.m3)
+
+p.f4.1 <- ggplot(data = lag.quantile.f4, aes(x=lag, y=quantile_0.1, group=lag)) +
+  geom_boxplot()
+p.f4.2 <- ggplot(data = lag.quantile.f4, aes(x=lag, y=quantile_0.25, group=lag)) +
+  geom_boxplot()
+p.f4.3 <- ggplot(data = lag.quantile.f4, aes(x=lag, y=quantile_0.5, group=lag)) +
+  geom_boxplot()
+p.f4.4 <- ggplot(data = lag.quantile.f4, aes(x=lag, y=quantile_0.75, group=lag)) +
+  geom_boxplot()
+p.f4.5 <- ggplot(data = lag.quantile.f4, aes(x=lag, y=quantile_0.9, group=lag)) +
+  geom_boxplot()
+grid.arrange(p.f4.1, p.f4.2, p.f4.3, p.f4.4, p.f4.5, nrow=2,
+             top = "Subject F4")
+
+p.m3.1 <- ggplot(data = lag.quantile.m3, aes(x=lag, y=quantile_0.1, group=lag)) +
+  geom_boxplot()
+p.m3.2 <- ggplot(data = lag.quantile.m3, aes(x=lag, y=quantile_0.25, group=lag)) +
+  geom_boxplot()
+p.m3.3 <- ggplot(data = lag.quantile.m3, aes(x=lag, y=quantile_0.5, group=lag)) +
+  geom_boxplot()
+p.m3.4 <- ggplot(data = lag.quantile.m3, aes(x=lag, y=quantile_0.75, group=lag)) +
+  geom_boxplot()
+p.m3.5 <- ggplot(data = lag.quantile.m3, aes(x=lag, y=quantile_0.9, group=lag)) +
+  geom_boxplot()
+grid.arrange(p.m3.1, p.m3.2, p.m3.3, p.m3.4, p.m3.5, nrow=2,
+             top = "Subject M3")
+
+paired.wilcox <- function(quantile.df, lag.values, quantile.names){
+  result.df <- data.frame(lag.1 = numeric(),
+                          lag.2 = numeric(),
+                          wilcox.pval = numeric(),
+                          quantile.name = character()
+                          )
+  lag.pairs <- t(combn(lag.values, 2))
+  n.pairs <- nrow(lag.pairs)
+  for (q in quantile.names) {
+    quantile.name <- rep(q, n.pairs)
+    wilcox.pval <- numeric()
+    for (i in 1:n.pairs) {
+      wilcox.pval[i] <- wilcox.test(x = quantile.df[quantile.df$lag == lag.pairs[i,1], q],
+                                    y = quantile.df[quantile.df$lag == lag.pairs[i,2], q])$p.value
+    }
+    wilcox.df <- data.frame(cbind(lag.pairs, wilcox.pval, quantile.name))
+    colnames(wilcox.df) <- c("lag.1", "lag.2", "wilcox.pval", "quantile.name")
+    result.df <- rbind(result.df, wilcox.df)
+  }
+  return(as.data.frame(result.df))
+}
+
+wilcox.tests.f4 <- paired.wilcox(lag.quantile.f4, 
+                                 lag.values = unique(lag.quantile.f4$lag), 
+                                 quantile.names = colnames(lag.quantile.f4)[c(-1,-2)])
+wilcox.tests.m3 <- paired.wilcox(lag.quantile.m3,
+                                lag.values = unique(lag.quantile.m3$lag),
+                                quantile.names = colnames(lag.quantile.m3)[c(-1,-2)])
+
+p.adjust(p = wilcox.tests.f4$wilcox.pval, method = "fdr")
+p.adjust(p = wilcox.tests.m3$wilcox.pval, method = "fdr")
+
