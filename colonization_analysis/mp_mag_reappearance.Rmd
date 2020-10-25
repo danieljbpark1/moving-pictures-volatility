@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(ggplot2)
+library(patchwork)
 library(dplyr)
 library(zoib)
 require(foreign)
@@ -96,14 +97,15 @@ library(cowplot)
 zibr.coefs.f4 <- summary(f4.reapp.relabs.ZIBR$coeff)$statistics[ ,1]
 zibr.coefs.m3 <- summary(m3.reapp.relabs.ZIBR$coeff)$statistics[ ,1]
 
+# SIMULATE THE ZOIB MODEL
 d$sim.y <- sim.zoib(f4.reapp.relabs.ZIBR, 
                     beta.mean.coefs = zibr.coefs.f4[1:3], 
-                    infl.coefs = zibr.coefs.f4[4], 
+                    infl.coefs = logit(0.54), #zibr.coefs.f4[4], 
                     beta.disp.coefs = zibr.coefs.f4[5:6])
 
 reapp.relabs.m3$sim.y <- sim.zoib(m3.reapp.relabs.ZIBR,
                                   beta.mean.coefs = zibr.coefs.m3[1:3],
-                                  infl.coefs = zibr.coefs.m3[4],
+                                  infl.coefs = logit(0.54), #zibr.coefs.m3[4],
                                   beta.disp.coefs = zibr.coefs.m3[5:6])
 ```
 
@@ -141,11 +143,64 @@ mean(reapp.relabs.m3$y > 0.05)
 
 ```{r}
 mean(d$y==0)
-mean(d$sim.y==0)
+mean(d$sim.y==0) # much higher simulated 0 inflation than observed
 
 mean(reapp.relabs.m3$y==0)
-mean(reapp.relabs.m3$sim.y==0)
+mean(reapp.relabs.m3$sim.y==0) # same for subject M3
 ```
+
+# Phylogenetic patterns to reappearances
+
+```{r}
+library(MicrobeDS)
+library(cluster)
+library(phyloseq)
+```
+
+```{r}
+data('MovingPictures')
+mp.tree <- MovingPictures@phy_tree
+# mp.tree$Nnode
+
+unique.otu.labels <- unique(c(rownames(otu.counts.f4), rownames(otu.counts.m3)))
+
+pruned.mp.tree <- prune_taxa(unique.otu.labels, mp.tree)
+
+mp.tree.dist <- cophenetic(pruned.mp.tree)
+
+# SELECTING THE OTUS WITH HIGHER REL. ABS. REAPPEARANCES
+high.reapp.otus.f4 <- reapp.relabs.f4 %>%
+  filter(y > 0.005) %>%
+  dplyr::select(otu_ids) %>%
+  distinct()
+
+high.reapp.otus.m3 <- reapp.relabs.m3 %>%
+  filter(y > 0.04) %>%
+  dplyr::select(otu_ids) %>%
+  distinct()
+
+for (nClus in c(5,10,20)) {
+  pam.obj <- pam(mp.tree.dist, nClus)
+  cluster.labels <- pam.obj$clustering
+  
+  df.f4 <- data.frame(cluster.labels[which(names(cluster.labels) %in% high.reapp.otus.f4$otu_ids)])
+  colnames(df.f4) <- c("cluster")
+  barchart.f4 <- ggplot(df.f4, aes(x = cluster)) +
+    geom_bar(stat = "count") +
+    labs(title = "F4", subtitle = "High-relative abundance reappearance OTUs")
+  
+  df.m3 <- data.frame(cluster.labels[which(names(cluster.labels) %in% high.reapp.otus.m3$otu_ids)])
+  colnames(df.m3) <- c("cluster")
+  barchart.m3 <- ggplot(df.m3, aes(x = cluster)) +
+    geom_bar() +
+    labs(title = "M3", subtitle = "High-relative abundance reappearance OTUs")
+
+  show(barchart.f4 + barchart.m3)
+}
+
+
+```
+
 
 # Raw Abundances of reappearance
 
