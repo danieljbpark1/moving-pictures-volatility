@@ -31,7 +31,7 @@ reapp.relabs.m3 <- format_reappearance_data(otutab = otu.relabs.m3,
 df.list <- list(new.reapp.relabs.f4, reapp.relabs.m3)
 
 # mean ~ median.abundance + log(sample.read.depth)
-# dispersion ~ median.abundance
+# dispersion ~ median.abundance 
 # Pr(Y = 0) ~ 1
 fit.zoib <- function(d) {
   return(
