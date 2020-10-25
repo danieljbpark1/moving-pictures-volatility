@@ -1,0 +1,48 @@
+---
+title: "Dethlefsen and Relman Microbiome Dataset"
+author: "Daniel J. Park"
+date: "10/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+```
+
+Dethlefsen and Relman: 
+- three individuals (D, E, F)
+- 52 to 56 stool samples per subject
+- over 10 months
+- two 5-day courses (external perturbations) of the antibiotic "ciprofloxacin" (Cp) separated by 6 months
+- samples were collected daily for two 19-day periods surrounding each Cp course and weekly or monthly at other times
+
+Taxa are rows; Samples are columns
+```{r}
+dethlefsen.relman.df <- read.delim(file = "/Users/danieljbpark/Downloads/dethlefsen_relman_ds_01.txt")
+```
+
+We don't have metadata in a file format!!! 
+
+```{r}
+dim(dethlefsen.relman.df)
+
+dr.D.df <- dethlefsen.relman.df %>%
+  select(matches("D\\d", ignore.case = FALSE))
+
+dr.E.df <- dethlefsen.relman.df %>%
+  select(matches("E\\d", ignore.case = FALSE))
+
+dr.F.df <- dethlefsen.relman.df %>%
+  select(matches("F\\d", ignore.case = FALSE))
+
+dim(dr.D.df); dim(dr.E.df); dim(dr.F.df)
+
+
+dethlefsen.relman.df %>%
+  select(D1, Name, Acc_No, Full_Name, Strain, Domain, Phylum, Taxon_3, Taxon_8) %>%
+  head(10)
+```
