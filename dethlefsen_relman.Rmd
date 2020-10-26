@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(dplyr)
+library(phyloseq)
+library(microbiome)
 ```
 
 Dethlefsen and Relman: 
@@ -28,8 +30,10 @@ dethlefsen.relman.df <- read.delim(file = "/Users/danieljbpark/Downloads/dethlef
 We don't have metadata in a file format!!! 
 
 ```{r}
-dim(dethlefsen.relman.df)
+colnames(dethlefsen.relman.df); dim(dethlefsen.relman.df)
+```
 
+```{r}
 dr.D.df <- dethlefsen.relman.df %>%
   select(matches("D\\d", ignore.case = FALSE))
 
@@ -40,9 +44,64 @@ dr.F.df <- dethlefsen.relman.df %>%
   select(matches("F\\d", ignore.case = FALSE))
 
 dim(dr.D.df); dim(dr.E.df); dim(dr.F.df)
-
-
-dethlefsen.relman.df %>%
-  select(D1, Name, Acc_No, Full_Name, Strain, Domain, Phylum, Taxon_3, Taxon_8) %>%
-  head(10)
 ```
+
+```{r}
+dr.D.otutab <- phyloseq(otu_table(dr.D.df, taxa_are_rows = TRUE))
+dr.D.rel.otutab <- transform(dr.D.otutab, transform = "compositional", target = 'OTU')
+
+dr.E.otutab <- phyloseq(otu_table(dr.E.df, taxa_are_rows = TRUE))
+dr.E.rel.otutab <- transform(dr.E.otutab, transform = "compositional", target = 'OTU')
+
+dr.F.otutab <- phyloseq(otu_table(dr.F.df, taxa_are_rows = TRUE))
+dr.F.rel.otutab <- transform(dr.F.otutab, transform = "compositional", target = 'OTU')
+
+# relative abundances for each sample sum to 1
+all(colSums(dr.D.rel.otutab) == 1); all(colSums(dr.E.rel.otutab) == 1); all(colSums(dr.F.rel.otutab) == 1)
+```
+
+```{r}
+# select OTUs that appear at least once across samples
+n.threshold <- 0
+dr.D.otutab <- dr.D.otutab[apply(dr.D.otutab, 1, sum) > n.threshold, ]
+dr.E.otutab <- dr.E.otutab[apply(dr.E.otutab, 1, sum) > n.threshold, ]
+dr.F.otutab <- dr.F.otutab[apply(dr.F.otutab, 1, sum) > n.threshold, ]
+
+dim(dr.D.otutab); dim(dr.E.otutab); dim(dr.F.otutab)
+
+# clr-transformed abundances for OTUs that are non-trivial
+dr.D.clr.otutab <- transform(dr.D.otutab, transform = "clr")
+dr.E.clr.otutab <- transform(dr.E.otutab, transform = "clr")
+dr.F.clr.otutab <- transform(dr.F.otutab, transform = "clr")
+
+# median clr-transformed abundance by OTU
+dr.D.med.clr <- apply(dr.D.clr.otutab, 1, median)
+dr.E.med.clr <- apply(dr.E.clr.otutab, 1, median)
+dr.F.med.clr <- apply(dr.F.clr.otutab, 1, median)
+```
+
+```{r}
+# f4.metadata # 130 rows, 3 cols
+# otutab
+# rel.otutab
+# clr.otutab
+# med.clr
+
+# sample.depth
+dr.D.sample.depth <- colSums(dr.D.otutab)
+dr.E.sample.depth <- colSums(dr.E.otutab)
+dr.F.sample.depth <- colSums(dr.F.otutab)
+
+save(dr.D.otutab, dr.D.rel.otutab, dr.D.clr.otutab, 
+     dr.D.med.clr, dr.D.sample.depth,
+     dr.E.otutab, dr.E.rel.otutab, dr.E.clr.otutab, 
+     dr.E.med.clr, dr.E.sample.depth,
+     dr.F.otutab, dr.F.rel.otutab, dr.F.clr.otutab, 
+     dr.F.med.clr, dr.F.sample.depth,
+     file = "dethlefsen_relman.Rdata")
+```
+
+
+
+
+
