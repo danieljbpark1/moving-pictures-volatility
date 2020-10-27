@@ -35,6 +35,7 @@ source("../mp_analysis_functions.R")
 # coverage.<subjID> : the total number of reads by sample
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
+load("../dethlefsen_relman.Rdata")
 ```
 
 # Probability of extinction
@@ -71,6 +72,61 @@ q.m3 <- ggplot(m3.otu.disappearance, aes(x = median.clr, y = prob.disappear)) +
 
 ggsave("f4_otu_prob_extinction.png", q.f4)
 ggsave("m3_otu_prob_extinction.png", q.m3)
+```
+
+```{r}
+produce.disapp.plot <- function(otu.tab, med.clr, plot.color) {
+  disapp.tab <- produce.disapp.tab(otu.tab, med.clr, "")
+  p <- ggplot(disapp.tab, aes(x = median.clr, y = prob.disappear)) +
+    geom_point(color = plot.color) +
+    labs(ylab = "Probability of extinction",
+         xlab = "OTU median clr abundance",
+         title = "Probability of extinction by OTU")
+  return(p)
+}
+
+produce.disapp.tab <- function(otu.tab, med.clr, subj.ID) {
+  disapp.prob <- disappearance_probabilities(otu.tab)
+  disapp.tab <- data.frame(prob.disappear = disapp.prob,
+                           median.clr = med.clr,
+                           subj.ID = rep(subj.ID, length(med.clr)))
+  return(disapp.tab)
+}
+```
+
+```{r}
+dr.D.disapp.plot <- produce.disapp.plot(dr.D.otutab, 
+                                        dr.D.med.clr, 
+                                        plot.color = "brown")
+dr.E.disapp.plot <- produce.disapp.plot(dr.E.otutab,
+                                        dr.E.med.clr,
+                                        plot.color = "gold3")
+dr.F.disapp.plot <- produce.disapp.plot(dr.F.otutab,
+                                        dr.F.med.clr,
+                                        plot.color = "seagreen")
+
+plot_grid(dr.D.disapp.plot,
+          dr.E.disapp.plot,
+          dr.F.disapp.plot,
+          ncol = 3,
+          labels = c("D", "E", "F"))
+
+DR.disapp.tab <- rbind(produce.disapp.tab(dr.D.otutab, dr.D.med.clr, "D"),
+                       produce.disapp.tab(dr.E.otutab, dr.E.med.clr, "E"),
+                       produce.disapp.tab(dr.F.otutab, dr.F.med.clr, "F"))
+
+DR.disapp.plot <- ggplot(DR.disapp.tab, aes(x = median.clr, y = prob.disappear)) +
+  geom_point(aes(color = subj.ID)) +
+  labs(y = "Probability of extinction",
+       x = "OTU median clr abundance",
+       title = "Probability of extinction by OTU",
+       subtitle = "Dethlefsen and Relman, 2011",
+       color = "Subject ID")
+
+ggsave("dethlefsen-relman-disapp-prob.png", 
+       DR.disapp.plot, 
+       width = 8,
+       height = 5)
 ```
 
 ```{r}
