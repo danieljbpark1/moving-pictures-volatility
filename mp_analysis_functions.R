@@ -27,36 +27,42 @@ fold_difference_table <- function(otu.table, taxa_are_rows = TRUE, logRatio = FA
 #   median abundances (either raw, relative, or clr-transformed) of OTUs in order
 #   sampling depths from samples ordered by time
 # returns: data frame with response y being the magnitude of a reappeared count, including zeroes
-format_reappearance_data <- function(otutab, otu.median.abs, read.depths, otu_id, taxa_are_rows = TRUE) {
-  if (!taxa_are_rows) {
+format_reappearance_data <- function(otutab, otuRarity, subjID, taxaAreRows = TRUE) {
+  if (!taxaAreRows) {
     otutab = t(otutab)
   }
   
   num.samples <- ncol(otutab)
   num.otus <- nrow(otutab)
+  otuID <- rownames(otutab)
   
+  # samples from 2 to N
   reappearance.candidate.samples <- otutab[ , 2:num.samples]
-  fold.diff.tab <- fold_difference_table(otu.table = otutab) 
+  fold.diff.tab <- fold_difference_table(otutab) 
+  # matrix indicating reappearance by OTU and sample
   reappearance.indices <- is.infinite(fold.diff.tab) | is.nan(fold.diff.tab)
-  read.depths <- read.depths[2:num.samples]
   
-  y <- numeric(); median.abundance <- numeric(); sample.read.depth <- numeric(); otu_ids <- character()
+  y <- numeric()
+  otu.rarity <- numeric()
+  otu.id <- character()
   for (i in 1:num.otus) {
     otu.reappearance.samples <- reappearance.indices[i, ]
+    # if OTU never reappeared, move on
     if (!any(otu.reappearance.samples)) {
       next
     }
-    
-    otu.reappearance.magnitudes <- reappearance.candidate.samples[i, names(otu.reappearance.samples[otu.reappearance.samples==TRUE])]
+    # extract the abundances after absences
+    otu.reappearance.magnitudes <- reappearance.candidate.samples[i, which(otu.reappearance.samples==TRUE)]
     
     y <- append(y, as.numeric(otu.reappearance.magnitudes))
-    median.abundance <- append(median.abundance, rep(otu.median.abs[i], length(otu.reappearance.magnitudes)))
-    sample.read.depth <- append(sample.read.depth, read.depths[otu.reappearance.samples])
-    otu_ids <- append(otu_ids, rep(otu_id[i], length(otu.reappearance.magnitudes)))
+    otu.rarity <- append(otu.rarity, rep(otuRarity[i], length(otu.reappearance.magnitudes)))
+    otu.id <- append(otu.id, rep(otuID[i], length(otu.reappearance.magnitudes)))
   }
   
+  res <- data.frame(y, otu.rarity, otu.id)
+  res$subjID <- rep(subjID, nrow(res))
   
-  return(data.frame(y, median.abundance, sample.read.depth, otu_ids, row.names = NULL))
+  return(res)
 }
 
 # function for predicting reappearance counts from negative binomial model
@@ -115,7 +121,7 @@ reappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE){
     dimension <- 2
   }
   
-  # number of times where taxa went from absent to present
+  # number of times where taxa reappeared
   reappearances <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a)))
   # number of times where taxa were absent at time t-1
   absences <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a) | is.nan(a)))
@@ -171,12 +177,11 @@ disappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE) {
     dimension <- 2
   }
   
-  # a count of times at which the taxa goes from present to absent
+  # a count of times at which the taxa disappeared
   disappearances <- apply(fold.difference.table, dimension, function(a) sum(a == 0, na.rm = TRUE))
-  # a count of time at which the taxa goes from present to present
-  presences <- apply(fold.difference.table, dimension, function(a) sum(a > 0 & is.finite(a), na.rm = TRUE))
-  # divide the disappearances by the total number of times a taxon was present
-  return(disappearances / (disappearances + presences))
+  # a count of times at which the taxa were present at time t-1
+  presences <- apply(fold.difference.table, dimension, function(a) sum(a >= 0 & is.finite(a), na.rm = TRUE))
+  return(disappearances / presences)
 }
 
 # format 1 for disappeared, 0 for continued presence
