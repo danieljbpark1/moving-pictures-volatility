@@ -10,8 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library(ggplot2)
-library(dplyr)
+library(tidyverse)
 library(boot)
 require(foreign)
 require(MASS)
@@ -38,8 +37,129 @@ load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
 ```
 
+# Demonstrate asymptotic regression 
+
+```{r}
+x <- seq(0,1,length.out = 1000)
+
+b0 <- 1 
+b1 <- -1
+
+plot(x, predict_AsympReg(x, c(b0, b1, 1)), type="l", lwd=2, col="purple",
+     main="Asymptotic regression b0 = 1, b1 = -1", ylab="y", ylim=c(-.02,1))
+lines(x, predict_AsympReg(x, c(b0, b1, .25)), lwd=2, col=)
+lines(x, predict_AsympReg(x, c(b0, b1, .5)), lwd=2, col="coral")
+lines(x, predict_AsympReg(x, c(b0, b1, 2)), lwd=2, col="firebrick")
+lines(x, predict_AsympReg(x, c(b0, b1, 4)), lwd=2, col="goldenrod")
+legend("topright", inset=.02, title="lrc value", 
+       legend=c(".25",".5","1","2","4"), 
+       col=c("forestgreen","coral","purple","firebrick","goldenrod"), 
+       lty=1, lwd=2, box.lty=0)
+```
+
 # Probability of extinction
 Given that a taxa is present at time $t-1$, what is the probability that the taxa disappears at time $t$?
+
+## Dethlefsen Relman and Caporaso data
+```{r}
+library(microbiome)
+
+asin.disapp.tab <- function(otutab, subj.ID) {
+  asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
+  avg.asin <- apply(asin.otutab, 1, mean)
+  disapp.prob <- disappearance_probabilities(otutab)
+  disapp.tab <- data.frame(prob.disappear = disapp.prob,
+                           avg.asin = avg.asin,
+                           subj.ID = rep(subj.ID, length(avg.asin)))
+  return(disapp.tab)
+}
+
+big.disapp.tab <- rbind(asin.disapp.tab(dr.D.otutab, 'D'),
+                        asin.disapp.tab(dr.E.otutab, 'E'),
+                        asin.disapp.tab(dr.F.otutab, 'F'),
+                        asin.disapp.tab(otu.counts.f4, 'F4'),
+                        asin.disapp.tab(otu.counts.m3, 'M3'))
+
+DR.disapp.plot <- ggplot(big.disapp.tab, aes(x = avg.asin, y = prob.disappear)) +
+  geom_point(aes(color = subj.ID),
+             size=.8) +
+  labs(y = "Probability of extinction",
+       x = "OTU mean arcsin Hellinger abundance",
+       title = "Probability of extinction by OTU",
+       subtitle = "Caporaso et al. / Dethlefsen and Relman",
+       color = "Subject ID")
+
+DR.disapp.plot
+```
+
+## Nonlinear Mixed Effects Model
+```{r}
+#big.disapp.tab[big.disapp.tab == 0] <- .00001
+
+big.disapp.tab$subj.ID.fct <- as.factor(big.disapp.tab$subj.ID)
+
+grouped.disapp.tab <- groupedData(prob.disappear ~ avg.asin | subj.ID.fct, 
+                                  data = big.disapp.tab)
+grouped.disapp.tab <- grouped.disapp.tab %>% drop_na()
+
+fm1 <- nlsList(SSasymp, data = grouped.disapp.tab)
+fm2 <- nlme(fm1, random = lrc ~ 1)
+
+summary(fm2)
+
+#plot(fm2)
+#fm2$coefficients$fixed
+fm2$coefficients$random$subj.ID.fct
+#fm2$modelStruct$reStruct$subj.ID.fct
+
+#plot(augPred(fm2, level = 0:1))
+intervals(fm2, which = "all")
+intervals(fm2, which = "all")$reStruct$subj.ID.fct$est.
+
+```
+
+
+```{r}
+dr.D.disapp.plot <- produce.disapp.plot(dr.D.otutab, 
+                                        dr.D.med.clr, 
+                                        plot.color = "brown")
+dr.E.disapp.plot <- produce.disapp.plot(dr.E.otutab,
+                                        dr.E.med.clr,
+                                        plot.color = "gold3")
+dr.F.disapp.plot <- produce.disapp.plot(dr.F.otutab,
+                                        dr.F.med.clr,
+                                        plot.color = "seagreen")
+
+plot_grid(dr.D.disapp.plot,
+          dr.E.disapp.plot,
+          dr.F.disapp.plot,
+          ncol = 3,
+          labels = c("D", "E", "F"))
+
+DR.disapp.tab <- rbind(produce.disapp.tab(dr.D.otutab, dr.D.med.clr, "D"),
+                       produce.disapp.tab(dr.E.otutab, dr.E.med.clr, "E"),
+                       produce.disapp.tab(dr.F.otutab, dr.F.med.clr, "F"))
+
+DR.disapp.plot <- ggplot(DR.disapp.tab, aes(x = median.clr, y = prob.disappear)) +
+  geom_point(aes(color = subj.ID)) +
+  labs(y = "Probability of extinction",
+       x = "OTU median clr abundance",
+       title = "Probability of extinction by OTU",
+       subtitle = "Dethlefsen and Relman, 2011",
+       color = "Subject ID")
+
+ggsave("dethlefsen-relman-disapp-prob.png", 
+       DR.disapp.plot, 
+       width = 8,
+       height = 5)
+```
+
+```{r}
+produce.disapp.plot(dr.D.asin, dr.D.med.asin, "brown")
+
+plot(x, predict_AsympReg(x, c(0.672,0.027-0.672,4.417)),
+     type="l", lwd=2, col="brown", ylab="y", ylim=c(-.02,.55))
+```
 
 ```{r}
 # probability of extinction by taxa for subjects F4 and M3
@@ -95,38 +215,26 @@ produce.disapp.tab <- function(otu.tab, med.clr, subj.ID) {
 ```
 
 ```{r}
-dr.D.disapp.plot <- produce.disapp.plot(dr.D.otutab, 
-                                        dr.D.med.clr, 
-                                        plot.color = "brown")
-dr.E.disapp.plot <- produce.disapp.plot(dr.E.otutab,
-                                        dr.E.med.clr,
-                                        plot.color = "gold3")
-dr.F.disapp.plot <- produce.disapp.plot(dr.F.otutab,
-                                        dr.F.med.clr,
-                                        plot.color = "seagreen")
+f4.disapp.tab <- f4.otu.disappearance %>% 
+  dplyr::select(prob.disappear, median.clr) %>%
+  mutate(subj.ID = "F4")
 
-plot_grid(dr.D.disapp.plot,
-          dr.E.disapp.plot,
-          dr.F.disapp.plot,
-          ncol = 3,
-          labels = c("D", "E", "F"))
+m3.disapp.tab <- m3.otu.disappearance %>%
+  dplyr::select(prob.disappear, median.clr) %>%
+  mutate(subj.ID = "M3")
 
-DR.disapp.tab <- rbind(produce.disapp.tab(dr.D.otutab, dr.D.med.clr, "D"),
-                       produce.disapp.tab(dr.E.otutab, dr.E.med.clr, "E"),
-                       produce.disapp.tab(dr.F.otutab, dr.F.med.clr, "F"))
+disapp.prob.tab <- rbind(DR.disapp.tab, f4.disapp.tab, m3.disapp.tab)
 
-DR.disapp.plot <- ggplot(DR.disapp.tab, aes(x = median.clr, y = prob.disappear)) +
-  geom_point(aes(color = subj.ID)) +
+big.disapp.plot <- ggplot(disapp.prob.tab, aes(x = median.clr, y = prob.disappear)) +
+  geom_point(aes(color = subj.ID),
+             size = .8) +
   labs(y = "Probability of extinction",
        x = "OTU median clr abundance",
-       title = "Probability of extinction by OTU",
-       subtitle = "Dethlefsen and Relman, 2011",
+       title = "Probability of OTU extinction",
+       subtitle = "Dethlefsen and Relman (2011) and Caporaso et al.",
        color = "Subject ID")
 
-ggsave("dethlefsen-relman-disapp-prob.png", 
-       DR.disapp.plot, 
-       width = 8,
-       height = 5)
+big.disapp.plot
 ```
 
 ```{r}
