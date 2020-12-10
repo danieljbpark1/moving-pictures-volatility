@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library(ggplot2)
-library(dplyr)
+library(tidyverse)
 library(zoib)
+library(ZIBR)
 library(boot)
 require(foreign)
 require(MASS)
@@ -30,9 +30,150 @@ source("../mp_analysis_functions.R")
 # coverage.f4 : the total number of reads by sample
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
+load("../dethlefsen_relman.Rdata")
 ```
 
 # Probability of reappearance
+
+```{r}
+library(microbiome)
+
+asin.reapp.tab <- function(otutab, subj.ID) {
+  avg.asin <- otu.avg.asin(otutab)
+  reapp.prob <- reappearance_probabilities(otutab)
+  reapp.tab <- data.frame(prob.reappear = reapp.prob,
+                          avg.asin = avg.asin,
+                          subj.ID = rep(subj.ID, length(avg.asin)))
+  return(reapp.tab)
+}
+
+otu.avg.asin <- function(otutab) {
+  asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
+  return(apply(asin.otutab, 1, mean))
+}
+```
+
+```{r}
+big.reapp.tab <- rbind(asin.reapp.tab(dr.D.otutab, 'D'),
+                       asin.reapp.tab(dr.E.otutab, 'E'),
+                       asin.reapp.tab(dr.F.otutab, 'F'),
+                       asin.reapp.tab(otu.counts.f4, 'F4'),
+                       asin.reapp.tab(otu.counts.m3, 'M3'))
+
+reapp.plot <- ggplot(big.reapp.tab, aes(x = avg.asin, y = prob.reappear)) +
+  geom_point(aes(color = subj.ID),
+             size=.8) +
+  labs(y = "Probability of colonization",
+       x = "OTU mean arcsin Hellinger abundance",
+       title = "Probability of colonization by OTU",
+       subtitle = "Caporaso et al. / Dethlefsen and Relman",
+       color = "Subject ID")
+
+reapp.plot
+```
+
+```{r}
+big.reapp.tab <- big.reapp.tab %>% 
+  mutate(subj.ID = as.factor(subj.ID)) %>%
+  drop_na()
+
+ggplot(big.reapp.tab, aes(x = prob.reappear, color = subj.ID)) +
+  geom_density(aes(fill = subj.ID),
+               alpha = 0.1) + 
+  scale_fill_discrete()
+```
+
+# Predicting probability of reappearance with Beta regression 
+
+```{r}
+# y ~ beta mean | beta dispersion | 
+dat1 <- big.reapp.tab %>%
+  filter(subj.ID %in% c("D", "E", "F"))
+
+dat2 <- big.reapp.tab %>%
+  filter(prob.reappear == 0 | prob.reappear == 1)
+head(dat2)
+
+beta.glmm1 <- zoib(prob.reappear ~ 1 | 1 | subj.ID,
+              data = dat1,
+              n.response = 1,
+              joint = FALSE,
+              zero.inflation = FALSE,
+              one.inflation = FALSE,
+              EUID = 1:nrow(dat1),
+              random = 1
+              )
+
+library(nlme)
+library(boot)
+
+logit.prob.reappear <- logit(big.reapp.tab$prob.reappear)
+summary(logit.prob.reappear)
+
+
+reapp.lmm1 <- lmer(formula = logit(prob.reappear) ~ 1 + (1 | subj.ID),
+     data = big.reapp.tab, na.action = "na.omit")
+```
+
+# Predict reappearance with logistic regression GLMM
+
+```{r}
+dr.D.avg.asin <- otu.avg.asin(dr.D.otutab)
+dr.E.avg.asin <- otu.avg.asin(dr.E.otutab)
+dr.F.avg.asin <- otu.avg.asin(dr.F.otutab)
+mp.F4.avg.asin <- otu.avg.asin(otu.counts.f4)
+mp.M3.avg.asin <- otu.avg.asin(otu.counts.m3)
+
+dr.D.reapp.tab <- format_reappearance_data(dr.D.otutab,
+                                           dr.D.avg.asin,
+                                           subjID = "D")
+dr.E.reapp.tab <- format_reappearance_data(dr.E.otutab,
+                                           dr.E.avg.asin,
+                                           subjID = "E")
+dr.F.reapp.tab <- format_reappearance_data(dr.F.otutab,
+                                           dr.F.avg.asin, 
+                                           subjID = "F")
+mp.F4.reapp.tab <- format_reappearance_data(otu.counts.f4,
+                                            mp.F4.avg.asin,
+                                            subjID = "F4")
+mp.M3.reapp.tab <- format_reappearance_data(otu.counts.m3,
+                                            mp.M3.avg.asin,
+                                            subjID = "M3")
+
+dr.mp.reapp.tab <- rbind(dr.D.reapp.tab,
+                         dr.E.reapp.tab,
+                         dr.F.reapp.tab,
+                         mp.F4.reapp.tab,
+                         mp.M3.reapp.tab)
+
+head(dr.mp.reapp.tab)
+tail(dr.mp.reapp.tab)
+
+dr.mp.reapp.tab <- dr.mp.reapp.tab %>%
+  mutate(reappeared = if_else(y > 0, 1, 0))
+```
+
+```{r}
+library(lme4)
+
+reapp.glmm <- glmer(reappeared ~ 1 + (1 | subjID / otu.id), 
+                    data = dr.mp.reapp.tab,
+                    family = binomial)
+
+summary(reapp.glmm)
+plot(reapp.glmm)
+
+reapp.predicted <- predict(reapp.glmm, 
+                           re.form = ~ (1 | subjID), 
+                           type = "response")
+unique(reapp.predicted)
+
+```
+
+
+
+
+
 
 ```{r}
 # a vector of probabilities of reappearing from absence by OTU
