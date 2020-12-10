@@ -101,7 +101,27 @@ save(dr.D.otutab, dr.D.rel.otutab, dr.D.clr.otutab,
      file = "dethlefsen_relman.Rdata")
 ```
 
+```{r}
+sum(rowSums(dr.D.otutab) == 0)
+sum(dr.D.med.clr == 0)
+```
 
+## Metadata
+```{r}
+library(lubridate)
+library(readr)
+dr.metadata <- read_csv("/Users/danieljbpark/Downloads/dethlefsen-relman-metadata.csv") %>%
+  dplyr::select(treatment:subjID) %>%
+  mutate(date = mdy(date))
 
+# this gets us the difference in days between consecutive samples.
+time.diff <- as.duration(int_diff(dr.metadata$date)) / ddays(1)
+
+head(dr.metadata)
+dim(dr.metadata)
+length(time.diff)
+time.diff
+
+```
 
 
