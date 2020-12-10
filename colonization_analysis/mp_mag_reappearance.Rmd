@@ -16,6 +16,7 @@ library(dplyr)
 library(zoib)
 require(foreign)
 require(Hmisc)
+library(microbiome)
 source("../mp_analysis_functions.R")
 ```
 
@@ -29,8 +30,9 @@ source("../mp_analysis_functions.R")
 # coverage.f4 : the total number of reads by sample
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
-
+load("../dethlefsen_relman.Rdata")
 ```
+
 
 # Predict Reappearance Relative Abundances
 
@@ -148,6 +150,48 @@ mean(d$sim.y==0) # much higher simulated 0 inflation than observed
 mean(reapp.relabs.m3$y==0)
 mean(reapp.relabs.m3$sim.y==0) # same for subject M3
 ```
+
+## Dethlefsen and Relman data
+
+```{r}
+produce.reapp.tab <- function(otu.tab, med.clr, subj.ID) {
+  reapp.prob <- reappearance_probabilities(otu.tab)
+  reapp.tab <- data.frame(reapp.prob = reapp.prob,
+                          median.clr = med.clr,
+                          subj.ID = rep(subj.ID, length(med.clr)))
+  return(reapp.tab)
+}
+```
+
+```{r}
+big.reapp.tab <- rbind(produce.reapp.tab(dr.D.otutab, dr.D.med.clr, "D"),
+                       produce.reapp.tab(dr.E.otutab, dr.E.med.clr, "E"),
+                       produce.reapp.tab(dr.F.otutab, dr.F.med.clr, "F"),
+                       produce.reapp.tab(otu.counts.f4, median.otu.clrabs.f4, "F4"),
+                       produce.reapp.tab(otu.counts.m3, median.otu.clrabs.m3, "M3"))
+
+big.reapp.plot <- ggplot(big.reapp.tab, aes(x = median.clr, y = reapp.prob, color = factor(subj.ID))) +
+  geom_point(size = .8) +
+  labs(y = "Probability of reappearance from absence",
+       x = "OTU median clr abundance",
+       title = "Probability of OTU reappearance",
+       subtitle = "Dethlefsen and Relman (2011) and Caporaso et al.",
+       color = "Subject ID") 
+
+big.reapp.plot
+```
+
+```{r}
+big.reapp.plot + 
+  geom_smooth(method = "glm", se = FALSE, method.args = list(family=binomial))
+```
+
+## Asymptotic regression
+
+```{r}
+mp.F4.reapp.tab <- produce.reapp.tab(otu.counts.f4, median.otu.clrabs.f4, "F4")
+```
+
 
 # Phylogenetic patterns to reappearances
 
