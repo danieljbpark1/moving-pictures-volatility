@@ -140,6 +140,9 @@ wilcox.tests.m3 <- paired.wilcox(lag.quantile.m3,
                                 lag.values = unique(lag.quantile.m3$lag),
                                 quantile.names = colnames(lag.quantile.m3)[c(-1,-2)])
 
-p.adjust(p = wilcox.tests.f4$wilcox.pval, method = "fdr")
-p.adjust(p = wilcox.tests.m3$wilcox.pval, method = "fdr")
+f4.wilcox.adjusted <- p.adjust(p = wilcox.tests.f4$wilcox.pval, method = "fdr")
 
+m3.wilcox.adjusted <- p.adjust(p = wilcox.tests.m3$wilcox.pval, method = "fdr")
+
+range(f4.wilcox.adjusted)
+range(m3.wilcox.adjusted)
