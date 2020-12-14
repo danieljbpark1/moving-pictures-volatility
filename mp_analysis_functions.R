@@ -1,4 +1,21 @@
 library(boot)
+library(microbiome)
+
+# return OTUs probability of reappearance
+asin.reapp.tab <- function(otutab, subj.ID) {
+  avg.asin <- otu.avg.asin(otutab)
+  reapp.prob <- reappearance_probabilities(otutab)
+  reapp.tab <- data.frame(prob.reappear = reapp.prob,
+                          avg.asin = avg.asin,
+                          subj.ID = rep(subj.ID, length(avg.asin)))
+  return(reapp.tab)
+}
+
+# return OTUs average asin Hellinger-abundance across samples
+otu.avg.asin <- function(otutab) {
+  asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
+  return(apply(asin.otutab, 1, mean))
+}
 
 # function for calculating fold-difference between consecutive samples
 # inputs: OTU table with samples ordered by time 
@@ -23,9 +40,7 @@ fold_difference_table <- function(otu.table, taxa_are_rows = TRUE, logRatio = FA
 # function for formatting reappearance data for regression
 # inputs: 
 #   OTU table with samples ordered by time and OTUs in order
-#   time when samples taken ordered by time
-#   median abundances (either raw, relative, or clr-transformed) of OTUs in order
-#   sampling depths from samples ordered by time
+#   otu rarity metric (either raw, relative, or clr-transformed) of OTUs in order
 # returns: data frame with response y being the magnitude of a reappeared count, including zeroes
 format_reappearance_data <- function(otutab, otuRarity, subjID, taxaAreRows = TRUE) {
   if (!taxaAreRows) {
@@ -53,8 +68,9 @@ format_reappearance_data <- function(otutab, otuRarity, subjID, taxaAreRows = TR
     }
     # extract the abundances after absences
     otu.reappearance.magnitudes <- reappearance.candidate.samples[i, which(otu.reappearance.samples==TRUE)]
+    otu.reappearance.magnitudes <- as.numeric(otu.reappearance.magnitudes)
     
-    y <- append(y, as.numeric(otu.reappearance.magnitudes))
+    y <- append(y, otu.reappearance.magnitudes)
     otu.rarity <- append(otu.rarity, rep(otuRarity[i], length(otu.reappearance.magnitudes)))
     otu.id <- append(otu.id, rep(otuID[i], length(otu.reappearance.magnitudes)))
   }
