@@ -35,13 +35,13 @@ colnames(dethlefsen.relman.df); dim(dethlefsen.relman.df)
 
 ```{r}
 dr.D.df <- dethlefsen.relman.df %>%
-  select(matches("D\\d", ignore.case = FALSE))
+  dplyr::select(matches("D\\d", ignore.case = FALSE))
 
 dr.E.df <- dethlefsen.relman.df %>%
-  select(matches("E\\d", ignore.case = FALSE))
+  dplyr::select(matches("E\\d", ignore.case = FALSE))
 
 dr.F.df <- dethlefsen.relman.df %>%
-  select(matches("F\\d", ignore.case = FALSE))
+  dplyr::select(matches("F\\d", ignore.case = FALSE))
 
 dim(dr.D.df); dim(dr.E.df); dim(dr.F.df)
 ```
@@ -66,6 +66,10 @@ n.threshold <- 0
 dr.D.otutab <- dr.D.otutab[apply(dr.D.otutab, 1, sum) > n.threshold, ]
 dr.E.otutab <- dr.E.otutab[apply(dr.E.otutab, 1, sum) > n.threshold, ]
 dr.F.otutab <- dr.F.otutab[apply(dr.F.otutab, 1, sum) > n.threshold, ]
+
+dr.D.rel.otutab <- dr.D.rel.otutab[apply(dr.D.rel.otutab, 1, sum) > n.threshold, ]
+dr.E.rel.otutab <- dr.E.rel.otutab[apply(dr.E.rel.otutab, 1, sum) > n.threshold, ]
+dr.F.rel.otutab <- dr.F.rel.otutab[apply(dr.F.rel.otutab, 1, sum) > n.threshold, ]
 
 dim(dr.D.otutab); dim(dr.E.otutab); dim(dr.F.otutab)
 
