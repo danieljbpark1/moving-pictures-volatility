@@ -31,40 +31,103 @@ source("../mp_analysis_functions.R")
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
+load("../colonization_analysis/bigReappTab.Rdata")
 ```
-
 
 # Predict Reappearance Relative Abundances
 
 ```{r}
-reapp.relabs.f4 <- format_reappearance_data(otutab = otu.relabs.f4, 
-                                         otu.median.abs = median.otu.clrabs.f4,
-                                         read.depths = coverage.f4,
-                                         otu_id = names(median.otu.clrabs.f4))
+dr.mp.reapp.tab$subjID <- as.factor(dr.mp.reapp.tab$subjID)
+reappeared.relabs.tab <- dr.mp.reapp.tab %>%
+  filter(y > 0)
+
+summary(reappeared.relabs.tab)
+
+ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = y)) +
+  geom_point(aes(color = subjID),
+             size = .75) + 
+  labs(title = "Reappeared relative abundances",
+       x = "OTU mean arcsin Hellinger-abundance (within subject)",
+       y = "")
+```
+
+```{r}
+library(glmmTMB)
+
+reapp.glmmTMB <- glmmTMB(y ~ otu.rarity + (otu.rarity|subjID), 
+                         data = reappeared.relabs.tab, 
+                         family = beta_family)
+
+sim.reapp <- simulate(reapp.glmmTMB)
+reappeared.relabs.tab$sim <- sim.reapp[ ,1]
+head(reappeared.relabs.tab)
+
+ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = sim)) +
+  geom_point(aes(color = subjID),
+             size = .75) + 
+  labs(title = "Simulated reappeared relative abundances",
+       x = "OTU mean arcsin Hellinger-abundance (within subject)",
+       y = "") +
+  ylim(0, 0.15)
+```
+
+```{r}
+reappeared.relabs.tab %>%
+  filter(y > 0.005) %>%
+  distinct(otu.id, otu.rarity, subjID) %>%
+  summarise(range(otu.rarity))
+
+# model summary
+summary(reapp.glmmTMB)
+# random effects
+ranef(reapp.glmmTMB)
+```
+
+
+
+
+
+
+
+```{r}
+reapp.zoib <- zoib(y ~ otu.rarity | otu.rarity | subjID,
+                   data = reappeared.relabs.tab,
+                   joint = FALSE,
+                   zero.inflation = FALSE,
+                   one.inflation = FALSE,
+                   random = 12,
+                   EUID = 1:nrow(reappeared.relabs.tab))
+```
+
+
+```{r}
+reapp.relabs.f4 <- format_reappearance_data(otutab = otu.relabs.f4,
+                                            otuRarity = median.otu.clrabs.f4,
+                                            subjID = "F4")
 
 head(reapp.relabs.f4); tail(reapp.relabs.f4); summary(reapp.relabs.f4); dim(reapp.relabs.f4)
 ```
 
 ```{r}
 reapp.relabs.m3 <- format_reappearance_data(otutab = otu.relabs.m3,
-                                            otu.median.abs = median.otu.clrabs.m3,
-                                            read.depths = coverage.m3,
-                                            otu_id = names(median.otu.clrabs.m3))
+                                            otuRarity = median.otu.clrabs.m3,
+                                            subjID = "M3")
 
 head(reapp.relabs.m3); tail(reapp.relabs.m3); summary(reapp.relabs.m3); dim(reapp.relabs.m3)
 ```
-
 
 The large raw counts are coming from samples with large read counts, which is why we're seeing a similar distribution of reappearing relative abundances. I think the best model to use is a zero-inflated negative binomial regression $y \sim x_1 + x_2$ where $x_1$ is the within-subject OTU median abundance and $x_2$ is log(sample read depth). Or a non-zero-inflated negative binomial regression regressing the count on within-subject OTU median abundance, log(sample read depth), and time since last sample. 
 
 ```{r}
 ggplot(reapp.relabs.f4) +
-  geom_point(aes(x = median.abundance, y = y)) +
-  labs(title = "Subject F4", y = "Reappeared Relative Abundances")
+  geom_point(aes(x = otu.rarity, y = y)) +
+  labs(title = "Subject F4", 
+       x = "OTU median clr abundance",
+       y = "Reappeared Relative Abundance (zeros included)")
 
-ggplot(reapp.relabs.f4) +
-  geom_point(aes(x = sample.read.depth, y = y)) +
-  labs(title = "Subject F4", y = "Reappeared Relative Abundances")
+# ggplot(reapp.relabs.f4) +
+#   geom_point(aes(x = sample.read.depth, y = y)) +
+#   labs(title = "Subject F4", y = "Reappeared Relative Abundances")
 
 d <- subset(reapp.relabs.f4, y < 0.04)
 
@@ -72,20 +135,20 @@ observed.reapp.f4 <- ggplot(d) +
   geom_point(aes(x = median.abundance, y = y)) +
   labs(title = "F4 Observed Reappearances", y = "Relative Abundance")
 
-ggplot(d) +
-  geom_point(aes(x = sample.read.depth, y = y)) +
-  labs(title = "Subject F4 without outliers", y = "Reappeared Relative Abundances")
+# ggplot(d) +
+#   geom_point(aes(x = sample.read.depth, y = y)) +
+#   labs(title = "Subject F4 without outliers", y = "Reappeared Relative Abundances")
 
 ```
 
 ```{r}
 observed.reapp.m3 <- ggplot(reapp.relabs.m3) +
-  geom_point(aes(x = median.abundance, y = y)) +
-  labs(title = "M3 Observed Reappearances", y = "Relative Abundance")
+  geom_point(aes(x = otu.rarity, y = y)) +
+  labs(title = "M3 Observed Reappearances", 
+       x = "OTU median clr abundance",
+       y = "Reappeared Relative Abundance (zeros included)")
 
-ggplot(reapp.relabs.m3) +
-  geom_point(aes(x = sample.read.depth, y = y)) +
-  labs(title = "Subject M3", y = "Reappeared Relative Abundances")
+observed.reapp.m3
 ```
 
 
