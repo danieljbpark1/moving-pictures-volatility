@@ -43,6 +43,12 @@ log.foldchange.data <- data.frame(otu.id = character(),
                                   subj.id = character()
                                   )
 
+## DATAFRAME OF PROP. NON-ZERO SAMPLES
+prop.positive.data <- data.frame(otu.id = character(),
+                                 prop.nonzero = numeric(),
+                                 avg.otu.rel.abnd = numeric(),
+                                 subj.id = character())
+
 ## iterate thru all the data for all subjects
 data.list <- list(list(otu.relabs.f4, avg.otu.relabs.f4, "F4"),
                   list(otu.relabs.m3, avg.otu.relabs.m3, "M3"),
@@ -80,8 +86,6 @@ for (subj in data.list) {
     mutate(rel.abnd.quintile = ntile(avg.otu.rel.abnd, 
                                      n = 5)) 
   
-  print(length(unique(subj.data$otu.id)))
-  print(length(unique(otu.rel.abnd.data$otu.id)))
   # join the two dataframes
   res.data <- left_join(x = subj.data,
                         y = otu.rel.abnd.data,
@@ -89,6 +93,23 @@ for (subj in data.list) {
     mutate(subj.id = subj.id)
   # bind to master dataframe
   log.foldchange.data <- rbind(log.foldchange.data, res.data)
+  
+  ## PROP. OF NON-ZERO SAMPLES 
+  rare.otu.data <- otu.rel.abnd.data %>% 
+    filter(rel.abnd.quintile == 1)
+  
+  prop.data <- apply(X = otu.relabs.tab > 0, MARGIN = 1, mean)
+  prop.data <- data.frame(prop.nonzero = prop.data)
+  prop.data <- setDT(prop.data, keep.rownames = TRUE) %>%
+    rename(otu.id = rn)
+  
+  res.prop.data <- inner_join(x = prop.data,
+                              y = rare.otu.data, 
+                              by = "otu.id") %>%
+    select(-rel.abnd.quintile) %>%
+    mutate(subj.id = subj.id)
+  
+  prop.positive.data <- rbind(prop.positive.data, res.prop.data)
 }
 
 log.foldchange.data <- log.foldchange.data %>%
@@ -111,9 +132,18 @@ log.foldchange.plot <- ggplot(data = log.foldchange.data,
 log.foldchange.plot
 ggsave("log_foldchanges_rel_abnd.png")
 
+summary(prop.positive.data)
 
+prop.positive.plot <- ggplot(data = prop.positive.data,
+                             aes(x=prop.nonzero)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(vars(subj.id), scales = "free") +
+  labs(title = "Distributions of proportion of non-zero abundances across samples",
+       subtitle = "OTUs in 1st quintile for rarity within each subject",
+       x = "proportion of non-zero abundances across all samples within subject")
 
-
+prop.positive.plot
+ggsave("prop_nonzero_rare_otus.png")
 
 
 
