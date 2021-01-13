@@ -116,6 +116,8 @@ fm2$coefficients$random$subj.ID.fct
 intervals(fm2, which = "all")
 intervals(fm2, which = "all")$reStruct$subj.ID.fct$est.
 
+## the predicted prob. disapp.
+# fm2$fitted
 ```
 
 
