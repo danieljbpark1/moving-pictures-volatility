@@ -110,7 +110,7 @@ dim(dr.mp.reapp.tab)
 ```{r}
 library(lme4)
 
-reapp.glmm <- glmer(reappeared ~ 1 + (1 | subjID / otu.id), 
+reapp.glmm <- glmer(reappeared ~ 1 + (1 | subj.id / otu.id), 
                     data = dr.mp.reapp.tab,
                     family = binomial)
 
@@ -118,24 +118,21 @@ summary(reapp.glmm)
 plot(reapp.glmm)
 
 reapp.predicted <- predict(reapp.glmm, 
-                           re.form = ~ (1 | subjID), 
+                           re.form = ~ (1 | subj.id), 
                            type = "response")
 unique(reapp.predicted)
-
 ```
 
 ```{r}
 full.reapp.pred <- predict(reapp.glmm, 
-                           re.form = ~ (1 | subjID / otu.id), 
+                           re.form = ~ (1 | subj.id / otu.id), 
                            type = "response")
 
-
-
 full.reapp.pred.df <- data.frame(pred.reapp.prob = full.reapp.pred,
-                                 subjID = dr.mp.reapp.tab$subjID)
+                                 subj.id = dr.mp.reapp.tab$subj.id)
 
-ggplot(full.reapp.pred.df, aes(x = pred.reapp.prob, color = subjID)) +
-  geom_density(aes(fill = subjID),
+ggplot(full.reapp.pred.df, aes(x = pred.reapp.prob, color = subj.id)) +
+  geom_density(aes(fill = subj.id),
                alpha = 0.1) + 
   labs(title = "Distribution of predicted reappearance probabilities",
        x = "predicted reappearance probability") +
