@@ -19,17 +19,18 @@ otu.avg.asin <- function(otutab) {
   return(apply(asin.otutab, 1, mean))
 }
 
-# function for calculating fold-difference between consecutive samples
-# inputs: OTU table with samples ordered by time 
-# returns: table of fold-differences
-fold_difference_table <- function(otu.table, taxa_are_rows = TRUE, logRatio = FALSE) {
+# returns table of fold-changes between consecutive samples
+# otutab : phyloseq OTU table
+# taxa_are_rows : are taxa rows or columns?
+# logRatio : option to return log fold-changes instead
+fold_difference_table <- function(otutab, taxa_are_rows = TRUE, logRatio = FALSE) {
   if (taxa_are_rows) {
-    num.samples <- ncol(otu.table)
-    fold.difference.table <- otu.table[ , 2:num.samples] / otu.table[ , 1:(num.samples-1)]  
+    num.samples <- ncol(otutab)
+    fold.difference.table <- otutab[ , 2:num.samples] / otutab[ , 1:(num.samples-1)]  
   }
   else {
-    num.samples <- nrow(otu.table)
-    fold.difference.table <- otu.table[2:num.samples, ] / otu.table[1:(num.samples-1), ]
+    num.samples <- nrow(otutab)
+    fold.difference.table <- otutab[2:num.samples, ] / otutab[1:(num.samples-1), ]
   }
   
   if (logRatio) {
