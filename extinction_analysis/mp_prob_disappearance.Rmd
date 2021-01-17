@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(lme4)
 library(boot)
 require(foreign)
 require(MASS)
@@ -37,6 +38,77 @@ load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
 ```
 
+# Disappearance logistic regression
+
+```{r}
+## excluding singletons and doubletons
+otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
+otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
+otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
+otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
+otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
+
+
+avg.asin.D <- otu.avg.asin(otutab.D)
+avg.asin.E <- otu.avg.asin(otutab.E)
+avg.asin.F <- otu.avg.asin(otutab.F)
+avg.asin.F4 <- otu.avg.asin(otutab.F4)
+avg.asin.M3 <- otu.avg.asin(otutab.M3)
+
+disapp.tab.D <- format_disappearance_data(otutab.D, 
+                                          avg.asin.D,
+                                          "D")
+disapp.tab.E <- format_disappearance_data(otutab.E,
+                                          avg.asin.E,
+                                          "E")
+disapp.tab.F <- format_disappearance_data(otutab.F,
+                                          avg.asin.F,
+                                          "F")
+disapp.tab.F4 <- format_disappearance_data(otutab.F4,
+                                           avg.asin.F4,
+                                           "F4")
+disapp.tab.M3 <- format_disappearance_data(otutab.M3,
+                                           avg.asin.M3,
+                                           "M3")
+
+big.disapp.tab <- rbind(disapp.tab.D,
+                        disapp.tab.E,
+                        disapp.tab.F,
+                        disapp.tab.F4,
+                        disapp.tab.M3)
+
+head(big.disapp.tab)
+dim(big.disapp.tab)
+
+disapp.glmm <- glmer(disappeared ~ 1 + (1 | subj.id / otu.id), 
+                     data = big.disapp.tab,
+                     family = binomial)
+
+summary(disapp.glmm)
+plot(disapp.glmm)
+
+```
+
+```{r}
+full.disapp.pred <- predict(disapp.glmm, 
+                            re.form = ~ (1 | subj.id / otu.id), 
+                            type = "response")
+length(full.disapp.pred)
+
+big.disapp.tab$pred.disapp.prob <- full.disapp.pred
+
+ggplot(big.disapp.tab, aes(x=pred.disapp.prob, color=subj.id)) +
+  geom_density(aes(fill = subj.id),
+                   alpha = 0.1) + 
+  labs(title = "Distribution of predicted disappearance probabilities",
+       x = "predicted disappearance probability") +
+  xlim(0,1) +
+  scale_fill_discrete()
+
+
+```
+
+
 # Demonstrate asymptotic regression 
 
 ```{r}
@@ -62,23 +134,28 @@ Given that a taxa is present at time $t-1$, what is the probability that the tax
 
 ## Dethlefsen Relman and Caporaso data
 ```{r}
-library(microbiome)
-
-asin.disapp.tab <- function(otutab, subj.ID) {
+asin.disapp.tab <- function(otutab, subj.id) {
   asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
   avg.asin <- apply(asin.otutab, 1, mean)
   disapp.prob <- disappearance_probabilities(otutab)
   disapp.tab <- data.frame(prob.disappear = disapp.prob,
-                           avg.asin = avg.asin,
-                           subj.ID = rep(subj.ID, length(avg.asin)))
+                           avg.asin = avg.asin) %>%
+    mutate(subj.id = subj.id)
   return(disapp.tab)
 }
 
-big.disapp.tab <- rbind(asin.disapp.tab(dr.D.otutab, 'D'),
-                        asin.disapp.tab(dr.E.otutab, 'E'),
-                        asin.disapp.tab(dr.F.otutab, 'F'),
-                        asin.disapp.tab(otu.counts.f4, 'F4'),
-                        asin.disapp.tab(otu.counts.m3, 'M3'))
+disapp.tab.ALL <- rbind(asin.disapp.tab(otutab.D, 'D'),
+                        asin.disapp.tab(otutab.E, 'E'),
+                        asin.disapp.tab(otutab.F, 'F'),
+                        asin.disapp.tab(otutab.F4, 'F4'),
+                        asin.disapp.tab(otutab.M3, 'M3'))
+
+ggplot(disapp.tab.ALL, aes(x=prob.disappear, color=subj.id)) +
+  geom_density(aes(fill = subj.id), alpha = 0.1) + 
+  labs(title = "Distribution of disappearance probabilities",
+       x = "disappearance probability") +
+  xlim(0,1) +
+  scale_fill_discrete()
 
 DR.disapp.plot <- ggplot(big.disapp.tab, aes(x = avg.asin, y = prob.disappear)) +
   geom_point(aes(color = subj.ID),
