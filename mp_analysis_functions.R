@@ -13,10 +13,13 @@ library(microbiome)
 #   return(reapp.tab)
 # }
 
-# return OTUs average asin Hellinger-abundance across samples
-otu.avg.asin <- function(otutab) {
-  asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
-  return(apply(asin.otutab, 1, mean))
+# returns vector of avg. asin Hellinger-transformed abnd. for each OTU
+avg.asin.abnd <- function(otutab) {
+  asin.otutab <- asin(transform(otutab, 
+                                transform = 'hellinger', 
+                                target = "OTU"))
+  avg.asin <- apply(asin.otutab, 1, mean)
+  return(avg.asin)
 }
 
 # returns table of fold-changes between consecutive samples
@@ -274,8 +277,8 @@ sim.zoib <- function(zoib.model, beta.mean.coefs, beta.disp.coefs, infl.coefs, i
 
 # inputs: OTU table with samples ordered by time 
 # returns: vector of disappearance probabilities named by OTU
-disappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE) {
-  fold.difference.table <- fold_difference_table(otu.table = otu.table, taxa_are_rows = taxa_are_rows)
+disappearance_probabilities <- function(otutab, taxa_are_rows = TRUE) {
+  fold.difference.table <- fold_difference_table(otutab, taxa_are_rows = taxa_are_rows)
   
   if (taxa_are_rows) {
     dimension <- 1
@@ -287,7 +290,7 @@ disappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE) {
   # a count of times at which the taxa disappeared
   disappearances <- apply(fold.difference.table, dimension, function(a) sum(a == 0, na.rm = TRUE))
   # a count of times at which the taxa were present at time t-1
-  presences <- apply(fold.difference.table, dimension, function(a) sum(a >= 0 & is.finite(a), na.rm = TRUE))
+  presences <- apply(fold.difference.table, dimension, function(a) sum(is.finite(a), na.rm = TRUE))
   return(disappearances / presences)
 }
 
