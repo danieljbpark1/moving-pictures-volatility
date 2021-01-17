@@ -72,16 +72,61 @@ ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = sim)) +
 ```
 
 ```{r}
+summary(reappeared.relabs.tab)
+
+# this is the proportion of true reappearances larger than
+# the greatest simulated reappearance
 reappeared.relabs.tab %>%
-  filter(y > 0.005) %>%
-  distinct(otu.id, otu.rarity, subjID) %>%
-  summarise(range(otu.rarity))
+  mutate(large.reapp = if_else(y > max(sim), 1, 0)) %>%
+  summarise(mean(large.reapp))
+  
+# reappeared.relabs.tab %>%
+#   filter(y > 0.005) %>%
+#   distinct(otu.id, otu.rarity, subjID) %>%
+#   summarise(range(otu.rarity))
 
 # model summary
 summary(reapp.glmmTMB)
 # random effects
 ranef(reapp.glmmTMB)
 ```
+
+```{r}
+# predicting with a 'new' dataset
+
+data.list <- list(list(otu.relabs.f4, "F4"),
+                  list(otu.relabs.m3, "M3"),
+                  list(dr.D.rel.otutab, "D"),
+                  list(dr.E.rel.otutab, "E"),
+                  list(dr.F.rel.otutab, "F"))
+new.reapp.df <- data.frame(otu.rarity = numeric(),
+                           subjID = character())
+
+for (subj in data.list) {
+  subj.otutab <- subj[[1]]
+  subj.id <- subj[[2]]
+  
+  subj.otu.rarity <- otu.avg.asin(subj.otutab)
+  subj.df <- data.frame(otu.rarity = subj.otu.rarity,
+                        subjID = rep(subj.id, length(subj.otu.rarity)))
+  new.reapp.df <- rbind(new.reapp.df, subj.df)
+}
+
+pred.reapp.abnd.1 <- predict(object = reapp.glmmTMB, newdata = new.reapp.df, allow.new.levels = FALSE, type = "response")
+pred.reapp.abnd.2 <- predict(object = reapp.glmmTMB, newdata = new.reapp.df, allow.new.levels = TRUE)
+
+head(cbind(pred.reapp.abnd.1, pred.reapp.abnd.2))
+
+new.reapp.df$pred.1 <- pred.reapp.abnd.1
+
+ggplot(new.reapp.df, aes(x=otu.rarity, y=pred.1, color=subjID)) +
+  geom_point() +
+  xlim(c(0,0.25)) +
+  ylim(c(0,0.15))
+
+summary(pred.reapp.abnd.1)
+```
+
 
 
 
