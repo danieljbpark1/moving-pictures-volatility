@@ -38,6 +38,37 @@ load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
 ```
 
+# Simulated Moving Pictures datasets
+```{r}
+#set.seed(0)
+set <- sample(x = 1:500, size = 1)
+sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+
+sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("F4"))
+sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("M3"))
+
+sim.disapp.tab <- rbind(prob.disapp.tab(otutab = sim.otutab.f4, subj.id = "F4"),
+                        prob.disapp.tab(otutab = sim.otutab.m3, subj.id = "M3"))
+
+head(sim.disapp.tab)
+
+ggplot(sim.disapp.tab, aes(x=avg.asin, y=prob.disappear, color=subj.id)) +
+  geom_point() +
+  labs(title = "OTU Probabilities of Disappearance",
+       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       x = "average within-subject asin Hellinger abundance", 
+       y = "probability of disappearance")
+
+ggplot(sim.disapp.tab, aes(x=prob.disappear, color=subj.id)) +
+  geom_density(aes(fill=subj.id), alpha=0.1) +
+    labs(title = "Distribution of OTU Probabilities of Disappearance",
+       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       x = "probability of disappearance")
+
+```
+
 # Disappearance logistic regression
 
 ```{r}
@@ -49,11 +80,11 @@ otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
 otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
 
 
-avg.asin.D <- otu.avg.asin(otutab.D)
-avg.asin.E <- otu.avg.asin(otutab.E)
-avg.asin.F <- otu.avg.asin(otutab.F)
-avg.asin.F4 <- otu.avg.asin(otutab.F4)
-avg.asin.M3 <- otu.avg.asin(otutab.M3)
+avg.asin.D <- avg.asin.abnd(otutab.D)
+avg.asin.E <- avg.asin.abnd(otutab.E)
+avg.asin.F <- avg.asin.abnd(otutab.F)
+avg.asin.F4 <- avg.asin.abnd(otutab.F4)
+avg.asin.M3 <- avg.asin.abnd(otutab.M3)
 
 disapp.tab.D <- format_disappearance_data(otutab.D, 
                                           avg.asin.D,
@@ -133,22 +164,13 @@ legend("topright", inset=.02, title="lrc value",
 Given that a taxa is present at time $t-1$, what is the probability that the taxa disappears at time $t$?
 
 ## Dethlefsen Relman and Caporaso data
-```{r}
-asin.disapp.tab <- function(otutab, subj.id) {
-  asin.otutab <- asin(transform(otutab, transform = 'hellinger'))
-  avg.asin <- apply(asin.otutab, 1, mean)
-  disapp.prob <- disappearance_probabilities(otutab)
-  disapp.tab <- data.frame(prob.disappear = disapp.prob,
-                           avg.asin = avg.asin) %>%
-    mutate(subj.id = subj.id)
-  return(disapp.tab)
-}
 
-disapp.tab.ALL <- rbind(asin.disapp.tab(otutab.D, 'D'),
-                        asin.disapp.tab(otutab.E, 'E'),
-                        asin.disapp.tab(otutab.F, 'F'),
-                        asin.disapp.tab(otutab.F4, 'F4'),
-                        asin.disapp.tab(otutab.M3, 'M3'))
+```{r}
+disapp.tab.ALL <- rbind(prob.disapp.tab(otutab.D, 'D'),
+                        prob.disapp.tab(otutab.E, 'E'),
+                        prob.disapp.tab(otutab.F, 'F'),
+                        prob.disapp.tab(otutab.F4, 'F4'),
+                        prob.disapp.tab(otutab.M3, 'M3'))
 
 ggplot(disapp.tab.ALL, aes(x=prob.disappear, color=subj.id)) +
   geom_density(aes(fill = subj.id), alpha = 0.1) + 
@@ -157,8 +179,8 @@ ggplot(disapp.tab.ALL, aes(x=prob.disappear, color=subj.id)) +
   xlim(0,1) +
   scale_fill_discrete()
 
-DR.disapp.plot <- ggplot(big.disapp.tab, aes(x = avg.asin, y = prob.disappear)) +
-  geom_point(aes(color = subj.ID),
+disapp.plot <- ggplot(disapp.tab.ALL, aes(x = avg.asin, y = prob.disappear)) +
+  geom_point(aes(color = subj.id),
              size=.8) +
   labs(y = "Probability of extinction",
        x = "OTU mean arcsin Hellinger abundance",
@@ -166,7 +188,7 @@ DR.disapp.plot <- ggplot(big.disapp.tab, aes(x = avg.asin, y = prob.disappear)) 
        subtitle = "Caporaso et al. / Dethlefsen and Relman",
        color = "Subject ID")
 
-DR.disapp.plot
+disapp.plot
 ```
 
 ## Nonlinear Mixed Effects Model

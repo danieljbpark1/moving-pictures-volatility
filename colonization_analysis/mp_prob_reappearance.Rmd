@@ -33,17 +33,56 @@ load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
 ```
 
+# Simulated Moving Pictures datasets
+```{r}
+#set.seed(0)
+set <- sample(x = 1:500, size = 1)
+sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+
+sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("F4"))
+sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("M3"))
+
+sim.reapp.tab <- rbind(prob.reapp.tab(otutab = sim.otutab.f4, subj.id = "F4"),
+                       prob.reapp.tab(otutab = sim.otutab.m3, subj.id = "M3"))
+
+head(sim.reapp.tab)
+
+ggplot(sim.reapp.tab, aes(x=avg.asin, y=prob.reappear, color=subj.id)) +
+  geom_point() +
+  labs(title = "OTU Probabilities of Reappearance",
+       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       x = "average within-subject asin Hellinger abundance", 
+       y = "probability of reappearance")
+
+ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
+  geom_density(aes(fill=subj.id), alpha=0.1) +
+    labs(title = "Distribution of OTU Probabilities of Reappearance",
+       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       x = "probability of reappearance")
+
+```
+
+
 # Probability of reappearance
 
 ```{r}
-big.reapp.tab <- rbind(asin.reapp.tab(dr.D.otutab, 'D'),
-                       asin.reapp.tab(dr.E.otutab, 'E'),
-                       asin.reapp.tab(dr.F.otutab, 'F'),
-                       asin.reapp.tab(otu.counts.f4, 'F4'),
-                       asin.reapp.tab(otu.counts.m3, 'M3'))
+## excluding singletons and doubletons
+otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
+otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
+otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
+otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
+otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
 
-reapp.plot <- ggplot(big.reapp.tab, aes(x = avg.asin, y = prob.reappear)) +
-  geom_point(aes(color = subj.ID),
+reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.D, 'D'),
+                       prob.reapp.tab(otutab.E, 'E'),
+                       prob.reapp.tab(otutab.F, 'F'),
+                       prob.reapp.tab(otutab.F4, 'F4'),
+                       prob.reapp.tab(otutab.M3, 'M3'))
+
+reapp.plot <- ggplot(reapp.tab.ALL, aes(x = avg.asin, y = prob.reappear)) +
+  geom_point(aes(color = subj.id),
              size=.8) +
   labs(y = "Probability of colonization",
        x = "OTU mean arcsin Hellinger abundance",
@@ -55,12 +94,12 @@ reapp.plot
 ```
 
 ```{r}
-big.reapp.tab <- big.reapp.tab %>% 
-  mutate(subj.ID = as.factor(subj.ID)) %>%
+reapp.tab.ALL <- reapp.tab.ALL %>% 
+  mutate(subj.id = as.factor(subj.id)) %>%
   drop_na()
 
-ggplot(big.reapp.tab, aes(x = prob.reappear, color = subj.ID)) +
-  geom_density(aes(fill = subj.ID),
+ggplot(reapp.tab.ALL, aes(x = prob.reappear, color = subj.id)) +
+  geom_density(aes(fill = subj.id),
                alpha = 0.1) + 
   labs(title = "Distribution of conditional reappearance probabilities",
        x = "conditional reappearance probability") +
@@ -70,27 +109,27 @@ ggplot(big.reapp.tab, aes(x = prob.reappear, color = subj.ID)) +
 # Predict reappearance with logistic regression GLMM
 
 ```{r}
-dr.D.avg.asin <- otu.avg.asin(dr.D.otutab)
-dr.E.avg.asin <- otu.avg.asin(dr.E.otutab)
-dr.F.avg.asin <- otu.avg.asin(dr.F.otutab)
-mp.F4.avg.asin <- otu.avg.asin(otu.counts.f4)
-mp.M3.avg.asin <- otu.avg.asin(otu.counts.m3)
+dr.D.avg.asin <- avg.asin.abnd(dr.D.otutab)
+dr.E.avg.asin <- avg.asin.abnd(dr.E.otutab)
+dr.F.avg.asin <- avg.asin.abnd(dr.F.otutab)
+mp.F4.avg.asin <- avg.asin.abnd(otu.counts.f4)
+mp.M3.avg.asin <- avg.asin.abnd(otu.counts.m3)
 
 dr.D.reapp.tab <- format_reappearance_data(dr.D.rel.otutab,
                                            dr.D.avg.asin,
-                                           subjID = "D")
+                                           "D")
 dr.E.reapp.tab <- format_reappearance_data(dr.E.rel.otutab,
                                            dr.E.avg.asin,
-                                           subjID = "E")
+                                           "E")
 dr.F.reapp.tab <- format_reappearance_data(dr.F.rel.otutab,
                                            dr.F.avg.asin, 
-                                           subjID = "F")
+                                           "F")
 mp.F4.reapp.tab <- format_reappearance_data(otu.relabs.f4,
                                             mp.F4.avg.asin,
-                                            subjID = "F4")
+                                            "F4")
 mp.M3.reapp.tab <- format_reappearance_data(otu.relabs.m3,
                                             mp.M3.avg.asin,
-                                            subjID = "M3")
+                                            "M3")
 
 dr.mp.reapp.tab <- rbind(dr.D.reapp.tab,
                          dr.E.reapp.tab,
