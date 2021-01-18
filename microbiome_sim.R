@@ -6,6 +6,7 @@ library(glmmTMB)
 library(dplyr)
 library(tidyr)
 library(dirmult)
+library(doParallel)
 source("mp_analysis_functions.R")
 load("mp_F4_data.Rdata") # Moving Pictures subject F4
 load("mp_M3_data.Rdata") # Moving Pictures subject M3
@@ -16,37 +17,54 @@ load("dethlefsen_relman.Rdata") # Dethlefsen Relman subjects D, E, F
 otutab.f4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
 otutab.m3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
 
-otu.id.f4 <- rownames(otutab.f4)
-otu.id.m3 <- rownames(otutab.m3)
-# OTUs shared across subjects
-otu.ids <- Reduce(intersect, list(otu.id.f4, 
-                                  otu.id.m3))
+otu.ids.f4 <- rownames(otutab.f4)
+otu.ids.m3 <- rownames(otutab.m3)
+# OTU IDs found in at least one subject
+otu.ids <- unique(c(otu.ids.f4,
+                    otu.ids.m3))
 n.otu <- length(otu.ids) # number of OTUs
 
-otutab.f4 <- otutab.f4[otu.ids, ]
-otutab.m3 <- otutab.m3[otu.ids, ]
-# combined OTU table of raw abundances, taxa are rows
+otutab.f4 <- as.data.frame(otutab.f4) %>%
+  rownames_to_column(var = "otu.id")
+otutab.f4 <- left_join(data.frame(otu.id = otu.ids),
+                       otutab.f4,
+                       by = "otu.id") %>%
+  mutate_all(list(~replace_na(.,0)))
+otutab.f4 <- otutab.f4 %>% column_to_rownames("otu.id")
+
+otutab.m3 <- as.data.frame(otutab.m3) %>%
+  rownames_to_column(var = "otu.id")
+otutab.m3 <- left_join(data.frame(otu.id = otu.ids),
+                       otutab.m3,
+                       by = "otu.id") %>%
+  mutate_all(list(~replace_na(.,0)))
+otutab.m3 <- otutab.m3 %>% column_to_rownames("otu.id")
+# combined otutab
 otutab <- cbind(otutab.f4,
                 otutab.m3)
 
 subj.ids <- c("F4", "M3") 
 n.subj <- length(subj.ids) # number of subjects
 # dataframe of all otu.id / subj.id pairs
-full.otu.subj.data <- data.frame(otu.id = rep(otu.ids, each = length(subj.ids)),
-                                 subj.id = rep(subj.ids, length(otu.ids)))
+full.otu.subj.data <- data.frame(otu.id = rep(otu.ids, each = n.subj),
+                                 subj.id = rep(subj.ids, n.otu))
 
 # relative abundance OTU tables
 rel.otutab.f4 <- transform(otutab.f4, transform = 'compositional')
 rel.otutab.m3 <- transform(otutab.m3, transform = 'compositional')
+
 # input for later functions
 input <- list(list(rel.otutab.f4, "F4"),
               list(rel.otutab.m3, "M3"))
-avg.pos.rel.abnd <- matrix(nrow = n.otu, ncol = n.subj, dimnames = list(otu.ids, subj.ids)) # average within-subject present relative abundance for each OTU
+
+# average within-subject present relative abundance for each OTU
+avg.pos.rel.abnd <- matrix(nrow = n.otu, ncol = n.subj, dimnames = list(otu.ids, subj.ids)) 
 for (i in 1:n.subj) {
   subj.otutab <- input[[i]][[1]]
   # avg. rel. abnd. presence for each OTU
-  avg.pos.rel.abnd[ ,i] <- apply(subj.otutab, 1, function(a) mean(a[a > 0])) 
+  avg.pos.rel.abnd[ ,i] <- apply(subj.otutab, 1, function(a) mean(a[a > 0], na.rm = TRUE)) 
 }
+avg.pos.rel.abnd[is.na(avg.pos.rel.abnd)] <- 0 # 0 if OTU never appears in subject
 
 ##
 ## SIMULATE OTU TABLES AT T=1
@@ -69,7 +87,8 @@ for (i in 1:n.subj) {
 
 set.seed(0) 
 n.set = 500 # number of simulated datasets
-for (set in 1:n.set) {
+
+simDM <- function(set, n.subj, dd.mp) {
   # track progress 
   if (set %% 100 == 0) print(set)
   
@@ -83,6 +102,10 @@ for (set in 1:n.set) {
               sep = "\t", col.names = T, row.names = T)
 }
 
+cl <- makeCluster(2, type="FORK") # parallel processing with 2 clusters
+registerDoParallel(cl)
+foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.mp)
+
 ## 
 ## SIMULATE LONGITUDINAL OTUs (multiple time points -- balanced) 
 ## 
@@ -94,7 +117,6 @@ for (t in 1:n.time) {
     samp.ids <- c(samp.ids, paste(s,t,sep = "."))
   }
 }
-
 
 # returns dataframe of all post-presence instances 
 asin.disapp.tab <- function(input) {
@@ -113,26 +135,21 @@ asin.disapp.tab <- function(input) {
     big.disapp.tab <- rbind(big.disapp.tab, disapp.tab)
   }
   return(big.disapp.tab)
-  # disapp.prob <- disappearance_probabilities(otutab)
-  # avg.asin <- avg.asin.abnd(otutab)
-  # disapp.tab <- data.frame(prob.disappear = disapp.prob,
-  #                          avg.asin = avg.asin) %>%
-  #   mutate(subj.id = subj.id)
 }
 
 # returns vector of pred. prob. of disapp. sorted by otu.ids / subj.id
 predict.prob.disapp <- function(input, otu.subj.data) {
   big.disapp.tab <- asin.disapp.tab(input) 
   # mixed effects logistic regression
-  disapp.glmm <- glmer(disappeared ~ 1 + (1 | subj.id / otu.id), 
-                       data = big.disapp.tab,
-                       family = binomial)
+  disapp.glmm <- glmer(disappeared ~ 1 + subj.id + (1 | otu.id),
+                        data = big.disapp.tab,
+                        family = binomial)
   # predict for all subj.id / otu.id
-  pred.disapp.prob <- predict(disapp.glmm, 
-                              re.form = ~ (1 | subj.id / otu.id), 
+  pred.prob.disapp <- predict(disapp.glmm, 
+                              re.form = ~ (1 | otu.id), 
                               type = "response")
   # bind to training dataset
-  big.disapp.tab$pred.disapp.prob <- pred.disapp.prob
+  big.disapp.tab$pred.prob.disapp <- pred.prob.disapp
   # choose with uniform probability one prediction for each subj.id / otu.id
   pred.disapp <- big.disapp.tab %>%
     group_by(subj.id, otu.id) %>%
@@ -142,11 +159,10 @@ predict.prob.disapp <- function(input, otu.subj.data) {
   res <- left_join(otu.subj.data,
                    pred.disapp,
                    by = c("otu.id", "subj.id"))
-  return(res$pred.disapp.prob)
-  # grouped.disapp.tab <- groupedData(prob.disappear ~ avg.asin | subj.id, 
-  #                                   data = big.disapp.tab)
-  # asymp.fixed <- nlsList(SSasymp, data = grouped.disapp.tab)
-  # asymp.mixed <- nlme(asymp.fixed, random = lrc ~ 1)
+  # if there's no prediction for an OTU, it should always disappear
+  # because it shouldn't be present in that subject
+  res$pred.prob.disapp[is.na(res$pred.prob.disapp)] <- 1
+  return(res$pred.prob.disapp)
 }
 
 # returns vector of simulated log fold-changes
@@ -171,19 +187,18 @@ asin.reapp.tab <- function(input) {
                                           subj.id)
     big.reapp.tab <- rbind(big.reapp.tab, reapp.tab)
   }
-  
   return(big.reapp.tab)
 }
 
 # returns vector of prob. of reapp. forsorted by otu.ids / subj.id
 predict.prob.reapp <- function(reapp.data, otu.subj.data) {
   # mixed effects logistic regression
-  reapp.glmm <- glmer(reappeared ~ 1 + (1 | subj.id / otu.id), 
+  reapp.glmm <- glmer(reappeared ~ 1 + subj.id + (1 | otu.id), 
                       data = reapp.data,
                       family = binomial)
   # predict for all rows in training data
   pred.prob.reapp <- predict(reapp.glmm, 
-                             re.form = ~ (1 | subj.id / otu.id), 
+                             re.form = ~ (1 | otu.id), 
                              type = "response")
   
   big.reapp.tab <- reapp.data
@@ -202,9 +217,6 @@ predict.prob.reapp <- function(reapp.data, otu.subj.data) {
     replace_na(replace = list(pred.prob.reapp = 1))
   
   return(res$pred.prob.reapp)
-  # pred.reapp.df <- data.frame(pred.prob.reapp = pred.prob.reapp) %>%
-  #   mutate(otu.id = big.reapp.tab$otu.id,
-  #          subj.id = subj.id)
 }
 
 # returns fitted glmmTMB mixed effects beta regression model
@@ -221,7 +233,8 @@ fit.reapp.glmm <- function(reapp.data) {
 }
 
 # returns dataframe of simulated reappeared relative abundances
-# if otu.id / subj.id is not simulated by reapp.glmmTMB, fill in with its average presence
+# if otu.id / subj.id is not simulated by reapp.glmmTMB
+# fill in with its average within-subject presence
 sim.reapp <- function(reapp.data, reapp.glmmTMB, avg.pos.rel.abnd, otu.subj.data) {
   # all reappearance relative abundance instances
   reapp.abnd.df <- reapp.data %>%
@@ -236,17 +249,17 @@ sim.reapp <- function(reapp.data, reapp.glmmTMB, avg.pos.rel.abnd, otu.subj.data
     sample_n(size = 1)
   
   # NA simulations for otu.id / subj.id that were never absent (always present)
+  # or are never present in a subject
   res <- left_join(otu.subj.data,
                    sim.reapp.data,
                    by = c("otu.id", "subj.id"))
-  # average present rel. abnd. for each otu.id / subj.id
+  # average within-subject present relative abundance for each OTU
   avg.presence <- melt(data.table(t(avg.pos.rel.abnd), keep.rownames = TRUE), id.vars = 'rn')
-  # fill in NA simulations with the OTU's average presence
+  # fill in NA simulations with the OTU's average within-subject presence
   res$sim[is.na(res$sim)] <- avg.presence$value[is.na(res$sim)]
   
   return(res$sim)
 }
-
 
 ## DISAPPEARANCE PROBABILITIES
 prob.disapp <- predict.prob.disapp(input = input, otu.subj.data = full.otu.subj.data) # prob. disapp. for each OTU
