@@ -7,11 +7,11 @@ library(dplyr)
 library(tidyr)
 library(dirmult)
 source("mp_analysis_functions.R")
-load("mp_F4_data.Rdata")
-load("mp_M3_data.Rdata")
-load("dethlefsen_relman.Rdata")
+load("mp_F4_data.Rdata") # Moving Pictures subject F4
+load("mp_M3_data.Rdata") # Moving Pictures subject M3
+load("dethlefsen_relman.Rdata") # Dethlefsen Relman subjects D, E, F
 
-# start by filtering out only singletons/doubletons
+# start by filtering out singletons/doubletons
 # join tables within studies but not across studies
 otutab.f4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
 otutab.m3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
@@ -21,15 +21,32 @@ otu.id.m3 <- rownames(otutab.m3)
 # OTUs shared across subjects
 otu.ids <- Reduce(intersect, list(otu.id.f4, 
                                   otu.id.m3))
+n.otu <- length(otu.ids) # number of OTUs
 
 otutab.f4 <- otutab.f4[otu.ids, ]
 otutab.m3 <- otutab.m3[otu.ids, ]
 # combined OTU table of raw abundances, taxa are rows
 otutab <- cbind(otutab.f4,
                 otutab.m3)
+
+subj.ids <- c("F4", "M3") 
+n.subj <- length(subj.ids) # number of subjects
+# dataframe of all otu.id / subj.id pairs
+full.otu.subj.data <- data.frame(otu.id = rep(otu.ids, each = length(subj.ids)),
+                                 subj.id = rep(subj.ids, length(otu.ids)))
+
 # relative abundance OTU tables
 rel.otutab.f4 <- transform(otutab.f4, transform = 'compositional')
 rel.otutab.m3 <- transform(otutab.m3, transform = 'compositional')
+# input for later functions
+input <- list(list(rel.otutab.f4, "F4"),
+              list(rel.otutab.m3, "M3"))
+avg.pos.rel.abnd <- matrix(nrow = n.otu, ncol = n.subj, dimnames = list(otu.ids, subj.ids)) # average within-subject present relative abundance for each OTU
+for (i in 1:n.subj) {
+  subj.otutab <- input[[i]][[1]]
+  # avg. rel. abnd. presence for each OTU
+  avg.pos.rel.abnd[ ,i] <- apply(subj.otutab, 1, function(a) mean(a[a > 0])) 
+}
 
 ##
 ## SIMULATE OTU TABLES AT T=1
@@ -52,8 +69,6 @@ rel.otutab.m3 <- transform(otutab.m3, transform = 'compositional')
 
 set.seed(0) 
 n.set = 500 # number of simulated datasets
-subj.ids <- c("F4", "M3")
-n.subj <- length(subj.id) # number of subjects
 for (set in 1:n.set) {
   # track progress 
   if (set %% 100 == 0) print(set)
@@ -72,18 +87,7 @@ for (set in 1:n.set) {
 ## SIMULATE LONGITUDINAL OTUs (multiple time points -- balanced) 
 ## 
 
-n.time = 10 # number of time points
-n.otu <- length(otu.ids) # number of OTUs
-input <- list(list(rel.otutab.f4, "F4"),
-              list(rel.otutab.m3, "M3"))
-full.otu.subj.data <- data.frame(otu.id = rep(otu.ids, each = length(subj.ids)),
-                                 subj.id = rep(subj.ids, length(otu.ids)))
-avg.pos.rel.abnd <- matrix(nrow = n.otu, ncol = n.subj, dimnames = list(otu.ids, subj.id)) # average within-subject present relative abundance for each OTU
-for (i in 1:n.subj) {
-  subj.otutab <- input[[i]][[1]]
-  # avg. rel. abnd. presence for each OTU
-  avg.pos.rel.abnd[ ,i] <- apply(subj.otutab, 1, function(a) mean(a[a > 0])) 
-}
+n.time = 120 # number of time points
 samp.ids <- character() # sample identifiers
 for (t in 1:n.time) {
   for (s in subj.ids) {
@@ -91,69 +95,6 @@ for (t in 1:n.time) {
   }
 }
 
-## DISAPPEARANCE PROBABILITIES
-prob.disapp <- predict.prob.disapp(input = input, otu.subj.data = full.otu.subj.data) # prob. disapp. for each OTU
-## REAPPEARANCE PROBABILITIES
-reapp.data <- asin.reapp.tab(input = input) # training data for reapp. models
-prob.reapp <- predict.prob.reapp(reapp.data = reapp.data, otu.subj.data = full.otu.subj.data) # prob. reapp. for each OTU
-## SIMULATE REAPPEARANCES
-reapp.glmm <- fit.reapp.glmm(reapp.data = reapp.data) # model for reapp. rel. abnd.
-
-for (set in 1:n.set) {
-  # track progress 
-  if (set %% 100 == 0) print(set) 
-  
-  # set up matrix and fill in time 1 
-  this.otus <- matrix(nrow = n.otu, ncol = n.subj*n.time, dimnames = list(otu.id, samp.id))
-  this.otus[, c(1:n.subj)] <- as.matrix(read.table(paste("./SimSets_MP", n.subj, "/set", sprintf("%04d", set), ".txt", sep = "")))
-  
-  for (tt in 2:n.time) {
-    prev.start <- (tt - 2)*n.subj + 1 
-    prev.end <- (tt - 1)*n.subj
-    prev.otus <- this.otus[, c(prev.start:prev.end)]
-    
-    # does taxon disappear? 
-    indic.disapp <- sapply(prob.disapp, FUN = function(p) rbinom(1, size = 1, prob = (1-p)))  # indicator that cell does *not* disappear
-    mat.disapp <- matrix(indic.disapp, ncol = n.subj, byrow = TRUE) 
-    
-    # if not, how much change from t1 to t2? 
-    perturb.lval <- sim.log.foldchange(n = n.subj*n.otu)
-    perturb.val <- exp(perturb.lval) 
-    mat.perturb <- matrix(perturb.val, ncol = n.subj, byrow = TRUE)
-    
-    # final perturbation 
-    current.otus <- prev.otus * mat.disapp * mat.perturb # disappeared OTUs go to 0
-
-    # does taxon reappear?
-    indic.reapp <- sapply(prob.reapp, FUN = function(p) rbinom(1, size = 1, prob = p)) # indicator that cell does reappear
-    mat.reapp <- matrix(indic.reapp, ncol = n.subj, byrow = TRUE)
-    
-    # at what relative abundance does it reappear?
-    sim.reapp.abnd <- sim.reapp(reapp.data = reapp.data, 
-                                reapp.glmmTMB = reapp.glmm, 
-                                avg.pos.rel.abnd = avg.pos.rel.abnd, 
-                                otu.subj.data = full.otu.subj.data)
-    mat.sim.reapp <- matrix(sim.reapp.abnd, ncol = n.subj, byrow = TRUE)
-    
-    # if prev.otu == 0 and mat.reapp == 1 then set to new reappeared relative abundance
-    current.absent <- prev.otus == 0 # matrix indices of current absences
-    mat.sim.reapp <- mat.sim.reapp * mat.reapp # non-reappeared OTUs go to 0
-    current.otus[current.absent] <- mat.sim.reapp[current.absent] # fill in currently absent, reappeared OTUs
-    
-    # re-normalize
-    this.start <- (tt - 1)*n.subj + 1 
-    this.end <- tt*n.subj 
-    this.otus[, this.start:this.end] <- transform(current.otus, transform = 'compositional')
-  }
-  
-  # set rownames to otu.ids
-  # set colnames to samp.ids
-  
-  # again write to pre-created folder 
-  write.table(this.otus, 
-              file = paste("./SimSets_MP_n", n.subj, "_t", n.time, "/set", sprintf("%04d", set), ".txt", sep = ""), 
-              sep = "\t", col.names = T, row.names = T)
-}
 
 # returns dataframe of all post-presence instances 
 asin.disapp.tab <- function(input) {
@@ -279,6 +220,8 @@ fit.reapp.glmm <- function(reapp.data) {
   return(reapp.glmmTMB)
 }
 
+# returns dataframe of simulated reappeared relative abundances
+# if otu.id / subj.id is not simulated by reapp.glmmTMB, fill in with its average presence
 sim.reapp <- function(reapp.data, reapp.glmmTMB, avg.pos.rel.abnd, otu.subj.data) {
   # all reappearance relative abundance instances
   reapp.abnd.df <- reapp.data %>%
@@ -300,12 +243,68 @@ sim.reapp <- function(reapp.data, reapp.glmmTMB, avg.pos.rel.abnd, otu.subj.data
   avg.presence <- melt(data.table(t(avg.pos.rel.abnd), keep.rownames = TRUE), id.vars = 'rn')
   # fill in NA simulations with the OTU's average presence
   res$sim[is.na(res$sim)] <- avg.presence$value[is.na(res$sim)]
-
+  
   return(res$sim)
 }
 
 
+## DISAPPEARANCE PROBABILITIES
+prob.disapp <- predict.prob.disapp(input = input, otu.subj.data = full.otu.subj.data) # prob. disapp. for each OTU
+## REAPPEARANCE PROBABILITIES
+reapp.data <- asin.reapp.tab(input = input) # training data for reapp. models
+prob.reapp <- predict.prob.reapp(reapp.data = reapp.data, otu.subj.data = full.otu.subj.data) # prob. reapp. for each OTU
+## SIMULATE REAPPEARANCES
+reapp.glmm <- fit.reapp.glmm(reapp.data = reapp.data) # model for reapp. rel. abnd.
 
+for (set in 1:n.set) {
+  # track progress 
+  if (set %% 100 == 0) print(set) 
+  
+  # set up matrix and fill in time 1 
+  this.otus <- matrix(nrow = n.otu, ncol = n.subj*n.time, dimnames = list(otu.ids, samp.ids))
+  this.otus[, c(1:n.subj)] <- as.matrix(read.table(paste("./SimSets_MP", n.subj, "/set", sprintf("%04d", set), ".txt", sep = "")))
+  
+  for (tt in 2:n.time) {
+    prev.start <- (tt - 2)*n.subj + 1 
+    prev.end <- (tt - 1)*n.subj
+    prev.otus <- this.otus[, c(prev.start:prev.end)]
+    
+    # does taxon disappear? 
+    indic.disapp <- sapply(prob.disapp, FUN = function(p) rbinom(1, size = 1, prob = (1-p)))  # indicator that cell does *not* disappear
+    mat.disapp <- matrix(indic.disapp, ncol = n.subj, byrow = TRUE) 
+    
+    # if not, how much change from t1 to t2? 
+    perturb.lval <- sim.log.foldchange(n = n.subj*n.otu)
+    perturb.val <- exp(perturb.lval) 
+    mat.perturb <- matrix(perturb.val, ncol = n.subj, byrow = TRUE)
+    
+    # final perturbation 
+    current.otus <- prev.otus * mat.disapp * mat.perturb # disappeared OTUs go to 0
 
-
-
+    # does taxon reappear?
+    indic.reapp <- sapply(prob.reapp, FUN = function(p) rbinom(1, size = 1, prob = p)) # indicator that cell does reappear
+    mat.reapp <- matrix(indic.reapp, ncol = n.subj, byrow = TRUE)
+    
+    # at what relative abundance does it reappear?
+    sim.reapp.abnd <- sim.reapp(reapp.data = reapp.data, 
+                                reapp.glmmTMB = reapp.glmm, 
+                                avg.pos.rel.abnd = avg.pos.rel.abnd, 
+                                otu.subj.data = full.otu.subj.data)
+    mat.sim.reapp <- matrix(sim.reapp.abnd, ncol = n.subj, byrow = TRUE)
+    
+    # if prev.otu == 0 and mat.reapp == 1 then set to new reappeared relative abundance
+    current.absent <- prev.otus == 0 # matrix indices of current absences
+    mat.sim.reapp <- mat.sim.reapp * mat.reapp # non-reappeared OTUs go to 0
+    current.otus[current.absent] <- mat.sim.reapp[current.absent] # fill in currently absent, reappeared OTUs
+    
+    # re-normalize
+    this.start <- (tt - 1)*n.subj + 1 
+    this.end <- tt*n.subj 
+    this.otus[, this.start:this.end] <- transform(current.otus, transform = 'compositional')
+  }
+  
+  # again write to pre-created folder 
+  write.table(this.otus, 
+              file = paste("./SimSets_MP_n", n.subj, "_t", n.time, "/set", sprintf("%04d", set), ".txt", sep = ""), 
+              sep = "\t", col.names = T, row.names = T)
+}
