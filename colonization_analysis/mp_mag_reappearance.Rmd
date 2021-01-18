@@ -128,12 +128,6 @@ summary(pred.reapp.abnd.1)
 ```
 
 
-
-
-
-
-
-
 ```{r}
 reapp.zoib <- zoib(y ~ otu.rarity | otu.rarity | subjID,
                    data = reappeared.relabs.tab,
