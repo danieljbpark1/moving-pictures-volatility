@@ -49,6 +49,13 @@ ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = y)) +
   labs(title = "Reappeared relative abundances",
        x = "OTU mean arcsin Hellinger-abundance (within subject)",
        y = "")
+
+ggplot(reappeared.relabs.tab %>% filter(subjID%in%c("F4","M3")), aes(x = otu.rarity, y = y)) +
+  geom_point(aes(color = subjID),
+             size = .75) + 
+  labs(title = "Reappeared relative abundances",
+       x = "OTU mean arcsin Hellinger-abundance (within subject)",
+       y = "")
 ```
 
 ```{r}
