@@ -3,16 +3,6 @@ library(data.table)
 library(tibble)
 library(microbiome)
 
-# return OTUs probability of reappearance
-# asin.reapp.tab <- function(otutab, subj.ID) {
-#   avg.asin <- otu.avg.asin(otutab)
-#   reapp.prob <- reappearance_probabilities(otutab)
-#   reapp.tab <- data.frame(prob.reappear = reapp.prob,
-#                           avg.asin = avg.asin,
-#                           subj.ID = rep(subj.ID, length(avg.asin)))
-#   return(reapp.tab)
-# }
-
 # returns vector of avg. asin Hellinger-transformed abnd. for each OTU
 avg.asin.abnd <- function(otutab) {
   asin.otutab <- asin(transform(otutab, 
@@ -175,6 +165,25 @@ format_reappearance_data <- function(otutab, otu.rarity, subj.id, taxa_are_rows 
   # return(res)
 }
 
+prob.disapp.tab <- function(otutab, subj.id) {
+  avg.asin <- avg.asin.abnd(otutab)
+  disapp.prob <- disappearance_probabilities(otutab)
+  disapp.tab <- data.frame(prob.disappear = disapp.prob,
+                           avg.asin = avg.asin) %>%
+    mutate(subj.id = subj.id)
+  return(disapp.tab)
+}
+
+prob.reapp.tab <- function(otutab, subj.id) {
+  avg.asin <- avg.asin.abnd(otutab)
+  reapp.prob <- reappearance_probabilities(otutab)
+  reapp.tab <- data.frame(prob.reappear = reapp.prob,
+                          avg.asin = avg.asin) %>%
+    mutate(subj.id = subj.id)
+  return(reapp.tab)
+}
+
+
 # function for predicting reappearance counts from negative binomial model
 predict_reappearance <- function(X_count, X_zero=NULL, negbin_model, zero_inflated=FALSE, seed = 0){
   set.seed(seed)
@@ -221,8 +230,8 @@ predict_reappearance <- function(X_count, X_zero=NULL, negbin_model, zero_inflat
 # function for calculating probability of reappearance for each OTU
 # inputs: OTU table with samples ordered by time 
 # returns: vector of reappearance probabilities for each OTU
-reappearance_probabilities <- function(otu.table, taxa_are_rows = TRUE){
-  fold.difference.table <- fold_difference_table(otu.table = otu.table, taxa_are_rows = taxa_are_rows)
+reappearance_probabilities <- function(otutab, taxa_are_rows = TRUE){
+  fold.difference.table <- fold_difference_table(otutab, taxa_are_rows = taxa_are_rows)
   
   if (taxa_are_rows) {
     dimension <- 1
