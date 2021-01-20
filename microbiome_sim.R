@@ -265,11 +265,13 @@ sim.reapp <- function(reapp.data, reapp.glmmTMB, avg.pos.rel.abnd, otu.subj.data
 prob.disapp <- predict.prob.disapp(input = input, otu.subj.data = full.otu.subj.data) # prob. disapp. for each OTU
 ## REAPPEARANCE PROBABILITIES
 reapp.data <- asin.reapp.tab(input = input) # training data for reapp. models
-prob.reapp <- predict.prob.reapp(reapp.data = reapp.data, otu.subj.data = full.otu.subj.data) # prob. reapp. for each OTU
+prob.reapp <- predict.prob.reapp(reapp.data, full.otu.subj.data) # prob. reapp. for each OTU
 ## SIMULATE REAPPEARANCES
 reapp.glmm <- fit.reapp.glmm(reapp.data = reapp.data) # model for reapp. rel. abnd.
 
-for (set in 1:n.set) {
+simLong <- function(set, n.subj, n.otu, n.time, 
+                    prob.disapp, prob.reapp, reapp.data, reapp.glmm, 
+                    avg.pos.rel.abnd, full.otu.subj.data) {
   # track progress 
   if (set %% 100 == 0) print(set) 
   
@@ -321,3 +323,7 @@ for (set in 1:n.set) {
               file = paste("./SimSets_MP_n", n.subj, "_t", n.time, "/set", sprintf("%04d", set), ".txt", sep = ""), 
               sep = "\t", col.names = T, row.names = T)
 }
+
+foreach(set = 1:n.set) %dopar% simLong(set, n.subj, n.otu, n.time, 
+                                       prob.disapp, prob.reapp, reapp.data, reapp.glmm, 
+                                       avg.pos.rel.abnd, full.otu.subj.data)
