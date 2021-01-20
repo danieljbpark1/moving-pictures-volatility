@@ -36,6 +36,7 @@ source("../mp_analysis_functions.R")
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
+load("../otu_tables_MP.Rdata")
 ```
 
 # Simulated Moving Pictures datasets
@@ -59,13 +60,15 @@ ggplot(sim.disapp.tab, aes(x=avg.asin, y=prob.disappear, color=subj.id)) +
   labs(title = "OTU Probabilities of Disappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
        x = "average within-subject asin Hellinger abundance", 
-       y = "probability of disappearance")
+       y = "probability of disappearance") +
+  ylim(0,1)
 
 ggplot(sim.disapp.tab, aes(x=prob.disappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
     labs(title = "Distribution of OTU Probabilities of Disappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
-       x = "probability of disappearance")
+       x = "probability of disappearance") +
+  xlim(0,1)
 
 ```
 
@@ -163,32 +166,38 @@ legend("topright", inset=.02, title="lrc value",
 # Probability of extinction
 Given that a taxa is present at time $t-1$, what is the probability that the taxa disappears at time $t$?
 
-## Dethlefsen Relman and Caporaso data
+## Dethlefsen Relman and Caporaso data PLOTS
 
 ```{r}
-disapp.tab.ALL <- rbind(prob.disapp.tab(otutab.D, 'D'),
-                        prob.disapp.tab(otutab.E, 'E'),
-                        prob.disapp.tab(otutab.F, 'F'),
-                        prob.disapp.tab(otutab.F4, 'F4'),
-                        prob.disapp.tab(otutab.M3, 'M3'))
+# disapp.tab.ALL <- rbind(prob.disapp.tab(otutab.D, 'D'),
+#                         prob.disapp.tab(otutab.E, 'E'),
+#                         prob.disapp.tab(otutab.F, 'F'),
+#                         prob.disapp.tab(otutab.F4, 'F4'),
+#                         prob.disapp.tab(otutab.M3, 'M3'))
+disapp.tab.ALL <- rbind(prob.disapp.tab(otutab.f4, "F4"),
+                        prob.disapp.tab(otutab.m3, "M3"))
+
+head(disapp.tab.ALL)
 
 ggplot(disapp.tab.ALL, aes(x=prob.disappear, color=subj.id)) +
   geom_density(aes(fill = subj.id), alpha = 0.1) + 
-  labs(title = "Distribution of disappearance probabilities",
+  labs(title = "Distribution of OTU Probabilities of Disappearance",
+       subtitle = "Observed Moving Pictures dataset",
        x = "disappearance probability") +
   xlim(0,1) +
   scale_fill_discrete()
 
-disapp.plot <- ggplot(disapp.tab.ALL, aes(x = avg.asin, y = prob.disappear)) +
+ggplot(disapp.tab.ALL, aes(x = avg.asin, y = prob.disappear)) +
   geom_point(aes(color = subj.id),
              size=.8) +
   labs(y = "Probability of extinction",
-       x = "OTU mean arcsin Hellinger abundance",
-       title = "Probability of extinction by OTU",
-       subtitle = "Caporaso et al. / Dethlefsen and Relman",
-       color = "Subject ID")
+       x = "average within-subject arcsin Hellinger abundance",
+       title = "OTU Probabilities of Disappearance",
+       subtitle = "Observed Moving Pictures dataset",
+       color = "Subject ID") +
+  ylim(0,1)
 
-disapp.plot
+
 ```
 
 ## Nonlinear Mixed Effects Model

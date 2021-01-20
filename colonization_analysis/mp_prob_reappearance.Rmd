@@ -31,12 +31,14 @@ source("../mp_analysis_functions.R")
 load("../mp_F4_data.Rdata")
 load("../mp_M3_data.Rdata")
 load("../dethlefsen_relman.Rdata")
+load("../otu_tables_MP.Rdata")
 ```
 
 # Simulated Moving Pictures datasets
 ```{r}
 #set.seed(0)
-set <- sample(x = 1:500, size = 1)
+#set <- sample(x = 1:500, size = 1)
+set <- 358
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
@@ -53,14 +55,16 @@ ggplot(sim.reapp.tab, aes(x=avg.asin, y=prob.reappear, color=subj.id)) +
   geom_point() +
   labs(title = "OTU Probabilities of Reappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
-       x = "average within-subject asin Hellinger abundance", 
-       y = "probability of reappearance")
+       x = "average within-subject arcsin Hellinger abundance", 
+       y = "probability of reappearance") +
+  ylim(0,1)
 
 ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
     labs(title = "Distribution of OTU Probabilities of Reappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
-       x = "probability of reappearance")
+       x = "probability of reappearance") +
+  xlim(0,1)
 
 ```
 
@@ -69,28 +73,38 @@ ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
 
 ```{r}
 ## excluding singletons and doubletons
-otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
-otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
-otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
-otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
-otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
+# otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
+# otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
+# otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
+# otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
+# otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
 
-reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.D, 'D'),
-                       prob.reapp.tab(otutab.E, 'E'),
-                       prob.reapp.tab(otutab.F, 'F'),
-                       prob.reapp.tab(otutab.F4, 'F4'),
-                       prob.reapp.tab(otutab.M3, 'M3'))
+# reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.D, 'D'),
+#                        prob.reapp.tab(otutab.E, 'E'),
+#                        prob.reapp.tab(otutab.F, 'F'),
+#                        prob.reapp.tab(otutab.F4, 'F4'),
+#                        prob.reapp.tab(otutab.M3, 'M3'))
+reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.f4, "F4"),
+                       prob.reapp.tab(otutab.m3, "M3"))
 
-reapp.plot <- ggplot(reapp.tab.ALL, aes(x = avg.asin, y = prob.reappear)) +
+ggplot(reapp.tab.ALL, aes(x = avg.asin, y = prob.reappear)) +
   geom_point(aes(color = subj.id),
              size=.8) +
-  labs(y = "Probability of colonization",
-       x = "OTU mean arcsin Hellinger abundance",
-       title = "Probability of colonization by OTU",
-       subtitle = "Caporaso et al. / Dethlefsen and Relman",
-       color = "Subject ID")
+  labs(y = "probability of reappearance",
+       x = "average within-subject arcsin Hellinger abundance",
+       title = "OTU Probabilities of Reappearance",
+       subtitle = "Observed Moving Pictures dataset",
+       color = "Subject ID") +
+  ylim(0,1) +
+  xlim(0, 0.25)
 
-reapp.plot
+ggplot(reapp.tab.ALL, aes(x = prob.reappear, color = subj.id)) +
+  geom_density(aes(fill = subj.id),
+               alpha = 0.1) + 
+  labs(title = "Distribution of OTU Probabilities of Reappearance",
+       x = "probability of reappearance") +
+  scale_fill_discrete() +
+  xlim(0,1)
 ```
 
 ```{r}
@@ -98,12 +112,7 @@ reapp.tab.ALL <- reapp.tab.ALL %>%
   mutate(subj.id = as.factor(subj.id)) %>%
   drop_na()
 
-ggplot(reapp.tab.ALL, aes(x = prob.reappear, color = subj.id)) +
-  geom_density(aes(fill = subj.id),
-               alpha = 0.1) + 
-  labs(title = "Distribution of conditional reappearance probabilities",
-       x = "conditional reappearance probability") +
-  scale_fill_discrete()
+
 ```
 
 # Predict reappearance with logistic regression GLMM
