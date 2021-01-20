@@ -10,36 +10,20 @@ source("mp_analysis_functions.R")
 load("mp_F4_data.Rdata")
 load("mp_M3_data.Rdata")
 load("dethlefsen_relman.Rdata")
-
-# are any OTUs present in 2 or fewer samples?
-any(rowSums(otu.relabs.f4 != 0) <= 2)
-any(rowSums(otu.relabs.m3 != 0) <= 2)
-any(rowSums(dr.D.rel.otutab != 0) <= 2)
-any(rowSums(dr.E.rel.otutab != 0) <= 2)
-any(rowSums(dr.F.rel.otutab != 0) <= 2)
+load("../otu_tables_MP.Rdata")
 
 # consider only OTUs present in at least 2 samples
 otu.relabs.D <- dr.D.rel.otutab[rowSums(dr.D.rel.otutab != 0) > 2, ]
 otu.relabs.E <- dr.E.rel.otutab[rowSums(dr.E.rel.otutab != 0) > 2, ]
 otu.relabs.F <- dr.F.rel.otutab[rowSums(dr.F.rel.otutab != 0) > 2, ]
 
-set <- sample(x = 1:500, size = 1)
+set <- 358
 sim.dataset <- as.matrix(read.table(file = paste("./SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("F4"))
 sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
-
-# calculate each OTU's average rel. abnd. within its subject
-avg.otu.relabs.f4 <- apply(otu.relabs.f4, 1, mean)
-avg.otu.relabs.m3 <- apply(otu.relabs.m3, 1, mean)
-avg.otu.relabs.D <- apply(otu.relabs.D, 1, mean)
-avg.otu.relabs.E <- apply(otu.relabs.E, 1, mean)
-avg.otu.relabs.F <- apply(otu.relabs.F, 1, mean)
-
-sim.avg.otu.relabs.f4 <- apply(sim.otutab.f4, 1, mean)
-sim.avg.otu.relabs.m3 <- apply(sim.otutab.m3, 1, mean)
 
 ## DATAFRAME OF LOG FOLDCHANGES WITHIN ALL SUBJECTS 
 ## otu.id : the OTU id
@@ -49,7 +33,7 @@ sim.avg.otu.relabs.m3 <- apply(sim.otutab.m3, 1, mean)
 ## subj.id : the subject id
 log.foldchange.data <- data.frame(otu.id = character(),
                                   log.foldchange = numeric(),
-                                  avg.otu.rel.abnd = numeric(),
+                                  otu.avg.relabs = numeric(),
                                   rel.abnd.quintile = numeric(),
                                   subj.id = character()
                                   )
@@ -57,26 +41,20 @@ log.foldchange.data <- data.frame(otu.id = character(),
 ## DATAFRAME OF PROP. NON-ZERO SAMPLES
 prop.positive.data <- data.frame(otu.id = character(),
                                  prop.nonzero = numeric(),
-                                 avg.otu.rel.abnd = numeric(),
+                                 otu.avg.relabs = numeric(),
                                  subj.id = character())
 
 ## iterate thru all the data for all subjects
-data.list <- list(list(otu.relabs.f4, avg.otu.relabs.f4, "F4"),
-                  list(otu.relabs.m3, avg.otu.relabs.m3, "M3"),
-                  list(otu.relabs.D, avg.otu.relabs.D, "D"),
-                  list(otu.relabs.E, avg.otu.relabs.E, "E"),
-                  list(otu.relabs.F, avg.otu.relabs.F, "F"))
-data.list <- list(list(sim.otutab.f4, sim.avg.otu.relabs.f4, "F4"),
-                  list(sim.otutab.m3, sim.avg.otu.relabs.m3, "M3"))
+data.list <- list(list(sim.otutab.f4, "F4"),
+                  list(sim.otutab.m3, "M3"))
+
 for (subj in data.list) {
-  # OTU rel. abnd. table
-  otu.relabs.tab <- subj[[1]]
-  # average OTU rel. abnd. 
-  avg.otu.relabs <- subj[[2]]
-  subj.id <- subj[[3]]
+  rel.otutab <- subj[[1]] # OTU relative abundance table
+  otu.avg.relabs <- apply(rel.otutab, 1, mean) # OTU average rel. abnd. 
+  subj.id <- subj[[2]]
   
   # log foldchanges table
-  log.foldchange.tab <- fold_difference_table(otutab = otu.relabs.tab,
+  log.foldchange.tab <- fold_difference_table(otutab = rel.otutab,
                                               taxa_are_rows = TRUE,
                                               logRatio = TRUE)
   # make otu.id a column
@@ -92,10 +70,9 @@ for (subj in data.list) {
     rename(otu.id = rn,
            log.foldchange = value)
   # bin OTUs into quintiles based on avg. within-subject rel. abnd.
-  otu.rel.abnd.data <- data.frame(avg.otu.rel.abnd = avg.otu.relabs)
-  otu.rel.abnd.data <- otu.rel.abnd.data %>%
+  otu.rel.abnd.data <- data.frame(otu.avg.relabs = otu.avg.relabs) %>%
     rownames_to_column(var = "otu.id") %>%
-    mutate(rel.abnd.quintile = ntile(avg.otu.rel.abnd, 
+    mutate(rel.abnd.quintile = ntile(otu.avg.relabs, 
                                      n = 5)) 
   
   # join the two dataframes
@@ -110,7 +87,7 @@ for (subj in data.list) {
   rare.otu.data <- otu.rel.abnd.data %>% 
     filter(rel.abnd.quintile == 1)
   
-  prop.data <- apply(X = otu.relabs.tab > 0, MARGIN = 1, mean)
+  prop.data <- apply(X = rel.otutab > 0, MARGIN = 1, mean)
   prop.data <- data.frame(prop.nonzero = prop.data)
   prop.data <- setDT(prop.data, keep.rownames = TRUE) %>%
     rename(otu.id = rn)
@@ -134,12 +111,16 @@ tail(log.foldchange.data, 10)
 log.foldchange.plot <- ggplot(data = log.foldchange.data,
                               aes(x=log.foldchange,
                                   fill=rel.abnd.quintile)) +
-  geom_density(alpha=0.4) +
+  geom_density(aes(color=rel.abnd.quintile, 
+                   ), alpha=0.1) +
   facet_wrap(vars(subj.id), scales = "free") +
-  labs(title = "Distribution of log foldchanges",
+  xlim(-8,8) +
+  labs(title = "Distribution of OTU log fold-changes",
+       # subtitle = "Observed Moving Pictures dataset",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
-       x = "log foldchanges",
-       fill = "within-subject \n avg. rel. abnd. \n quintile")
+       x = "log fold-changes",
+       color = "within-subject \n average \n relative \n abundance \n quintile",
+       fill = "within-subject \n average \n relative \n abundance \n quintile")
 
 log.foldchange.plot
 ggsave("sim_log_foldchanges_MP.png")
