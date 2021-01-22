@@ -17,11 +17,11 @@ otu.relabs.D <- dr.D.rel.otutab[rowSums(dr.D.rel.otutab != 0) > 2, ]
 otu.relabs.E <- dr.E.rel.otutab[rowSums(dr.E.rel.otutab != 0) > 2, ]
 otu.relabs.F <- dr.F.rel.otutab[rowSums(dr.F.rel.otutab != 0) > 2, ]
 
-set <- 358
+set <- sample(x = 1:10, size = 1)
 sim.dataset <- as.matrix(read.table(file = paste("./SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
-sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("F4"))
+# sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+#   dplyr::select(contains("F4"))
 sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
 
@@ -45,8 +45,10 @@ prop.positive.data <- data.frame(otu.id = character(),
                                  subj.id = character())
 
 ## iterate thru all the data for all subjects
-data.list <- list(list(sim.otutab.f4, "F4"),
-                  list(sim.otutab.m3, "M3"))
+# data.list <- list(list(sim.otutab.m3, "M3"))
+data.list <- list(list(rel.otutab.f4, "F4"),
+                  list(rel.otutab.m3, "M3"))
+
 
 for (subj in data.list) {
   rel.otutab <- subj[[1]] # OTU relative abundance table
@@ -123,6 +125,11 @@ log.foldchange.plot <- ggplot(data = log.foldchange.data,
        fill = "within-subject \n average \n relative \n abundance \n quintile")
 
 log.foldchange.plot
+
+log.foldchange.data %>%
+  group_by(rel.abnd.quintile) %>%
+  summarise(sd = sd(log.foldchange))
+
 ggsave("sim_log_foldchanges_MP.png")
 
 summary(prop.positive.data)
