@@ -36,20 +36,17 @@ load("../otu_tables_MP.Rdata")
 ```
 
 ```{r}
-set <- 358
+set <- sample(x = 1:500, size = 1)
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
-sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("F4"))
+# sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+#   dplyr::select(contains("F4"))
 sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
 
-sim.reappeared.relabs.tab <- rbind(format_reappearance_data(otutab = sim.otutab.f4, 
-                                                            otu.rarity = avg.asin.abnd(sim.otutab.f4), 
-                                                            subj.id = "F4"),
-                                   format_reappearance_data(otutab = sim.otutab.m3, 
+sim.reappeared.relabs.tab <- format_reappearance_data(otutab = sim.otutab.m3, 
                                                             otu.rarity = avg.asin.abnd(sim.otutab.m3), 
-                                                            subj.id = "M3")) %>%
+                                                            subj.id = "M3") %>%
   filter(reappeared == 1)
 
 summary(sim.reappeared.relabs.tab)
@@ -61,7 +58,8 @@ ggplot(sim.reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
        x = "average within-subject arcsin Hellinger abundance",
        y = "relative abundance") +
-  ylim(0,1)
+  ylim(0,0.2) +
+  xlim(0, 0.25)
 
 ```
 
@@ -71,12 +69,9 @@ ggplot(sim.reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
 # dr.mp.reapp.tab$subjID <- as.factor(dr.mp.reapp.tab$subjID)
 # reappeared.relabs.tab <- dr.mp.reapp.tab %>%
 #   filter(y > 0)
-reappeared.relabs.tab <- rbind(format_reappearance_data(otutab = rel.otutab.f4, 
-                                                        otu.rarity = avg.asin.abnd(rel.otutab.f4), 
-                                                        subj.id = "F4"),
-                               format_reappearance_data(otutab = rel.otutab.m3, 
+reappeared.relabs.tab <- format_reappearance_data(otutab = rel.otutab.m3, 
                                                         otu.rarity = avg.asin.abnd(rel.otutab.m3), 
-                                                        subj.id = "M3")) %>%
+                                                        subj.id = "M3") %>%
   filter(reappeared == 1)
 
 summary(reappeared.relabs.tab)
@@ -88,7 +83,8 @@ ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
        subtitle = "Observed Moving Pictures dataset",
        x = "average within-subject arcsin Hellinger abundance",
        y = "relative abundance") +
-  ylim(0,1)
+  ylim(0,0.2) +
+  xlim(0, 0.25)
 
 ```
 

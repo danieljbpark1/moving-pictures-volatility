@@ -38,26 +38,26 @@ load("../otu_tables_MP.Rdata")
 ```{r}
 #set.seed(0)
 #set <- sample(x = 1:500, size = 1)
-set <- 358
+set <- sample(x = 1:500, size = 1)
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
-sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("F4"))
+# sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+#   dplyr::select(contains("F4"))
 sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
 
-sim.reapp.tab <- rbind(prob.reapp.tab(otutab = sim.otutab.f4, subj.id = "F4"),
-                       prob.reapp.tab(otutab = sim.otutab.m3, subj.id = "M3"))
+sim.reapp.tab <- prob.reapp.tab(otutab = sim.otutab.m3, subj.id = "M3")
 
 head(sim.reapp.tab)
 
 ggplot(sim.reapp.tab, aes(x=avg.asin, y=prob.reappear, color=subj.id)) +
-  geom_point() +
+  geom_point(size = 0.8) +
   labs(title = "OTU Probabilities of Reappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
        x = "average within-subject arcsin Hellinger abundance", 
        y = "probability of reappearance") +
-  ylim(0,1)
+  ylim(0,1) +
+  xlim(0,0.25)
 
 ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
@@ -84,8 +84,7 @@ ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
 #                        prob.reapp.tab(otutab.F, 'F'),
 #                        prob.reapp.tab(otutab.F4, 'F4'),
 #                        prob.reapp.tab(otutab.M3, 'M3'))
-reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.f4, "F4"),
-                       prob.reapp.tab(otutab.m3, "M3"))
+reapp.tab.ALL <- prob.reapp.tab(otutab.m3, "M3")
 
 ggplot(reapp.tab.ALL, aes(x = avg.asin, y = prob.reappear)) +
   geom_point(aes(color = subj.id),

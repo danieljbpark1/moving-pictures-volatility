@@ -45,23 +45,23 @@ load("../otu_tables_MP.Rdata")
 set <- sample(x = 1:500, size = 1)
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
-sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("F4"))
+# sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
+#   dplyr::select(contains("F4"))
 sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
 
-sim.disapp.tab <- rbind(prob.disapp.tab(otutab = sim.otutab.f4, subj.id = "F4"),
-                        prob.disapp.tab(otutab = sim.otutab.m3, subj.id = "M3"))
+sim.disapp.tab <- prob.disapp.tab(otutab = sim.otutab.m3, subj.id = "M3")
 
 head(sim.disapp.tab)
 
 ggplot(sim.disapp.tab, aes(x=avg.asin, y=prob.disappear, color=subj.id)) +
-  geom_point() +
+  geom_point(size = 0.8) +
   labs(title = "OTU Probabilities of Disappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
        x = "average within-subject asin Hellinger abundance", 
        y = "probability of disappearance") +
-  ylim(0,1)
+  ylim(0,1) +
+  xlim(0,0.5)
 
 ggplot(sim.disapp.tab, aes(x=prob.disappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
@@ -174,8 +174,7 @@ Given that a taxa is present at time $t-1$, what is the probability that the tax
 #                         prob.disapp.tab(otutab.F, 'F'),
 #                         prob.disapp.tab(otutab.F4, 'F4'),
 #                         prob.disapp.tab(otutab.M3, 'M3'))
-disapp.tab.ALL <- rbind(prob.disapp.tab(otutab.f4, "F4"),
-                        prob.disapp.tab(otutab.m3, "M3"))
+disapp.tab.ALL <- prob.disapp.tab(otutab.m3, "M3")
 
 head(disapp.tab.ALL)
 
@@ -196,8 +195,6 @@ ggplot(disapp.tab.ALL, aes(x = avg.asin, y = prob.disappear)) +
        subtitle = "Observed Moving Pictures dataset",
        color = "Subject ID") +
   ylim(0,1)
-
-
 ```
 
 ## Nonlinear Mixed Effects Model
