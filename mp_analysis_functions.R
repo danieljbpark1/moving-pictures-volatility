@@ -166,19 +166,17 @@ format_reappearance_data <- function(otutab, otu.rarity, subj.id, taxa_are_rows 
 }
 
 prob.disapp.tab <- function(otutab, subj.id) {
-  avg.asin <- avg.asin.abnd(otutab)
-  disapp.prob <- disappearance_probabilities(otutab)
-  disapp.tab <- data.frame(prob.disappear = disapp.prob,
-                           avg.asin = avg.asin) %>%
+  disapp.tab <- data.frame(otu.id = rownames(otutab),
+                           prob.disappear = disappearance_probabilities(otutab),
+                           avg.asin = avg.asin.abnd(otutab)) %>%
     mutate(subj.id = subj.id)
   return(disapp.tab)
 }
 
 prob.reapp.tab <- function(otutab, subj.id) {
-  avg.asin <- avg.asin.abnd(otutab)
-  reapp.prob <- reappearance_probabilities(otutab)
-  reapp.tab <- data.frame(prob.reappear = reapp.prob,
-                          avg.asin = avg.asin) %>%
+  reapp.tab <- data.frame(otu.id = rownames(otutab),
+                          prob.reappear = reappearance_probabilities(otutab),
+                          avg.asin = avg.asin.abnd(otutab)) %>%
     mutate(subj.id = subj.id)
   return(reapp.tab)
 }
@@ -243,8 +241,8 @@ reappearance_probabilities <- function(otutab, taxa_are_rows = TRUE){
   # number of times where taxa reappeared
   reappearances <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a)))
   # number of times where taxa were absent at time t-1
-  absences <- apply(fold.difference.table, dimension, function(a) sum(is.infinite(a) | is.nan(a)))
-  return(reappearances / absences)
+  absences <- apply(fold.difference.table, dimension, function(a) sum(!is.finite(a)))
+  return(as.numeric(reappearances / absences))
 }
 
 # function for simulating inflated beta distribution 
@@ -300,7 +298,7 @@ disappearance_probabilities <- function(otutab, taxa_are_rows = TRUE) {
   disappearances <- apply(fold.difference.table, dimension, function(a) sum(a == 0, na.rm = TRUE))
   # a count of times at which the taxa were present at time t-1
   presences <- apply(fold.difference.table, dimension, function(a) sum(is.finite(a), na.rm = TRUE))
-  return(disappearances / presences)
+  return(as.numeric(disappearances / presences))
 }
 
 # function for predicting an asymptotic regression
