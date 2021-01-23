@@ -38,7 +38,7 @@ load("../otu_tables_MP.Rdata")
 ```{r}
 #set.seed(0)
 #set <- sample(x = 1:500, size = 1)
-set <- sample(x = 1:500, size = 1)
+set <- 63
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 # sim.otutab.f4 <- as.data.frame(sim.dataset) %>%

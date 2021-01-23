@@ -17,7 +17,8 @@ otu.relabs.D <- dr.D.rel.otutab[rowSums(dr.D.rel.otutab != 0) > 2, ]
 otu.relabs.E <- dr.E.rel.otutab[rowSums(dr.E.rel.otutab != 0) > 2, ]
 otu.relabs.F <- dr.F.rel.otutab[rowSums(dr.F.rel.otutab != 0) > 2, ]
 
-set <- sample(x = 1:10, size = 1)
+# set <- sample(x = 1:10, size = 1)
+set <- 63
 sim.dataset <- as.matrix(read.table(file = paste("./SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 # sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
@@ -45,9 +46,10 @@ prop.positive.data <- data.frame(otu.id = character(),
                                  subj.id = character())
 
 ## iterate thru all the data for all subjects
+data.list <- list(list(rel.otutab.m3, "M3"))
 # data.list <- list(list(sim.otutab.m3, "M3"))
-data.list <- list(list(rel.otutab.f4, "F4"),
-                  list(rel.otutab.m3, "M3"))
+# data.list <- list(list(rel.otutab.f4, "F4"),
+#                   list(rel.otutab.m3, "M3"))
 
 
 for (subj in data.list) {
