@@ -42,7 +42,7 @@ load("../otu_tables_MP.Rdata")
 # Simulated Moving Pictures datasets
 ```{r}
 #set.seed(0)
-set <- sample(x = 1:500, size = 1)
+set <- 63 # sample(x = 1:500, size = 1)
 sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 # sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
@@ -51,17 +51,20 @@ sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
   dplyr::select(contains("M3"))
 
 sim.disapp.tab <- prob.disapp.tab(otutab = sim.otutab.m3, subj.id = "M3")
+sim.disapp.tab$avg.rel.abnd <- apply(sim.otutab.m3, 1, mean)
 
 head(sim.disapp.tab)
 
-ggplot(sim.disapp.tab, aes(x=avg.asin, y=prob.disappear, color=subj.id)) +
-  geom_point(size = 0.8) +
+ggplot(sim.disapp.tab, aes(x=avg.rel.abnd, y=prob.disappear)) +
+  geom_point(aes(color=subj.id),
+             alpha=0.5) +
   labs(title = "OTU Probabilities of Disappearance",
        subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
-       x = "average within-subject asin Hellinger abundance", 
+       color = "Subject ID",
+       x = "average within-subject average abundance", 
        y = "probability of disappearance") +
   ylim(0,1) +
-  xlim(0,0.5)
+  xlim(0,0.25)
 
 ggplot(sim.disapp.tab, aes(x=prob.disappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
@@ -175,6 +178,7 @@ Given that a taxa is present at time $t-1$, what is the probability that the tax
 #                         prob.disapp.tab(otutab.F4, 'F4'),
 #                         prob.disapp.tab(otutab.M3, 'M3'))
 disapp.tab.ALL <- prob.disapp.tab(otutab.m3, "M3")
+disapp.tab.ALL$avg.rel.abnd <- apply(rel.otutab.m3, 1, mean)
 
 head(disapp.tab.ALL)
 
@@ -186,15 +190,16 @@ ggplot(disapp.tab.ALL, aes(x=prob.disappear, color=subj.id)) +
   xlim(0,1) +
   scale_fill_discrete()
 
-ggplot(disapp.tab.ALL, aes(x = avg.asin, y = prob.disappear)) +
+ggplot(disapp.tab.ALL, aes(x = avg.rel.abnd, y = prob.disappear)) +
   geom_point(aes(color = subj.id),
-             size=.8) +
+             alpha=0.5) +
   labs(y = "Probability of extinction",
-       x = "average within-subject arcsin Hellinger abundance",
+       x = "average within-subject relative abundance",
        title = "OTU Probabilities of Disappearance",
        subtitle = "Observed Moving Pictures dataset",
        color = "Subject ID") +
-  ylim(0,1)
+  ylim(0,1) +
+  xlim(0,0.25)
 ```
 
 ## Nonlinear Mixed Effects Model
