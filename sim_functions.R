@@ -35,7 +35,6 @@ predict.prob.disapp <- function(input, otu.subj.data) {
   # predict for all otu.id / subj.id
   # bind to training dataset
   big.disapp.tab$pred.prob.disapp <- predict(disapp.glmm, 
-                                             re.form = ~ (1 | otu.id), 
                                              type = "response")
   # choose with uniform probability one prediction for each subj.id / otu.id
   pred.disapp <- big.disapp.tab %>%
@@ -53,9 +52,32 @@ predict.prob.disapp <- function(input, otu.subj.data) {
   return(res.pred)
 }
 
+# returns dataframe of OTUs and their within-subject average relative abundance quintiles
+rarity.quintiles.tab <- function(input) {
+  res <- data.frame(otu.id = character(),
+                    subj.id = character(),
+                    avg.rel.abnd = numeric(),
+                    quintile = numeric())
+  for (subj in input) {
+    subj.otutab <- subj[[1]] # OTU relative abundance table
+    subj.id <- subj[[2]] 
+    subj.res <- data.frame(otu.id = rownames(subj.otutab)) %>%
+      mutate(subj.id = subj.id,
+             avg.rel.abnd = apply(subj.otutab, 1, mean),
+             quintile = ntile(avg.rel.abnd, n=5))
+    res <- rbind(res, subj.res)
+  }  
+  return(res)
+}
+
 # returns vector of simulated log fold-changes
-sim.log.foldchange <- function(n) {
-  return(rnorm(n = n, mean = 0, sd = 1))
+sim.log.foldchange <- function(quintiles.tab, otu.subj.data, base.sd = 1, scaling.factors = c(0.8, 0.9, 1, 1.1, 1.2)) {
+  quintiles.tab$scaled.sd <- base.sd * scaling.factors[quintiles.tab$quintile]
+  quintiles.tab$sim.log.foldchange <- sapply(quintiles.tab$scaled.sd, FUN = function(s) rnorm(n=1, mean = 0, sd = s))
+  res <- left_join(x=otu.subj.data,
+                   y=quintiles.tab,
+                   by=c("otu.id","subj.id"))
+  return(res$sim.log.foldchange)
 }
 
 # returns dataframe of all post-absence instances
@@ -83,12 +105,11 @@ predict.prob.reapp <- function(input, otu.subj.data) {
   big.reapp.tab <- asin.reapp.tab(input)
   # mixed effects logistic regression
   reapp.glmm <- glmer(reappeared ~ 1 + subj.id + (1 | otu.id), 
-                      data = reapp.data,
+                      data = big.reapp.tab,
                       family = binomial)
   # predict for all otu.id / subj.id
   # bind to training dataset
   big.reapp.tab$pred.prob.reapp <- predict(reapp.glmm, 
-                                           re.form = ~ (1 | otu.id), 
                                            type = "response")
   # choose with uniform probability one prediction for each otu.id / subj.id in training data
   pred.reapp <- big.reapp.tab %>%
@@ -115,7 +136,9 @@ fit.reapp.glmm <- function(reapp.data) {
   
   reapp.glmmTMB <- glmmTMB(reapp.abnd ~ otu.rarity + (otu.rarity|subj.id), 
                            data = reapp.abnd.df, 
-                           family = beta_family)
+                           family = beta_family,
+                           control = glmmTMBControl(optimizer=optim, 
+                                                    optArgs=list(method="BFGS")))
   return(reapp.glmmTMB)
 }
 
