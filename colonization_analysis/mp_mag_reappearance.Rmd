@@ -36,30 +36,30 @@ load("../otu_tables_MP.Rdata")
 ```
 
 ```{r}
-# set <- sample(x = 1:500, size = 1)
-set <- 63
-sim.dataset <- as.matrix(read.table(file = paste("../SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+set.seed(0)
+set <- sample(x = 1:100, size = 1)
+sim.dataset <- as.matrix(read.table(file = paste("../SimSets_DR_n3_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 # sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
 #   dplyr::select(contains("F4"))
-sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("M3"))
+sim.otutab.D <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("D"))
 
-sim.reappeared.relabs.tab <- format_reappearance_data(otutab = sim.otutab.m3, 
-                                                            otu.rarity = avg.asin.abnd(sim.otutab.m3), 
-                                                            subj.id = "M3") %>%
+sim.reappeared.relabs.tab <- format_reappearance_data(otutab = sim.otutab.D, 
+                                                      otu.rarity = avg.asin.abnd(sim.otutab.D), 
+                                                      subj.id = "D") %>%
   filter(reappeared == 1)
 
 summary(sim.reappeared.relabs.tab)
 
 ggplot(sim.reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
   geom_point(aes(color = subj.id),
-             size = .75) + 
+             alpha = 0.4) + 
   labs(title = "OTU Reappeared Relative Abundances",
-       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       subtitle = paste("Simulated Dethlefsen-Relman dataset set", sprintf("%04d", set), sep = ""),
        x = "average within-subject arcsin Hellinger abundance",
        y = "relative abundance") +
-  ylim(0,0.2) +
+  ylim(0,0.07) +
   xlim(0, 0.25)
 
 ```
@@ -70,22 +70,22 @@ ggplot(sim.reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
 # dr.mp.reapp.tab$subjID <- as.factor(dr.mp.reapp.tab$subjID)
 # reappeared.relabs.tab <- dr.mp.reapp.tab %>%
 #   filter(y > 0)
-reappeared.relabs.tab <- format_reappearance_data(otutab = rel.otutab.m3, 
-                                                        otu.rarity = avg.asin.abnd(rel.otutab.m3), 
-                                                        subj.id = "M3") %>%
+reappeared.relabs.tab <- format_reappearance_data(otutab = rel.otutab.D, 
+                                                  otu.rarity = avg.asin.abnd(rel.otutab.D), 
+                                                  subj.id = "D") %>%
   filter(reappeared == 1)
 
 summary(reappeared.relabs.tab)
 
 ggplot(reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
   geom_point(aes(color = subj.id),
-             size = .75) + 
+             alpha = 0.4) + 
   labs(title = "OTU Reappeared Relative Abundances",
-       subtitle = "Observed Moving Pictures dataset",
+       subtitle = "Observed Dethlefsen-Relman dataset",
        x = "average within-subject arcsin Hellinger abundance",
        y = "relative abundance") +
-  ylim(0,0.2) +
-  xlim(0, 0.25)
+  ylim(0,0.07) +
+  xlim(0,0.25)
 
 ```
 

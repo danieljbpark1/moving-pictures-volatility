@@ -13,18 +13,15 @@ load("dethlefsen_relman.Rdata")
 load("../otu_tables_MP.Rdata")
 
 # consider only OTUs present in at least 2 samples
-otu.relabs.D <- dr.D.rel.otutab[rowSums(dr.D.rel.otutab != 0) > 2, ]
-otu.relabs.E <- dr.E.rel.otutab[rowSums(dr.E.rel.otutab != 0) > 2, ]
-otu.relabs.F <- dr.F.rel.otutab[rowSums(dr.F.rel.otutab != 0) > 2, ]
 
 # set <- sample(x = 1:10, size = 1)
-set <- 63
-sim.dataset <- as.matrix(read.table(file = paste("./SimSets_MP_n2_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+set <- 14
+sim.dataset <- as.matrix(read.table(file = paste("./SimSets_DR_n3_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
 
 # sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
 #   dplyr::select(contains("F4"))
-sim.otutab.m3 <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("M3"))
+sim.otutab.D <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("D"))
 
 ## DATAFRAME OF LOG FOLDCHANGES WITHIN ALL SUBJECTS 
 ## otu.id : the OTU id
@@ -46,7 +43,7 @@ prop.positive.data <- data.frame(otu.id = character(),
                                  subj.id = character())
 
 ## iterate thru all the data for all subjects
-data.list <- list(list(rel.otutab.m3, "M3"))
+data.list <- list(list(sim.otutab.D, "D"))
 # data.list <- list(list(sim.otutab.m3, "M3"))
 # data.list <- list(list(rel.otutab.f4, "F4"),
 #                   list(rel.otutab.m3, "M3"))
@@ -115,13 +112,12 @@ tail(log.foldchange.data, 10)
 log.foldchange.plot <- ggplot(data = log.foldchange.data,
                               aes(x=log.foldchange,
                                   fill=rel.abnd.quintile)) +
-  geom_density(aes(color=rel.abnd.quintile, 
-                   ), alpha=0.1) +
+  geom_density(aes(color=rel.abnd.quintile), alpha=0.1) +
   facet_wrap(vars(subj.id), scales = "free") +
-  xlim(-8,8) +
+  xlim(-5,5) +
   labs(title = "Distribution of OTU log fold-changes",
-       # subtitle = "Observed Moving Pictures dataset",
-       subtitle = paste("Simulated Moving Pictures dataset set", sprintf("%04d", set), sep = ""),
+       #subtitle = "Observed Dethlefsen-Relman dataset",
+       subtitle = paste("Simulated Dethlefsen-Relman dataset set", sprintf("%04d", set), sep = ""),
        x = "log fold-changes",
        color = "within-subject \n average \n relative \n abundance \n quintile",
        fill = "within-subject \n average \n relative \n abundance \n quintile")
