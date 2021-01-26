@@ -6,51 +6,68 @@ library(tidyr)
 library(dirmult)
 library(doParallel)
 source("./sim_functions.R")
-load("mp_F4_data.Rdata") # Moving Pictures subject F4
-load("mp_M3_data.Rdata") # Moving Pictures subject M3
-# load("dethlefsen_relman.Rdata") # Dethlefsen Relman subjects D, E, F
+# load("mp_F4_data.Rdata") # Moving Pictures subject F4
+# load("mp_M3_data.Rdata") # Moving Pictures subject M3
+load("dethlefsen_relman.Rdata") # Dethlefsen Relman subjects D, E, F
 
 # start by filtering out singletons/doubletons
 # join tables within studies but not across studies
-otutab.f4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
-otutab.m3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
+otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
+otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
+otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
 
-otu.ids.f4 <- rownames(otutab.f4)
-otu.ids.m3 <- rownames(otutab.m3)
+dim(otutab.D); dim(otutab.E); dim(otutab.F)
+
+otu.ids.D <- rownames(otutab.D)
+otu.ids.E <- rownames(otutab.E)
+otu.ids.F <- rownames(otutab.F)
 # OTU IDs found in at least one subject
-otu.ids <- unique(c(otu.ids.f4,
-                    otu.ids.m3))
+otu.ids <- unique(c(otu.ids.D,
+                    otu.ids.E,
+                    otu.ids.F))
 n.otu <- length(otu.ids) # number of OTUs
 
-otutab.f4 <- as.data.frame(otutab.f4) %>%
+
+otutab.D <- as.data.frame(otutab.D) %>%
   rownames_to_column(var = "otu.id")
-otutab.f4 <- left_join(data.frame(otu.id = otu.ids),
-                       otutab.f4,
-                       by = "otu.id") %>%
+otutab.D <- left_join(data.frame(otu.id = otu.ids),
+                      otutab.D,
+                      by = "otu.id") %>%
   mutate_all(list(~replace_na(.,0))) %>% 
   column_to_rownames("otu.id")
 
-otutab.m3 <- as.data.frame(otutab.m3) %>%
+otutab.E <- as.data.frame(otutab.E) %>%
   rownames_to_column(var = "otu.id")
-otutab.m3 <- left_join(data.frame(otu.id = otu.ids),
-                       otutab.m3,
-                       by = "otu.id") %>%
+otutab.E <- left_join(data.frame(otu.id = otu.ids),
+                      otutab.E,
+                      by = "otu.id") %>%
+  mutate_all(list(~replace_na(.,0))) %>% 
+  column_to_rownames("otu.id")
+
+otutab.F <- as.data.frame(otutab.F) %>%
+  rownames_to_column(var = "otu.id")
+otutab.F <- left_join(data.frame(otu.id = otu.ids),
+                      otutab.F,
+                      by = "otu.id") %>%
   mutate_all(list(~replace_na(.,0))) %>% 
   column_to_rownames("otu.id")
 
 # combined otutab
-otutab <- cbind(otutab.f4,
-                otutab.m3)
+otutab <- cbind(otutab.D,
+                otutab.E,
+                otutab.F)
 
 # relative abundance OTU tables
-rel.otutab.f4 <- transform(otutab.f4, transform = 'compositional')
-rel.otutab.m3 <- transform(otutab.m3, transform = 'compositional')
+rel.otutab.D <- transform(otutab.D, transform = 'compositional')
+rel.otutab.E <- transform(otutab.E, transform = 'compositional')
+rel.otutab.F <- transform(otutab.F, transform = 'compositional')
 
 # input for later functions
-input <- list(list(rel.otutab.f4, "F4"),
-              list(rel.otutab.m3, "M3"))
+input <- list(list(rel.otutab.D, "D"),
+              list(rel.otutab.E, "E"),
+              list(rel.otutab.F, "F"))
 
-subj.ids <- c("F4", "M3") 
+subj.ids <- c("D", "E", "F") 
 n.subj <- length(subj.ids) # number of subjects
 
 # dataframe of all otu.id / subj.id pairs
@@ -72,10 +89,10 @@ for (i in 1:n.subj) {
 ##
 
 # estimate Dirichlet-multinomial parameters 
-# dd.mp = dirmult(t(otutab)) # taxa are columns
+dd.DR = dirmult(t(otutab)) # taxa are columns
 
-# save(dd.mp, file = "DirMultOutput_MP.Rda")
-load("DirMultOutput_MP.Rda") 
+# save(dd.DR, file = "DirMultOutput_DR.Rda")
+# load("DirMultOutput_DR.Rda") 
 
 # Function parameters: 
 #   J = number of subpopulations sampled = "number of samples"
@@ -87,22 +104,22 @@ load("DirMultOutput_MP.Rda")
 # Each simset is a JxK matrix with OTU counts. 
 
 set.seed(0) 
-n.set = 500 # number of simulated datasets
+n.set = 100 # number of simulated datasets
 
-# required: a pre-existing folder at "./SimSets_MP<n.subj>"
-simDM <- function(set, n.subj, dd.mp) {
+# required: a pre-existing folder
+simDM <- function(set, n.subj, dd, folder.path) {
   # simulate from Dirichlet-multinomial 
-  S = simPop(J = n.subj, n = 10000, pi = dd.mp$pi, theta = dd.mp$theta) # matrix of OTU counts, taxa are columns
+  S = simPop(J = n.subj, n = 10000, pi = dd$pi, theta = dd$theta) # matrix of OTU counts, taxa are columns
   S.otutab <- otu_table(t(S$data), taxa_are_rows = TRUE) # transpose matrix so taxa are rows, subjects are columns
   S.rel.otutab <- transform(S.otutab, transform = "compositional") # transform into relative abundances
   
   # save in pre-existing folder, labeled as set0001, set0002, etc. 
-  write.table(S.rel.otutab, file = paste("./SimSets_MP", n.subj, "/set", sprintf("%04d", set), ".txt", sep = ""), 
+  write.table(S.rel.otutab, file = paste(folder.path, "/set", sprintf("%04d", set), ".txt", sep = ""), 
               sep = "\t", col.names = T, row.names = T)
 }
 
-registerDoParallel(cores=3) # parallel processing with 2 clusters
-foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.mp)
+registerDoParallel(cores=2) # parallel processing with 2 clusters
+foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.DR, "./SimSets_DR3")
 
 ## 
 ## SIMULATE LONGITUDINAL OTUs (multiple time points -- balanced) 
@@ -119,18 +136,20 @@ for (t in 1:n.time) {
 ## DISAPPEARANCE PROBABILITIES
 prob.disapp <- predict.prob.disapp(input, full.otu.subj.data) # prob. disapp. for each OTU
 ## REAPPEARANCE PROBABILITIES
-reapp.data <- asin.reapp.tab(input) # training data for reapp. models
 prob.reapp <- predict.prob.reapp(input, full.otu.subj.data) # prob. reapp. for each OTU
 ## SIMULATE REAPPEARANCES
+reapp.data <- asin.reapp.tab(input) # training data for reapp. models
 reapp.glmm <- fit.reapp.glmm(reapp.data) # model for reapp. rel. abnd.
+## CALCULATE WITHIN-SUBJECT QUINTILES OF AVERAGE RELATIVE ABUNDANCE
+otu.rarity.data <- rarity.quintiles.tab(input)
 
-# requires pre-existing folder at "./SimSets_MP_n<n.subj>_t<n.time>"
+# requires pre-existing folder
 simLong <- function(set, n.otu, n.subj, n.time, 
                     prob.disapp, prob.reapp, reapp.data, reapp.glmm, 
-                    avg.pos.rel.abnd, full.otu.subj.data) {
+                    avg.pos.rel.abnd, otu.rarity.data, full.otu.subj.data) {
   # set up matrix and fill in time 1 
   this.otus <- matrix(nrow = n.otu, ncol = n.subj*n.time, dimnames = list(otu.ids, samp.ids))
-  this.otus[, c(1:n.subj)] <- as.matrix(read.table(paste("./SimSets_MP", n.subj, "/set", sprintf("%04d", set), ".txt", sep = "")))
+  this.otus[, c(1:n.subj)] <- as.matrix(read.table(paste("./SimSets_DR", n.subj, "/set", sprintf("%04d", set), ".txt", sep = "")))
   
   for (tt in 2:n.time) {
     prev.start <- (tt - 2)*n.subj + 1 
@@ -142,7 +161,8 @@ simLong <- function(set, n.otu, n.subj, n.time,
     mat.disapp <- matrix(indic.disapp, ncol = n.subj, byrow = TRUE) 
     
     # if not, how much change from t1 to t2? 
-    perturb.lval <- sim.log.foldchange(n = n.subj*n.otu)
+    perturb.lval <- sim.log.foldchange(otu.rarity.data, full.otu.subj.data, 
+                                       base.sd = 0.5, scaling.factors = c(.4, .7, 1, 1.4, 2))
     perturb.val <- exp(perturb.lval) 
     mat.perturb <- matrix(perturb.val, ncol = n.subj, byrow = TRUE)
     
@@ -161,9 +181,9 @@ simLong <- function(set, n.otu, n.subj, n.time,
     mat.sim.reapp <- matrix(sim.reapp.abnd, ncol = n.subj, byrow = TRUE)
     
     # if prev.otu == 0 and mat.reapp == 1 then set to new reappeared relative abundance
-    current.absent <- prev.otus == 0 # matrix indices of current absences
+    prev.absent <- prev.otus == 0 # matrix indices of previous absences
     mat.sim.reapp <- mat.sim.reapp * mat.reapp # non-reappeared OTUs go to 0
-    current.otus[current.absent] <- mat.sim.reapp[current.absent] # fill in currently absent, reappeared OTUs
+    current.otus[prev.absent] <- mat.sim.reapp[prev.absent] # fill in previously absent, reappeared OTUs
     
     # re-normalize
     this.start <- (tt - 1)*n.subj + 1 
@@ -173,10 +193,10 @@ simLong <- function(set, n.otu, n.subj, n.time,
   
   # again write to pre-created folder 
   write.table(this.otus, 
-              file = paste("./SimSets_MP_n", n.subj, "_t", n.time, "/set", sprintf("%04d", set), ".txt", sep = ""), 
+              file = paste("./SimSets_DR_n", n.subj, "_t", n.time, "/set", sprintf("%04d", set), ".txt", sep = ""), 
               sep = "\t", col.names = T, row.names = T)
 }
 
-foreach(set = 1:n.set) %dopar% simLong(set, n.otu, n.subj, n.time, 
+foreach(set = 1:15) %dopar% simLong(set, n.otu, n.subj, n.time, 
                                        prob.disapp, prob.reapp, reapp.data, reapp.glmm, 
-                                       avg.pos.rel.abnd, full.otu.subj.data)
+                                       avg.pos.rel.abnd, otu.rarity.data, full.otu.subj.data)
