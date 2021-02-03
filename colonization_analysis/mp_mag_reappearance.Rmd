@@ -67,9 +67,6 @@ ggplot(sim.reappeared.relabs.tab, aes(x = otu.rarity, y = reapp.abnd)) +
 # Predict Reappearance Relative Abundances
 
 ```{r}
-# dr.mp.reapp.tab$subjID <- as.factor(dr.mp.reapp.tab$subjID)
-# reappeared.relabs.tab <- dr.mp.reapp.tab %>%
-#   filter(y > 0)
 reappeared.relabs.tab <- format_reappearance_data(otutab = rel.otutab.D, 
                                                   otu.rarity = avg.asin.abnd(rel.otutab.D), 
                                                   subj.id = "D") %>%
