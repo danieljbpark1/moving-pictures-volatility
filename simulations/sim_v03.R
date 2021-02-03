@@ -4,11 +4,12 @@ library(dplyr)
 library(tidyr)
 library(dirmult)
 library(doParallel)
-source("./simulations/sim_functions.R") # for simulation functions
+source("./simulations/sim_functions.R")
 load("./simulations/dethlefsen_relman_for_sim.Rdata") 
 
-## NULL MODEL 
-## NO DIFFERENCE IN VOLATILITY BETWEEN GROUPS
+## DIFFERENCE IN QUANTITATIVE VOLATILITY BETWEEN 2 GROUPS 
+## SUBJECTS 1-50: GROUP 1
+## SUBJECTS 51-100: GROUP 2 (HIGHER VOLATILITY)
 
 n.otu <- length(otu.ids) # number of OTUs
 n.subj <- 100 # number of subjects
@@ -42,7 +43,7 @@ simDM <- function(set, n.subj, dd, folder.path) {
 }
 
 registerDoParallel(cores=2) # parallel processing with 2 clusters
-foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.DR, "./SimSets_DR_v01_n100")
+foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.DR, "./SimSets_DR_v03_n100")
 
 ## 
 ## SIMULATE LONGITUDINAL OTUs (multiple time points -- balanced) 
@@ -76,20 +77,21 @@ simLong <- function(set, n.otu, n.subj, n.time, otu.ids, samp.ids,
                     avg.pos.rel.abnd, otu.quintiles, read.path, write.path) {
   # set up matrix and fill in time 1 
   this.otus <- matrix(nrow = n.otu, ncol = n.subj*n.time, dimnames = list(otu.ids, samp.ids))
-  this.otus[ ,c(1:n.subj)] <- as.matrix(read.table(paste(read.path, "/set", sprintf("%04d", set), ".txt", sep = "")))
+  this.otus[, c(1:n.subj)] <- as.matrix(read.table(paste(read.path, "/set", sprintf("%04d", set), ".txt", sep = "")))
   
   for (tt in 2:n.time) {
     prev.start <- (tt - 2)*n.subj + 1 
     prev.end <- (tt - 1)*n.subj
-    prev.otus <- this.otus[ ,c(prev.start:prev.end)]
+    prev.otus <- this.otus[, c(prev.start:prev.end)]
     
     # does taxon disappear? 
     indic.disapp <- sapply(prob.disapp, FUN = function(p) rbinom(1, size = 1, prob = (1-p)))  # indicator that cell does *not* disappear
     mat.disapp <- matrix(indic.disapp, ncol = n.subj) 
     
     # if not, how much change from t1 to t2? 
-    perturb.lval <- sim.log.foldchange(otu.quintiles, n.subj, base.sd = 0.75, scaling.factors = c(.5, .75, 1, 1.25, 1.5))
-    mat.perturb <- exp(perturb.lval) # exponentiate the log fold-changes
+    perturb.lval_1 <- sim.log.foldchange(otu.quintiles, n.subj = 50, base.sd = 0.5, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 1
+    perturb.lval_2 <- sim.log.foldchange(otu.quintiles, n.subj = 50, base.sd = 2, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 2
+    mat.perturb <- exp(cbind(perturb.lval_1, perturb.lval_2)) # exponentiate the log fold-changes
     
     # final perturbation 
     current.otus <- prev.otus * mat.disapp * mat.perturb # disappeared OTUs go to 0
@@ -100,7 +102,7 @@ simLong <- function(set, n.otu, n.subj, n.time, otu.ids, samp.ids,
     
     # at what relative abundance does it reappear?
     sim.reapp.abnd <- sim.reapp(reapp.means, reapp.disps, n.otu, n.subj)
-    mat.sim.reapp <- matrix(sim.reapp.abnd, ncol = n.subj)
+    mat.sim.reapp <- matrix(sim.reapp.abnd, ncol = n.subj, byrow = TRUE)
     
     # if prev.otu == 0 and mat.reapp == 1 then set to new reappeared relative abundance
     prev.absent <- prev.otus == 0 # matrix indices of previous absences
@@ -110,7 +112,7 @@ simLong <- function(set, n.otu, n.subj, n.time, otu.ids, samp.ids,
     # re-normalize
     this.start <- (tt - 1)*n.subj + 1 
     this.end <- tt*n.subj 
-    this.otus[ ,this.start:this.end] <- transform(current.otus, transform = 'compositional')
+    this.otus[, this.start:this.end] <- transform(current.otus, transform = 'compositional')
   }
   
   # again write to pre-created folder 
@@ -120,9 +122,9 @@ simLong <- function(set, n.otu, n.subj, n.time, otu.ids, samp.ids,
 }
 
 
-foreach(set = 1:15) %dopar% simLong(set, n.otu, n.subj, n.time, otu.ids, samp.ids, 
+foreach(set = 1:15) %dopar% simLong(set, n.otu, n.subj, n.time, otu.ids, samp.ids,
                                     prob.disapp, prob.reapp, reapp.data, reapp.glmm, 
-                                    avg.pos.rel.abnd, otu.quintiles, read.path = "./SimSets_DR_v01_n100", write.path = "./SimSets_DR_v01_n100_t120")
+                                    avg.pos.rel.abnd, otu.quintiles, read.path = "./SimSets_DR_v03_n100", write.path = "./SimSets_DR_v03_n100_t120")
 
 
 
