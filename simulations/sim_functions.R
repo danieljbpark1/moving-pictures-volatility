@@ -72,10 +72,9 @@ otu.quintiles.tab <- function(input) {
 
 # returns matrix of simulated log fold-changes
 sim.log.foldchange <- function(quintiles.tab, n.subj, base.sd = 1, scaling.factors = c(0.8, 0.9, 1, 1.1, 1.2)) {
-  res <- matrix(nrow = length(otu.ids), ncol = n.subj) # taxa are rows, subjects are columns
-  quintiles <- quintiles.tab$quintile # a vector of within-subject quintiles of relative abundance
+  res <- matrix(nrow = nrow(quintiles.tab), ncol = n.subj) # taxa are rows, subjects are columns
+  scaled.sd <- base.sd * scaling.factors[quintiles.tab$quintile] # multiply base standard deviation by scaling factor according to rarity quintile
   for (i in 1:n.subj) {
-    scaled.sd <- base.sd * scaling.factors[quintiles] # multiply base standard deviation by scaling factor according to rarity quintile
     res[ ,i] <- sapply(scaled.sd, FUN = function(s) rnorm(n = 1, mean = 0, sd = s)) 
   }
   return(res)
@@ -128,6 +127,15 @@ predict.prob.reapp <- function(reapp.glmm, otu.ids, n.subj, mean.group, sd.group
   # so fill in NA with 1
 }
 
+# returns dataframe of otu.id, otu.rarity, subj.id
+otu.rarity.tab <- function(otutab, otu.ids, subj.ids) {
+  otu.rarity <- avg.asin.abnd(otutab)
+  res <- data.frame(otu.id = rep(otu.ids, length(subj.ids)),
+                    otu.rarity = rep(otu.rarity, length(subj.ids)),
+                    subj.id = rep(subj.ids, each = length(otu.ids)))
+  return(res)
+}
+
 # returns fitted glmmTMB mixed effects beta regression model
 # reappearance relative abundance ~ otu.rarity + (otu.rarity|subj.id)
 fit.reapp.beta <- function(input) { 
@@ -143,12 +151,10 @@ fit.reapp.beta <- function(input) {
   return(reapp.glmmTMB)
 }
 
-otu.rarity.tab <- function(otutab, otu.ids, subj.ids) {
-  otu.rarity <- avg.asin.abnd(otutab)
-  res <- data.frame(otu.id = rep(otu.ids, length(subj.ids)),
-                    otu.rarity = rep(otu.rarity, length(subj.ids)),
-                    subj.id = rep(subj.ids, each = length(otu.ids)))
-  return(res)
+# returns dataframe of beta distribution shape1, shape2
+# input is dataframe of beta distribution mean, precision
+get.beta.params <- function(df) {
+  shapes.list <- apply(df, 1, function(x) betaGetShapes(x[1], x[2]))
 }
 
 # returns dataframe of simulated reappeared relative abundances
