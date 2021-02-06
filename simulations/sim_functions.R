@@ -2,6 +2,7 @@ library(nlme)
 library(lme4)
 library(glmmTMB)
 library(microbiome)
+library(phyloseq)
 library(dplyr)
 library(tidyr)
 library(boot)
@@ -36,23 +37,23 @@ fit.disapp.model <- function(input) {
   return(disapp.glmm)
 }
 
-# returns matrix of simulated probabilities of disappearance
+# returns matrix of simulated probabilities of dis/(re)appearance
 # taxa are rows, subjects are columns
 # uses fitted coefficients to simulate new probabilities where simulated subjects intercepts ~ N(mean.group, sd.group)
-predict.prob.disapp <- function(disapp.glmm, otu.ids, n.subj, mean.group, sd.group) {
-  baseline.intercepts <- coef(disapp.glmm)[[1]]
+predict.logistic <- function(logistic.glmm, otu.ids, n.subj, mean.group, sd.group) {
+  baseline.intercepts <- coef(logistic.glmm)[[1]]
   baseline.intercepts <- baseline.intercepts[otu.ids, 1] # baseline subject intercept + OTU random intercepts in order
   
   subj.intercepts <- rnorm(n = n.subj, mean = mean.group, sd = sd.group) # simulated subject fixed intercepts
   
-  res <- matrix(nrow = length(baseline.intercepts), ncol = n.subj) # return matrix with taxa as rows, subjects as columns
+  res <- matrix(nrow = length(otu.ids), ncol = n.subj) # return matrix with taxa as rows, subjects as columns
   for (i in 1:n.subj) {
     res[ ,i] <- inv.logit(baseline.intercepts + subj.intercepts[i]) # predict probabilities for all otu.id / subj.id
   }
   return(res)
 }
 
-# returns dataframe of OTUs and their within-subject average relative abundance quintiles
+# returns (KxN) x 4 dataframe of OTUs and their within-subject average relative abundance quintiles
 otu.quintiles.tab <- function(input) {
   res <- data.frame(otu.id = character(),
                     subj.id = character(),
@@ -70,13 +71,19 @@ otu.quintiles.tab <- function(input) {
   return(res)
 }
 
-# returns matrix of simulated log fold-changes
-sim.log.foldchange <- function(quintiles.tab, n.subj, base.sd = 1, scaling.factors = c(0.8, 0.9, 1, 1.1, 1.2)) {
-  res <- matrix(nrow = nrow(quintiles.tab), ncol = n.subj) # taxa are rows, subjects are columns
+# return K x N matrix of scaled standard deviations
+# base s.d. scaled by factor according to an OTU's quintiles
+get.scaled.sd <- function(quintiles.tab, n.subj, base.sd = 1, scaling.factors = c(0.8, 0.9, 1, 1.1, 1.2)) {
   scaled.sd <- base.sd * scaling.factors[quintiles.tab$quintile] # multiply base standard deviation by scaling factor according to rarity quintile
-  for (i in 1:n.subj) {
-    res[ ,i] <- sapply(scaled.sd, FUN = function(s) rnorm(n = 1, mean = 0, sd = s)) 
-  }
+  scaled.sd <- matrix(rep(scaled.sd, n.subj), ncol = n.subj)
+  return(scaled.sd)
+}
+
+# returns K x N matrix of simulated log fold-changes
+# intput is matrix of scaled standard deviations 
+sim.log.foldchange <- function(scaled.sd) {
+  res <- sapply(scaled.sd, FUN = function(s) rnorm(n = 1, mean = 0, sd = s))
+  res <- matrix(res, ncol = ncol(scaled.sd)) # taxa are rows, subjects are columns
   return(res)
 }
 
@@ -109,30 +116,14 @@ fit.reapp.model <- function(input) {
  return(reapp.glmm) 
 }
 
-# returns matrix of simulated probabilities of reappearance
-# taxa are rows, subjects are columns
-# uses fitted coefficients to simulate new probabilities where simulated subjects intercepts ~ N(mean.group, sd.group)
-predict.prob.reapp <- function(reapp.glmm, otu.ids, n.subj, mean.group, sd.group) {
-  baseline.intercepts <- coef(reapp.glmm)[[1]]
-  baseline.intercepts <- baseline.intercepts[otu.ids, 1] # baseline subject intercept + OTU random intercepts in order
-  
-  subj.intercepts <- rnorm(n = n.subj, mean = mean.group, sd = sd.group) # simulated subject fixed intercepts
-  
-  res <- matrix(nrow = length(baseline.intercepts), ncol = n.subj) # return matrix with taxa as rows, subjects as columns
-  for (i in 1:n.subj) {
-    res[ ,i] <- inv.logit(baseline.intercepts + subj.intercepts[i]) # predict probabilities for all otu.id / subj.id
-  }
-  return(res)
-  # NA predictions for otu.id / subj.id that were always present across all observed subjects
-  # so fill in NA with 1
-}
-
 # returns dataframe of otu.id, otu.rarity, subj.id
 otu.rarity.tab <- function(otutab, otu.ids, subj.ids) {
+  n.subj <- length(subj.ids)
+  n.otu <- length(otu.ids)
   otu.rarity <- avg.asin.abnd(otutab)
-  res <- data.frame(otu.id = rep(otu.ids, length(subj.ids)),
-                    otu.rarity = rep(otu.rarity, length(subj.ids)),
-                    subj.id = rep(subj.ids, each = length(otu.ids)))
+  res <- data.frame(otu.id = rep(otu.ids, n.subj),
+                    otu.rarity = rep(otu.rarity, n.subj),
+                    subj.id = rep(subj.ids, each = n.otu))
   return(res)
 }
 
@@ -151,22 +142,80 @@ fit.reapp.beta <- function(input) {
   return(reapp.glmmTMB)
 }
 
-# returns dataframe of beta distribution shape1, shape2
+# returns (KxN) x 2 dataframe of beta distribution shape1, shape2
 # input is dataframe of beta distribution mean, precision
-get.beta.params <- function(df) {
-  shapes.list <- apply(df, 1, function(x) betaGetShapes(x[1], x[2]))
+get.beta.shapes <- function(reapp.model, newdata) {
+  beta.params.df <- data.frame(mu = predict(reapp.model, newdata = newdata, allow.new.levels = TRUE, type = "response"),
+                               phi = predict(reapp.model, newdata = newdata, allow.new.levels = TRUE, type = "disp"))
+  
+  shapes.list <- apply(beta.params.df, 1, function(x) betaGetShapes(x[1], x[2]))
+  shapes.df <- as.data.frame(do.call(rbind, shapes.list))
+  return(shapes.df)
 }
 
-# returns dataframe of simulated reappeared relative abundances
-# if otu.id / subj.id is not simulated by reapp.glmmTMB
-# fill in with its average within-subject presence
-sim.reapp <- function(beta.means, beta.disps, n.otu, n.subj) {
+# returns K x N dataframe of simulated reappeared relative abundances
+# input is dataframe of beta distribution shape1, shape2 parameters
+sim.reapp <- function(shapes.df, n.subj) {
   # predict reappearances for all OTUs with new subject ID levels 
-  res <- numeric(n.otu*n.subj)
-  for (i in 1:length(beta.means)) {
-    shapes <- betaGetShapes(beta.means[i], beta.disps[i])
-    res[i] <- rbeta(n = 1, shapes$shape1, shapes$shape2)
-  }
-  res <- matrix(res, nrow = n.otu, ncol = n.subj)
+  res <- rbeta(n = nrow(shapes.df), shape1 = unlist(shapes.df[ ,1]), shape2 = unlist(shapes.df[ ,2]))
+  res <- matrix(res, ncol = n.subj)
   return(res)
+}
+
+# required: a pre-existing folder
+simDM <- function(set, n.subj, dd, write.path) {
+  # simulate from Dirichlet-multinomial 
+  S = simPop(J = n.subj, n = 10000, pi = dd$pi, theta = dd$theta) # matrix of OTU counts, taxa are columns
+  S.otutab <- otu_table(t(S$data), taxa_are_rows = TRUE) # transpose matrix so that taxa are rows, subjects are columns
+  S.rel.otutab <- transform(S.otutab, transform = "compositional") # transform into relative abundances
+  
+  # save in pre-existing folder, labeled as set0001, set0002, etc. 
+  write.table(S.rel.otutab, file = paste(write.path, "/set", sprintf("%04d", set), ".txt", sep = ""), 
+              sep = "\t", col.names = T, row.names = T)
+}
+
+# requires pre-existing folder
+simLong <- function(set, n.otu, n.subj, n.time, otu.ids, samp.ids, prob.disapp, prob.reapp, beta.shapes.df, scaled.sd, read.path, write.path) {
+  # set up matrix and fill in time 1 
+  this.otus <- matrix(nrow = n.otu, ncol = n.subj*n.time, dimnames = list(otu.ids, samp.ids))
+  this.otus[ ,c(1:n.subj)] <- as.matrix(read.table(paste(read.path, "/set", sprintf("%04d", set), ".txt", sep = "")))
+  
+  for (tt in 2:n.time) {
+    prev.start <- (tt - 2)*n.subj + 1 
+    prev.end <- (tt - 1)*n.subj
+    prev.otus <- this.otus[ ,c(prev.start:prev.end)]
+    
+    # does taxon disappear? 
+    indic.disapp <- sapply(prob.disapp, FUN = function(p) rbinom(1, size = 1, prob = (1-p)))  # indicator that cell does *not* disappear
+    mat.disapp <- matrix(indic.disapp, ncol = n.subj) 
+    
+    # if not, how much change from t1 to t2? 
+    perturb.lval <- sim.log.foldchange(scaled.sd)
+    mat.perturb <- exp(perturb.lval) # exponentiate the log fold-changes
+    
+    # final perturbation 
+    current.otus <- prev.otus * mat.disapp * mat.perturb # disappeared OTUs go to 0
+    
+    # does taxon reappear?
+    indic.reapp <- sapply(prob.reapp, FUN = function(p) rbinom(1, size = 1, prob = p)) # indicator that cell *does* reappear
+    mat.reapp <- matrix(indic.reapp, ncol = n.subj)
+    
+    # at what relative abundance does it reappear?
+    mat.sim.reapp <- sim.reapp(beta.shapes.df, n.subj)
+    
+    # if prev.otu == 0 and mat.reapp == 1 then set to new reappeared relative abundance
+    prev.absent <- prev.otus == 0 # matrix indices of previous absences
+    mat.sim.reapp <- mat.sim.reapp * mat.reapp # non-reappeared OTUs go to 0
+    current.otus[prev.absent] <- mat.sim.reapp[prev.absent] # fill in previously absent, reappeared OTUs
+    
+    # re-normalize
+    this.start <- (tt - 1)*n.subj + 1 
+    this.end <- tt*n.subj 
+    this.otus[ ,this.start:this.end] <- transform(current.otus, transform = 'compositional')
+  }
+  
+  # again write to pre-created folder 
+  write.table(this.otus, 
+              file = paste(write.path, "/set", sprintf("%04d", set), ".txt", sep = ""), 
+              sep = "\t", col.names = T, row.names = T)
 }
