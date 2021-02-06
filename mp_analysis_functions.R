@@ -181,7 +181,6 @@ prob.reapp.tab <- function(otutab, subj.id) {
   return(reapp.tab)
 }
 
-
 # function for predicting reappearance counts from negative binomial model
 predict_reappearance <- function(X_count, X_zero=NULL, negbin_model, zero_inflated=FALSE, seed = 0){
   set.seed(seed)
