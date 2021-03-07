@@ -9,7 +9,7 @@ library(tidyr)
 library(dirmult)
 library(doParallel)
 source("./sim_functions.R") # for simulation functions
-load("./dethlefsen_relman_for_sim.Rdata") # OTU tables and IDs from Dethlefsen-Relman study
+load("simulations/dethlefsen_relman_for_sim.Rdata") # OTU tables and IDs from Dethlefsen-Relman study
 
 ## NULL MODEL 
 ## NO DIFFERENCE IN VOLATILITY BETWEEN GROUPS

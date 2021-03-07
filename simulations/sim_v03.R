@@ -26,11 +26,12 @@ input <- list(list(rel.otutab.D, "D"),
 ##
 ## SIMULATE OTU TABLES AT T=1
 ##
-load("./DirMultOutput_DR.Rda") 
+load("./DirMultOutput_DR.Rda") # load pre-trained Dirichlet-Multinomial object named dd.DR
 
 set.seed(0) 
 n.set = as.numeric(args[2]) # number of simulated datasets
 
+# only need to run once
 foreach(set = 1:n.set) %dopar% simDM(set, n.subj, dd.DR, "./SimSets_DR_v03_n100")
 
 ## 
@@ -45,6 +46,7 @@ for (t in 1:n.time) {
   }
 }
 
+group2.base.sd <- as.numeric(args[4])
 ## DISAPPEARANCE PROBABILITIES
 disapp.logistic <- fit.disapp.model(input)
 prob.disapp <- predict.logistic(disapp.logistic, otu.ids, n.subj, mean.group = 0, sd.group = 0.1) # prob. disapp. for each OTU
@@ -57,9 +59,10 @@ reapp.beta <- fit.reapp.beta(input) # model for reappeared relative abundance
 beta.shapes.df <- get.beta.shapes(reapp.beta, otu.rarity.newdata) # predicted beta distributions
 ## CALCULATE WITHIN-SUBJECT QUINTILES OF AVERAGE RELATIVE ABUNDANCE
 otu.quintiles <- otu.quintiles.tab(list(list(rel.otutab.D, "D")))
-scaled.sd_1 <- get.scaled.sd(otu.quintiles, n.subj = 50, base.sd = 0.5, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 1
-scaled.sd_2 <- get.scaled.sd(otu.quintiles, n.subj = 50, base.sd = 2, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 2
+scaled.sd_1 <- get.scaled.sd(otu.quintiles, n.subj = (n.subj/2), base.sd = 1, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 1
+scaled.sd_2 <- get.scaled.sd(otu.quintiles, n.subj = (n.subj/2), base.sd = group2.base.sd, scaling.factors = c(.5, .75, 1, 1.25, 1.5)) # group 2
 scaled.sd <- cbind(scaled.sd_1, scaled.sd_2)
 
+# requires existing directory at write.path argument
 foreach(set = 1:n.set) %dopar% simLong(set, n.otu, n.subj, n.time, otu.ids, samp.ids, prob.disapp, prob.reapp, beta.shapes.df, scaled.sd, 
-                                        read.path = "./SimSets_DR_v03_n100", write.path = "./SimSets_DR_v03_n100_t120")
+                                        read.path = "./SimSets_DR_v03_n100", write.path = as.character(args[5]))

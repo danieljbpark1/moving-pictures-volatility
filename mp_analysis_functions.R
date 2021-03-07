@@ -88,35 +88,6 @@ change.unweighted <- function(otutab, otu.rarity, subj.id, change.direction, tax
 format_disappearance_data <- function(otutab, otu.rarity, subj.id, taxa_are_rows = TRUE) {
   return(change.unweighted(otutab, otu.rarity, subj.id,
                            change.direction = "disappearance"))
-  # if (!taxa_are_rows) {
-  #   otutab = t(otutab)
-  # }
-  # 
-  # num.samples <- ncol(otutab)
-  # num.otus <- nrow(otutab)
-  # 
-  # fold.diff.tab <- fold_difference_table(otu.table = otutab) 
-  # candidate.indices <- is.finite(fold.diff.tab) 
-  # delta.time <- t.sample[2:num.samples] - t.sample[1:(num.samples-1)]
-  # read.depths <- read.depths[2:num.samples]
-  # 
-  # disappeared <- numeric(); median.abundance <- numeric(); sample.read.depth <- numeric(); time.diff <- numeric(); otu_ids <- character()
-  # for (i in 1:num.otus) {
-  #   otu.candidate.indices <- candidate.indices[i, ]
-  #   if (!any(otu.candidate.indices)) {
-  #     next
-  #   }
-  #   
-  #   otu.candidate.samples <- fold.diff.tab[i, otu.candidate.indices]
-  #   
-  #   disappeared <- append(disappeared, ifelse(otu.candidate.samples == 0, 1, 0))
-  #   median.abundance <- append(median.abundance, rep(otu.median.abs[i], length(otu.candidate.samples)))
-  #   sample.read.depth <- append(sample.read.depth, read.depths[otu.candidate.indices])
-  #   time.diff <- append(time.diff, delta.time[otu.candidate.indices])
-  #   otu_ids <- append(otu_ids, rep(otu_id[i], length(otu.candidate.samples)))
-  # }
-  # 
-  # return(data.frame(disappeared, median.abundance, sample.read.depth, time.diff, otu_ids, row.names = NULL))
 }
 
 # function for formatting reappearance data for regression
@@ -127,42 +98,6 @@ format_disappearance_data <- function(otutab, otu.rarity, subj.id, taxa_are_rows
 format_reappearance_data <- function(otutab, otu.rarity, subj.id, taxa_are_rows = TRUE) {
   return(change.unweighted(otutab, otu.rarity, subj.id, 
                            change.direction = "reappearance"))
-  # if (!taxaAreRows) {
-  #   otutab = t(otutab)
-  # }
-  # 
-  # num.samples <- ncol(otutab)
-  # num.otus <- nrow(otutab)
-  # otuID <- rownames(otutab)
-  # 
-  # # samples from 2 to N
-  # reappearance.candidate.samples <- otutab[ , 2:num.samples]
-  # fold.diff.tab <- fold_difference_table(otutab) 
-  # # matrix indicating reappearance by OTU and sample
-  # reappearance.indices <- is.infinite(fold.diff.tab) | is.nan(fold.diff.tab)
-  # 
-  # y <- numeric()
-  # otu.rarity <- numeric()
-  # otu.id <- character()
-  # for (i in 1:num.otus) {
-  #   otu.reappearance.samples <- reappearance.indices[i, ]
-  #   # if OTU never reappeared, move on
-  #   if (!any(otu.reappearance.samples)) {
-  #     next
-  #   }
-  #   # extract the abundances after absences
-  #   otu.reappearance.magnitudes <- reappearance.candidate.samples[i, which(otu.reappearance.samples==TRUE)]
-  #   otu.reappearance.magnitudes <- as.numeric(otu.reappearance.magnitudes)
-  #   
-  #   y <- append(y, otu.reappearance.magnitudes)
-  #   otu.rarity <- append(otu.rarity, rep(otuRarity[i], length(otu.reappearance.magnitudes)))
-  #   otu.id <- append(otu.id, rep(otuID[i], length(otu.reappearance.magnitudes)))
-  # }
-  # 
-  # res <- data.frame(y, otu.rarity, otu.id)
-  # res$subj.id <- rep(subjID, nrow(res))
-  # 
-  # return(res)
 }
 
 prob.disapp.tab <- function(otutab, subj.id) {
@@ -242,6 +177,52 @@ reappearance_probabilities <- function(otutab, taxa_are_rows = TRUE){
   # number of times where taxa were absent at time t-1
   absences <- apply(fold.difference.table, dimension, function(a) sum(!is.finite(a)))
   return(as.numeric(reappearances / absences))
+}
+
+# function for creating table of disappearance proportions
+# input: list of lists of OTU tables and subject IDs
+disapp_prop_table <- function(input) {
+  big.disapp.tab <- data.frame(otu.id = character(),
+                              subj.id = character(),
+                              prop.disapp = numeric(),
+                              n.presences = numeric(),
+                              stringsAsFactors = FALSE)
+  for (i in 1:length(input)) {
+    sim.otutab_i <- input[[i]][[1]]
+    subj.id_i <- input[[i]][[2]]
+    fd.tab_i <- fold_difference_table(sim.otutab_i)
+    disappearances_i <- apply(fd.tab_i, 1, function(a) sum(a == 0, na.rm = TRUE)) # number of times when taxon disappeared
+    presences_i <- apply(fd.tab_i, 1, function(a) sum(is.finite(a))) # number of time when taxon was present
+    res_i <- data.frame(otu.id = rownames(sim.otutab_i)) %>%
+      mutate(subj.id = subj.id_i,
+             prop.disapp = as.numeric(disappearances_i/presences_i),
+             n.presences = as.numeric(presences_i))
+    big.disapp.tab <- rbind(big.disapp.tab, res_i)
+  }
+  return(big.disapp.tab)
+}
+
+# function for creating table of reappearance proportions
+# input: list of lists of OTU tables and subject IDs
+reapp_prop_table <- function(input) {
+  big.reapp.tab <- data.frame(otu.id = character(),
+                              subj.id = character(),
+                              prop.reapp = numeric(),
+                              n.absences = numeric(),
+                              stringsAsFactors = FALSE)
+  for (i in 1:length(input)) {
+    sim.otutab_i <- input[[i]][[1]]
+    subj.id_i <- input[[i]][[2]]
+    fd.tab_i <- fold_difference_table(sim.otutab_i)
+    reappearances_i <- apply(fd.tab_i, 1, function(a) sum(is.infinite(a))) # number of times when taxon reappeared
+    absences_i <- apply(fd.tab_i, 1, function(a) sum(!is.finite(a))) # number of time when taxon was absent
+    res_i <- data.frame(otu.id = rownames(sim.otutab_i)) %>%
+      mutate(subj.id = subj.id_i,
+             prop.reapp = as.numeric(reappearances_i/absences_i),
+             n.absences = as.numeric(absences_i))
+    big.reapp.tab <- rbind(big.reapp.tab, res_i)
+  }
+  return(big.reapp.tab)
 }
 
 # function for simulating inflated beta distribution 

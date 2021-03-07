@@ -37,31 +37,33 @@ load("../otu_tables_MP.Rdata")
 # Simulated Moving Pictures datasets
 ```{r}
 set.seed(0)
-set <- sample(x = 1:100, size = 1)
-sim.dataset <- as.matrix(read.table(file = paste("../SimSets_DR_n3_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+set <- 500
+#sim.dataset <- as.matrix(read.table(file = paste("../SimSets_DR_n3_t120", "/set", sprintf("%04d", set), ".txt", sep = "")))
+sim.dataset <- as.matrix(read.table(file = "../simset_DR_v02_0500.txt"))
+dim(sim.dataset)
 
-# sim.otutab.f4 <- as.data.frame(sim.dataset) %>%
-#   dplyr::select(contains("F4"))
-sim.otutab.D <- as.data.frame(sim.dataset) %>%
-  dplyr::select(contains("D"))
+sim.otutab_33 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("SUBJ_33"))
+sim.otutab_77 <- as.data.frame(sim.dataset) %>%
+  dplyr::select(contains("SUBJ_77"))
 
-sim.reapp.tab <- prob.reapp.tab(otutab = sim.otutab.D, subj.id = "D")
+sim.reapp.tab <- rbind(prob.reapp.tab(sim.otutab_33, subj.id = "SUBJ_33"),
+                       prob.reapp.tab(sim.otutab_77, subj.id = "SUBJ_77"))
 
 head(sim.reapp.tab)
 
 ggplot(sim.reapp.tab, aes(x=avg.asin, y=prob.reappear, color=subj.id)) +
   geom_point(alpha = 0.4) +
   labs(title = "OTU Probabilities of Reappearance",
-       subtitle = paste("Simulated Dethlefsen-Relman dataset set", sprintf("%04d", set), sep = ""),
+       subtitle = paste("v02 Simulated Dethlefsen-Relman dataset set", sprintf("%04d", 500), sep = ""),
        x = "average within-subject arcsin Hellinger abundance", 
        y = "probability of reappearance") +
-  ylim(0,1) +
-  xlim(0,0.35)
+  ylim(0,1)
 
 ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
   geom_density(aes(fill=subj.id), alpha=0.1) +
     labs(title = "Distribution of OTU Probabilities of Reappearance",
-       subtitle = paste("Simulated Dethlefsen-Relman dataset set", sprintf("%04d", set), sep = ""),
+       subtitle = paste("v02 Simulated Dethlefsen-Relman dataset set", sprintf("%04d", set), sep = ""),
        x = "probability of reappearance") +
   xlim(0,1)
 

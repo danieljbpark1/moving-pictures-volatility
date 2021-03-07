@@ -44,7 +44,7 @@ predict.logistic <- function(logistic.glmm, otu.ids, n.subj, mean.group, sd.grou
   baseline.intercepts <- coef(logistic.glmm)[[1]]
   baseline.intercepts <- baseline.intercepts[otu.ids, 1] # baseline subject intercept + OTU random intercepts in order
   
-  subj.intercepts <- rnorm(n = n.subj, mean = mean.group, sd = sd.group) # simulated subject fixed intercepts
+  subj.intercepts <- rnorm(n = n.subj, mean = mean.group, sd = sd.group) # simulated subject random intercepts
   
   res <- matrix(nrow = length(otu.ids), ncol = n.subj) # return matrix with taxa as rows, subjects as columns
   for (i in 1:n.subj) {
