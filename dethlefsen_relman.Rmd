@@ -11,11 +11,298 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(dplyr)
+library(data.table)
 library(phyloseq)
 library(microbiome)
 ```
 
-Dethlefsen and Relman: 
+# Only Qualitative Difference Scenarios
+
+```{r}
+d <- seq(from = 0, to = 1, by = 0.1)
+power.table <- matrix(nrow = length(d), ncol = 10)
+colnames(power.table) <- c("delta", "disapp", "reapp", "quant", 
+                           "bray_qual", "bray_quant", "bray_omni", 
+                           "adhoc_bray_qual", "adhoc_bray_quant", "quant_meanL2")
+
+alpha <- 0.05
+for (i in 1:length(d)) {
+  disapp.tests <- as.matrix(read.table(paste("testresults/qual_disapp_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  reapp.tests <- as.matrix(read.table(paste("testresults/qual_reapp_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_d", d[i], "_s1.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.meanL2 <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_int1_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  disapp.pvals <- disapp.tests[ , ncol(disapp.tests)]
+  reapp.pvals <- reapp.tests[ ,ncol(reapp.tests)]
+  quant.pvals <- quant.tests[ ,ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ ,ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ ,ncol(adhoc.quant)]
+  quant.meanL2.pvals <- quant.meanL2[ ,ncol(quant.meanL2)]
+  
+  power.table[i,1] <- d[i] # difference in mean of subject random intercept distribution between groups
+  power.table[i,2] <- mean(disapp.pvals < alpha, na.rm = TRUE) # power
+  power.table[i,3] <- mean(reapp.pvals < alpha, na.rm = TRUE)
+  power.table[i,4] <- mean(quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,5:7] <- apply(pldist.tests, 2, function(x) mean(x < alpha, na.rm = TRUE))
+  power.table[i,8] <- mean(adhoc.qual.pvals < alpha, na.rm = TRUE)
+  power.table[i,9] <- mean(adhoc.quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,10] <- mean(quant.meanL2.pvals < alpha, na.rm = TRUE)
+
+  # print(paste("For delta = ", d[i], ", ", length(pvals), " tests were returned.", sep = ""))
+  # hist(pvals, breaks = seq(from = 0, to = 1, by = 0.05), xlim = c(0,1), 
+  #      main = bquote("Histogram of p-values for " ~ delta == .(d[i])))
+}
+```
+
+```{r}
+plot(x = power.table[ ,1], y = power.table[ ,2], ylim = c(0,1), type = "o", pch = 15, lty = 1, col = "red",
+     main = "Qualitative Difference Only Scenarios", xlab = expression("Effect Size" ~ delta), ylab = "Power")
+
+points(x = power.table[ ,1], y = power.table[ ,3], pch = 16, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,3], lty = 2, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,4], pch = 17, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,4], lty = 3, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,5], pch = 1)
+lines(x = power.table[ ,1], y = power.table[ ,5], lty = 4)
+points(x = power.table[ ,1], y = power.table[ ,6], pch = 2)
+lines(x = power.table[ ,1], y = power.table[ ,6], lty = 5)
+points(x = power.table[ ,1], y = power.table[ ,7], pch = 5)
+lines(x = power.table[ ,1], y = power.table[ ,7], lty = 6)
+points(x = power.table[ ,1], y = power.table[ ,8], pch = 3)
+lines(x = power.table[ ,1], y = power.table[ ,8], lty = 7)
+points(x = power.table[ ,1], y = power.table[ ,9], pch = 4)
+lines(x = power.table[ ,1], y = power.table[ ,9], lty = 8)
+points(x = power.table[ ,1], y = power.table[ ,10], pch = 18, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,10], lty = 9, col = "red")
+
+legend(0, 1, legend=c("Disapp", "Reapp","Quant", 
+                      expression(K[BB]), expression(K[BQ]), expression(K[omni]),
+                      expression(adhoc[BB]), expression(adhoc[BQ]), bquote("Quant"["Mean L2"])),
+       pch=c(15, 16, 17, 1, 2, 5, 3, 4, 18), lty=1:(ncol(power.table)-1), 
+       col=c(rep("red", 3), rep("black", (ncol(power.table)-5)), "red"), 
+       ncol=1)
+
+power.table
+```
+
+## Balanced Subsampled: 4 Intervals of 30 Time Points
+
+```{r}
+d <- seq(from = 0, to = 1, by = 0.1)
+power.table <- matrix(nrow = length(d), ncol = 10)
+colnames(power.table) <- c("delta", "disapp", "reapp", "quant", 
+                           "bray_qual", "bray_quant", "bray_omni", 
+                           "adhoc_bray_qual", "adhoc_bray_quant", "quantMeanL2")
+
+alpha <- 0.05
+for (i in 1:length(d)) {
+  disapp.tests <- as.matrix(read.table(paste("testresults/qual_disapp_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  reapp.tests <- as.matrix(read.table(paste("testresults/qual_reapp_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.meanL2 <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_int30_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  
+  disapp.pvals <- disapp.tests[ , ncol(disapp.tests)]
+  reapp.pvals <- reapp.tests[ ,ncol(reapp.tests)]
+  quant.pvals <- quant.tests[ ,ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ ,ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ ,ncol(adhoc.quant)]
+  quant.meanL2.pvals <- quant.meanL2[ ,ncol(quant.meanL2)]
+  
+  power.table[i,1] <- d[i] # difference in mean of subject random intercept distribution between groups
+  power.table[i,2] <- mean(disapp.pvals < alpha, na.rm = TRUE) # power
+  power.table[i,3] <- mean(reapp.pvals < alpha, na.rm = TRUE)
+  power.table[i,4] <- mean(quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,5:7] <- apply(pldist.tests, 2, function(x) mean(x < alpha, na.rm = TRUE))
+  power.table[i,8] <- mean(adhoc.qual.pvals < alpha, na.rm = TRUE)
+  power.table[i,9] <- mean(adhoc.quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,10] <- mean(quant.meanL2.pvals < alpha, na.rm = TRUE)
+  
+  # print(paste("For delta = ", d[i], ", ", length(pvals), " tests were returned.", sep = ""))
+  # hist(pvals, breaks = seq(from = 0, to = 1, by = 0.05), xlim = c(0,1), 
+  #      main = bquote("Histogram of p-values for " ~ delta == .(d[i])))
+}
+
+```
+
+```{r}
+plot(x = power.table[ ,1], y = power.table[ ,2], ylim = c(0,1), type = "o", pch = 15, lty = 1, col = "red",
+     main = "Qualitative Difference Only Scenarios", sub = "Balanced Subsampling: 4 Intervals of 30 time points",
+     xlab = expression("Effect Size" ~ delta), ylab = "Power")
+
+points(x = power.table[ ,1], y = power.table[ ,3], pch = 16, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,3], lty = 2, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,4], pch = 17, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,4], lty = 3, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,5], pch = 1)
+lines(x = power.table[ ,1], y = power.table[ ,5], lty = 4)
+points(x = power.table[ ,1], y = power.table[ ,6], pch = 2)
+lines(x = power.table[ ,1], y = power.table[ ,6], lty = 5)
+points(x = power.table[ ,1], y = power.table[ ,7], pch = 5)
+lines(x = power.table[ ,1], y = power.table[ ,7], lty = 6)
+points(x = power.table[ ,1], y = power.table[ ,8], pch = 3)
+lines(x = power.table[ ,1], y = power.table[ ,8], lty = 7)
+points(x = power.table[ ,1], y = power.table[ ,9], pch = 4)
+lines(x = power.table[ ,1], y = power.table[ ,9], lty = 8)
+points(x = power.table[ ,1], y = power.table[ ,10], pch = 18, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,10], lty = 9, col = "red")
+
+legend(0, 1, legend=c("Disapp", "Reapp","Quant", 
+                      expression(K[BB]), expression(K[BQ]), expression(K[omni]),
+                      expression(adhoc[BB]), expression(adhoc[BQ]), bquote("Quant"["Mean L2"])),
+       pch=c(15, 16, 17, 1, 2, 5, 3, 4, 18), lty=1:(ncol(power.table)-1), 
+       col=c(rep("red", 3), rep("black", (ncol(power.table)-5)), "red"), 
+       ncol=1)
+
+power.table
+```
+
+# Only Quantitative Difference Scenarios
+
+```{r}
+f <- seq(from = 1, to = 1.5, by = 0.05)
+power.table <- matrix(nrow = length(f), ncol = 10)
+colnames(power.table) <- c("f", "disapp", "reapp", "quant", 
+                           "bray_qual", "bray_quant", "bray_omni", 
+                           "adhoc_bray_qual", "adhoc_bray_quant", "quant_meanL2")
+
+alpha <- 0.05
+for (i in 1:length(f)) {
+  disapp.tests <- as.matrix(read.table(paste("testresults/qual_disapp_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  reapp.tests <- as.matrix(read.table(paste("testresults/qual_reapp_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_b1_f", f[i], ".txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.meanL2 <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_int1_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  disapp.pvals <- disapp.tests[ , ncol(disapp.tests)]
+  reapp.pvals <- reapp.tests[ , ncol(reapp.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ , ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ , ncol(adhoc.quant)]
+  quant.meanL2.pvals <- quant.meanL2[ ,ncol(quant.meanL2)]
+
+  power.table[i,1] <- f[i] # multiplicative difference in variance of log fold-changes between groups
+  power.table[i,2] <- mean(disapp.pvals < alpha, na.rm = TRUE) # power
+  power.table[i,3] <- mean(reapp.pvals < alpha, na.rm = TRUE)
+  power.table[i,4] <- mean(quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,5:7] <- apply(pldist.tests, 2, function(x) mean(x < alpha, na.rm = TRUE))
+  power.table[i,8] <- mean(adhoc.qual.pvals < alpha, na.rm = TRUE)
+  power.table[i,9] <- mean(adhoc.quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,10] <- mean(quant.meanL2.pvals < alpha, na.rm = TRUE)
+}
+```
+
+```{r}
+par(mar = c(5, 4, 4, 8), xpd = TRUE)
+
+plot(x = power.table[ ,1], y = power.table[ ,2], ylim = c(0,1), type = "o", pch = 15, lty = 1, col = "red",
+     main = "Quantitative Difference Only Scenarios", xlab = bquote("Effect Size" ~ sigma[2]^2 == delta * sigma[1]^2), ylab = "Power")
+
+points(x = power.table[ ,1], y = power.table[ ,3], pch = 16, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,3], lty = 2, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,4], pch = 17, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,4], lty = 3, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,5], pch = 1)
+lines(x = power.table[ ,1], y = power.table[ ,5], lty = 4)
+points(x = power.table[ ,1], y = power.table[ ,6], pch = 2)
+lines(x = power.table[ ,1], y = power.table[ ,6], lty = 5)
+points(x = power.table[ ,1], y = power.table[ ,7], pch = 5)
+lines(x = power.table[ ,1], y = power.table[ ,7], lty = 6)
+points(x = power.table[ ,1], y = power.table[ ,8], pch = 3)
+lines(x = power.table[ ,1], y = power.table[ ,8], lty = 7)
+points(x = power.table[ ,1], y = power.table[ ,9], pch = 4)
+lines(x = power.table[ ,1], y = power.table[ ,9], lty = 8)
+points(x = power.table[ ,1], y = power.table[ ,10], pch = 18, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,10], lty = 9, col = "red")
+
+legend("topright", inset = c(-0.32, 0), 
+       legend=c("Disapp", "Reapp","Quant", 
+                expression(K[BB]), expression(K[BQ]), expression(K[omni]),
+                expression(adhoc[BB]), expression(adhoc[BQ]), bquote("Quant"["Mean L2"])),
+       pch=c(15, 16, 17, 1, 2, 5, 3, 4, 18), lty=1:(ncol(power.table)-1), 
+       col=c(rep("red", 3), rep("black", (ncol(power.table)-5)), "red"), 
+       ncol=1)
+
+power.table
+```
+
+## Balanced Subsampled: 4 Intervals of 30 Time Points
+
+```{r}
+f <- seq(from = 1, to = 1.5, by = 0.05)
+power.table <- matrix(nrow = length(f), ncol = 10)
+colnames(power.table) <- c("f", "disapp", "reapp", "quant", 
+                           "bray_qual", "bray_quant", "bray_omni", 
+                           "adhoc_bray_qual", "adhoc_bray_quant", "quant_meanL2")
+
+alpha <- 0.05
+for (i in 1:length(f)) {
+  disapp.tests <- as.matrix(read.table(paste("testresults/qual_disapp_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  reapp.tests <- as.matrix(read.table(paste("testresults/qual_reapp_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.meanL2 <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_int30_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  disapp.pvals <- disapp.tests[ , ncol(disapp.tests)]
+  reapp.pvals <- reapp.tests[ , ncol(reapp.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ , ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ , ncol(adhoc.quant)]
+  quant.meanL2.pvals <- quant.meanL2[ , ncol(quant.meanL2)]
+
+  power.table[i,1] <- f[i] # multiplicative difference in variance of log fold-changes between groups
+  power.table[i,2] <- mean(disapp.pvals < alpha, na.rm = TRUE) # power
+  power.table[i,3] <- mean(reapp.pvals < alpha, na.rm = TRUE)
+  power.table[i,4] <- mean(quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,5:7] <- apply(pldist.tests, 2, function(x) mean(x < alpha, na.rm = TRUE))
+  power.table[i,8] <- mean(adhoc.qual.pvals < alpha, na.rm = TRUE)
+  power.table[i,9] <- mean(adhoc.quant.pvals < alpha, na.rm = TRUE)
+  power.table[i,10] <- mean(quant.meanL2.pvals < alpha, na.rm = TRUE)
+}
+```
+
+```{r}
+plot(x = power.table[ ,1], y = power.table[ ,2], ylim = c(0,1), type = "o", pch = 15, lty = 1, col = "red",
+     main = "Quantitative Difference Only Scenarios", sub = "Balanced Subsampling: 4 Intervals of 30 time points",
+     xlab = bquote("Effect Size" ~ sigma[2]^2 == delta * sigma[1]^2), ylab = "Power")
+
+points(x = power.table[ ,1], y = power.table[ ,3], pch = 16, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,3], lty = 2, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,4], pch = 17, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,4], lty = 3, col = "red")
+points(x = power.table[ ,1], y = power.table[ ,5], pch = 1)
+lines(x = power.table[ ,1], y = power.table[ ,5], lty = 4)
+points(x = power.table[ ,1], y = power.table[ ,6], pch = 2)
+lines(x = power.table[ ,1], y = power.table[ ,6], lty = 5)
+points(x = power.table[ ,1], y = power.table[ ,7], pch = 5)
+lines(x = power.table[ ,1], y = power.table[ ,7], lty = 6)
+points(x = power.table[ ,1], y = power.table[ ,8], pch = 3)
+lines(x = power.table[ ,1], y = power.table[ ,8], lty = 7)
+points(x = power.table[ ,1], y = power.table[ ,9], pch = 4)
+lines(x = power.table[ ,1], y = power.table[ ,9], lty = 8)
+points(x = power.table[ ,1], y = power.table[ ,10], pch = 18, col = "red")
+lines(x = power.table[ ,1], y = power.table[ ,10], lty = 9, col = "red")
+
+legend(1, 1, legend=c("Disapp", "Reapp","Quant", 
+                      expression(K[BB]), expression(K[BQ]), expression(K[omni]),
+                      expression(adhoc[BB]), expression(adhoc[BQ]), bquote("Quant"["Mean L2"])),
+       pch=c(15, 16, 17, 1, 2, 5, 3, 4, 18), lty=1:(ncol(power.table)-1), 
+       col=c(rep("red", 3), rep("black", (ncol(power.table)-5)), "red"), 
+       ncol=1)
+
+power.table
+```
+
+# Dethlefsen and Relman: 
 - three individuals (D, E, F)
 - 52 to 56 stool samples per subject
 - over 10 months

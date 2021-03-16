@@ -1,7 +1,9 @@
 library(lme4)
 library(lmerTest)
+library(dplyr)
 library(pldist)
 library(MiRKAT)
+library(vegan)
 source("./mp_analysis_functions.R")
 
 ##
@@ -142,28 +144,78 @@ doManyQuantTest <- function(n.set, folder.path, n.subj, n.time) {
 # binary: qualitative (TRUE) or quantitative (FALSE)
 # method: braycurtis, jaccard, kulczynski, gower, unifrac (requires phylo tree)
 
-mirkat.test <- function(file.path, n.subj, n.time, response, binary = TRUE, method = "bray") {
-  sim.dataset <- as.matrix(read.table(file = file.path))
-  otus <- t(sim.dataset)
-  
-  subj.ids <- character(n.subj)
-  for (i in 1:n.subj) {
-    subj.ids[i] <- paste("SUBJ_", i, sep = "")
+mirkat.test <- function(file.path, n.subj, n.time, response, method = "bray", subsample = FALSE, interval = NULL) {
+  if (subsample) {
+    stopifnot(!is.null(interval))
+    sim.dataset <- subsample(file.path, n.subj, n.time, interval)
+  } else {
+    sim.dataset <- as.matrix(read.table(file = file.path))
   }
-  subjID <- rep(subj.ids, n.time)
+  
+  otus <- t(sim.dataset)
   sampID <- rownames(otus)
-  time <- rep(1:n.time, each = n.subj)
+  subjID <- sapply(strsplit(sampID, split = "[.]"), "[[", 1)
+  time <- sapply(strsplit(sampID, split = "[.]"), "[[", 2)
   metadata <- data.frame(subjID, sampID, time)
   
-  D <- pldist_all(otu = otus, metadata = metadata, method = c("bray"))
-  Ks <- lapply(D, FUN = function(d) D2K(d))
-  res <- MiRKAT(y = y, Ks = Ks)
+  Ds <- pldist_all(otu = otus, metadata = metadata, method = c("bray"))
+  Ks <- lapply(Ds, FUN = function(d) D2K(d))
+  res <- MiRKAT(y = response, Ks = Ks)
+  return(unlist(res))
+}
+
+doManyMirkatTest <- function(n.set, folder.path, n.subj, n.time, response, method = "bray", subsample = FALSE, interval = NULL) {
+  registerDoParallel(cores = detectCores()-1)
+  res.list <- foreach(i = 1:n.set) %dopar% mirkat.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), n.subj, n.time, response, binary, method)
+  res <- matrix(unlist(res.list), nrow = length(res.list), byrow = TRUE)
   return(res)
 }
 
-doManyMirkatTest <- function(n.set, folder.path, n.subj, n.time, response, binary = TRUE, method = "bray") {
-  registerDoParallel(cores = detectCores()-1)
-  res.list <- foreach(i = 1:n.set) %dopar% mirkat.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), n.subj, n.time, response, binary, method)
-  return(res.list)
+adhoc.test <- function(file.path, n.subj, method = "bray", binary = FALSE, subsample = FALSE, n.time = NULL, interval = NULL) {
+  if (subsample) {
+    stopifnot(!is.null(interval), !is.null(n.time))
+    sim.dataset <- subsample(file.path, n.subj, n.time, interval)
+  } else {
+    sim.dataset <- as.matrix(read.table(file = file.path))
+  }
+  
+  ## create data dataset with: distance, subj.id, group2
+  big.dist.tab <- data.frame(distance = numeric(),
+                             group2 = numeric(),
+                             subj.id = character(),
+                             stringsAsFactors = FALSE)
+  for (i in 1:n.subj) {
+    subj.id_i <- paste("SUBJ_", i, sep = "")
+    sim.otutab_i <- as.data.frame(sim.dataset) %>%
+      dplyr::select(contains(paste(subj.id_i, ".", sep = "")))
+    
+    n.pairs <- ncol(sim.otutab_i) - 1
+    
+    if (i <= (n.subj / 2)) {
+      group2 <- rep(0, n.pairs)
+    } else {
+      group2 <- rep(1, n.pairs)
+    }
+    
+    dist.mat <- as.matrix(vegdist(x = t(sim.otutab_i), method = method, binary = binary))
+    
+    dist.tab_i <- data.frame(distance = diag(dist.mat[2:nrow(dist.mat), 1:(nrow(dist.mat)-1)]),
+                             group2 = group2,
+                             subj.id = rep(subj.id_i, n.pairs))
+    ## rbind with data dataset
+    big.dist.tab <- rbind(big.dist.tab, dist.tab_i)
+  }
+  
+  # LMM: distance ~ 1 + group2 + (1|subj.id)
+  lmm <- lmer(distance ~ 1 + group2 + (1 | subj.id), data = big.dist.tab)
+  lmm.summary <- summary(lmm)
+  return(lmm.summary$coefficients["group2", ])
 }
+
+
+
+
+
+
+
 
