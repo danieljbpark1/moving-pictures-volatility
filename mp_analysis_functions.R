@@ -225,6 +225,26 @@ reapp_prop_table <- function(input) {
   return(big.reapp.tab)
 }
 
+# function for creating table of state change (change in presence/absence) proportions
+# input: list of lists of OTU tables and subject IDs
+statechange_prop_table <- function(input) {
+  big.statechange.tab <- data.frame(otu.id = character(),
+                                    subj.id = character(),
+                                    prop.statechange = numeric(),
+                                    stringsAsFactors = FALSE)
+  for (i in 1:length(input)) {
+    sim.otutab_i <- input[[i]][[1]]
+    subj.id_i <- input[[i]][[2]]
+    presence.tab <- sim.otutab_i > 0
+    statechange.tab <- presence.tab[ ,2:ncol(presence.tab)] - presence.tab[ ,1:(ncol(presence.tab) - 1)]
+    res_i <- data.frame(otu.id = rownames(sim.otutab_i)) %>%
+      mutate(subj.id = subj.id_i,
+             prop.statechange = apply(statechange.tab, 1, function(x) mean(x != 0)))
+    big.statechange.tab <- rbind(big.statechange.tab, res_i)
+  }
+  return(big.statechange.tab)
+}
+
 # function for simulating inflated beta distribution 
 # inputs: coefficients for Beta mean and dispersion, coefficients for probability of one-inflation
 # returns: draws from one-inflated Beta distribution with probability of one, Beta mean and dispersion regressed on predictors
