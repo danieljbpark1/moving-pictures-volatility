@@ -183,48 +183,69 @@ doManyMirkatTest <- function(n.set, folder.path, n.subj, n.time, n.interval = n.
   return(res)
 }
 
-adhoc.test <- function(file.path, n.subj, method = "bray", binary = FALSE, subsample = FALSE, n.time = NULL, interval = NULL) {
-  if (subsample) {
-    stopifnot(!is.null(interval), !is.null(n.time))
-    sim.dataset <- subsample(file.path, n.subj, n.time, interval)
-  } else {
-    sim.dataset <- as.matrix(read.table(file = file.path))
-  }
+adhoc.test <- function(file.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, method = "bray") {
+  sim.dataset <- subsample(file.path, n.subj, n.time, n.interval, sub.subj, rand.interval)
+  n.totalsubj <- sub.subj * 2 # total number of subsampled subjects
+  subj.ind <- c(1:sub.subj, (n.subj/2 + 1):(n.subj/2 + sub.subj)) # subjIDs
   
   ## create data dataset with: distance, subj.id, group2
-  big.dist.tab <- data.frame(distance = numeric(),
-                             group2 = numeric(),
-                             subj.id = character(),
-                             stringsAsFactors = FALSE)
-  for (i in 1:n.subj) {
-    subj.id_i <- paste("SUBJ_", i, sep = "")
+  ## binary (qualitative) and quantitative distances
+  big.dist.tab.qual <- data.frame(distance = numeric(),
+                                  group2 = numeric(),
+                                  subj.id = character(),
+                                  stringsAsFactors = FALSE)
+  big.dist.tab.quant <- data.frame(distance = numeric(),
+                                   group2 = numeric(),
+                                   subj.id = character(),
+                                   stringsAsFactors = FALSE)
+  for (i in 1:n.totalsubj) {
+    subj.id_i <- paste("SUBJ_", subj.ind[i], sep = "")
     sim.otutab_i <- as.data.frame(sim.dataset) %>%
       dplyr::select(contains(paste(subj.id_i, ".", sep = "")))
     
-    n.pairs <- ncol(sim.otutab_i) - 1
+    n.pairs <- ncol(sim.otutab_i) - 1 # number of consecutive pairs of samples
     
-    if (i <= (n.subj / 2)) {
-      group2 <- rep(0, n.pairs)
+    if (i <= sub.subj) {
+      group2 <- rep(0, n.pairs) # not in group2 if subject in first half
     } else {
-      group2 <- rep(1, n.pairs)
+      group2 <- rep(1, n.pairs) # in group2 if subject in second half
     }
     
-    dist.mat <- as.matrix(vegdist(x = t(sim.otutab_i), method = method, binary = binary))
-    
-    dist.tab_i <- data.frame(distance = diag(dist.mat[2:nrow(dist.mat), 1:(nrow(dist.mat)-1)]),
-                             group2 = group2,
-                             subj.id = rep(subj.id_i, n.pairs))
+    dist.mat.qual <- as.matrix(vegdist(x = t(sim.otutab_i), method = method, binary = TRUE)) # sample-sample distance matrix
+    dist.tab.qual_i <- data.frame(distance = diag(dist.mat.qual[2:nrow(dist.mat.qual), 1:(nrow(dist.mat.qual)-1)]),
+                                  group2 = group2,
+                                  subj.id = rep(subj.id_i, n.pairs))
+    dist.mat.quant <- as.matrix(vegdist(x = t(sim.otutab_i), method = method, binary = FALSE)) # sample-sample distance matrix
+    dist.tab.quant_i <- data.frame(distance = diag(dist.mat.quant[2:nrow(dist.mat.quant), 1:(nrow(dist.mat.quant)-1)]),
+                                   group2 = group2,
+                                   subj.id = rep(subj.id_i, n.pairs))
     ## rbind with data dataset
-    big.dist.tab <- rbind(big.dist.tab, dist.tab_i)
+    big.dist.tab.qual <- rbind(big.dist.tab.qual, dist.tab.qual_i)
+    big.dist.tab.quant <- rbind(big.dist.tab.quant, dist.tab.quant_i)
   }
   
   # LMM: distance ~ 1 + group2 + (1|subj.id)
-  lmm <- lmer(distance ~ 1 + group2 + (1 | subj.id), data = big.dist.tab)
-  lmm.summary <- summary(lmm)
-  return(lmm.summary$coefficients["group2", ])
+  lmm.qual <- lmer(distance ~ 1 + group2 + (1 | subj.id), data = big.dist.tab.qual)
+  lmm.qual.summary <- summary(lmm.qual)
+  lmm.qual.coefs <- lmm.qual.summary$coefficients
+  
+  lmm.quant <- lmer(distance ~ 1 + group2 + (1 | subj.id), data = big.dist.tab.quant)
+  lmm.quant.summary <- summary(lmm.quant)
+  lmm.quant.coefs <- lmm.quant.summary$coefficients
+  
+  lmm.qual.pval <- lmm.qual.coefs["group2", ncol(lmm.qual.coefs)]
+  lmm.quant.pval <- lmm.quant.coefs["group2", ncol(lmm.quant.coefs)]
+  res <- matrix(c(lmm.qual.pval, lmm.quant.pval), nrow = 1, ncol = 2, dimnames = list(NULL, c("adhoc_qual_pval", "adhoc_quant_pval")))
+  return(res)
 }
 
-
+doManyAdhocTest <- function(n.set, folder.path,	n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, method = "bray") {
+  registerDoParallel(cores = detectCores())
+  res <- foreach(i = 1:n.set) %dopar% adhoc.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""),
+                                                 n.subj, n.time, n.interval, sub.subj, rand.interval, method)
+  res <- matrix(unlist(res), nrow = length(res), byrow = TRUE)
+  return(res)
+}
 
 
 
