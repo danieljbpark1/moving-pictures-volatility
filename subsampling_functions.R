@@ -10,23 +10,44 @@ source("./mp_analysis_functions.R")
 ## SUBSAMPLING AT TIME INTERVALS
 ## 
 
-subsample <- function(file.path, n.subj, n.time, interval) {
-  sim.dataset <- as.matrix(read.table(file = file.path))
+subsample <- function(file.path, n.subj, n.time, n.interval, sub.subj = n.subj / 2, rand.interval = FALSE) {
+  # assumed: samples are columns S1.1 S2.1 ... SN.1 ... S1.T S2.T ... SN.T
+  # assumed: first n.subj / 2 subjects are in group 1, the rest are in group 2
+  sim.dataset <- as.matrix(read.table(file = file.path)) # read simulated OTU table
+  n.otu <- nrow(sim.dataset) # taxa are rows
+  ss.dataset <- matrix(nrow = n.otu, ncol = 0) # subsampled data
   
-  n.otu <- nrow(sim.dataset)
-  n.interval <- n.time %/% interval
-  
-  ss.dataset <- matrix(nrow = n.otu, ncol = 0)
-  for (i in 1:(n.interval)) {
-    sim.start <- ((i-1) * interval) * n.subj + 1
-    sim.end <- sim.start + n.subj - 1
-
-    ss.dataset <- cbind(ss.dataset, sim.dataset[ , sim.start:sim.end])
+  if (rand.interval) {
+    # extract first (sub)group
+    for (i in 1:sub.subj) {
+      t <- sort(sample(x = n.time, size = n.interval)) # random time points
+      samp.ind <- (t-1) * n.subj + i # indices for this subject and time points in sim.dataset
+      ss.dataset <- cbind(ss.dataset, sim.dataset[ ,samp.ind]) # bind to result
+    }
+    # extract second (sub)group
+    group2.start <- (n.subj / 2) + 1 # first subjID in group2
+    group2.end <- (n.subj / 2) + sub.subj # last subjID in (sub)group2
+    for (i in group2.start:group2.end) {
+      t <- sort(sample(x = n.time, size = n.interval)) # random time points
+      samp.ind <- (t-1) * n.subj + i # indices for this subject and time points in sim.dataset
+      ss.dataset <- cbind(ss.dataset, sim.dataset[ , samp.ind]) # bind to result
+    }
+  } else {
+    interval <- n.time %/% n.interval # length of evenly spaced intervals
+    for (i in 1:(n.interval)) {
+      # select subset from group1
+      sim.start <- ((i-1) * interval) * n.subj + 1
+      sim.end <- sim.start + sub.subj - 1
+      ss.dataset <- cbind(ss.dataset, sim.dataset[ , sim.start:sim.end])
+      # select subset from group2
+      sim.start <- ((i-1) * interval) * n.subj + (n.subj/2) + 1
+      sim.end <- sim.start + sub.subj - 1
+      ss.dataset <- cbind(ss.dataset, sim.dataset[ , sim.start:sim.end])
+    }
   }
+  
   return(ss.dataset)
 }
-
-
 
 ##
 ## DETECTING DIFFERENCE IN QUALITATIVE VOLATILITY
@@ -88,36 +109,29 @@ doManyQualTest <- function(n.set, folder.path, n.subj, direction = "disappearanc
 ## DETECTING DIFFERENCE IN QUALITATIVE VOLATILITY
 ##
 
-quantitative.test <- function(file.path, n.subj, n.time, subsample = FALSE, interval = NULL) {
-  if (subsample) {
-    stopifnot(!is.null(interval))
-    sim.dataset <- subsample(file.path, n.subj, n.time, interval)
-    n.fc <- n.time %/% interval
-  } else {
-    sim.dataset <- as.matrix(read.table(file = file.path))
-    n.fc <- n.time - 1
-  }
-  
-  big.logFC.tab <- data.frame(logFC = numeric(n.subj * n.fc),
-                              group2 = numeric(n.subj * n.fc),
-                              subj.id = character(n.subj * n.fc),
+quantitative.test <- function(file.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE) {
+  sim.dataset <- subsample(file.path, n.subj, n.time, n.interval, sub.subj, rand.interval)
+  n.fc <- n.interval - 1 # number of fold-changes
+  n.totalsubj <- sub.subj * 2 # total number of subsampled subjects
+  big.logFC.tab <- data.frame(logFC = numeric(n.totalsubj * n.fc),
+                              group2 = numeric(n.totalsubj * n.fc),
+                              subj.id = character(n.totalsubj * n.fc),
                               stringsAsFactors = FALSE)
-  
-  sim.dataset <- as.matrix(read.table(file = file.path))
-  for (i in 1:n.subj) {
-    subj.id_i <- paste("SUBJ_", i, sep = "")
+  subj.ind <- c(1:sub.subj, (n.subj/2 + 1):(n.subj/2+sub.subj)) # subjIDs
+  for (i in 1:n.totalsubj) {
+    subj.id_i <- paste("SUBJ_", subj.ind[i], sep = "")
     sim.otutab_i <- as.data.frame(sim.dataset) %>%
       dplyr::select(contains(paste(subj.id_i, ".", sep = "")))
     sim.logFC.tab <- fold_difference_table(sim.otutab_i, logRatio = TRUE)
-    # within-sample squared L2 norm of log fold-changes excluding reappearances and continued absences
-    logFC_i <- apply(sim.logFC.tab, 2, FUN = function(x) sum((x[is.finite(x)])**2, na.rm = TRUE))
+    # within-sample squared L2 norm of log fold-changes excluding dis/reappearances and continued absences
+    logFC_i <- apply(sim.logFC.tab, 2, FUN = function(x) mean((x[is.finite(x)])**2, na.rm = TRUE))
     
     index.start <- ((i-1) * n.fc) + 1
     index.end <- i * n.fc
     
     big.logFC.tab[index.start:index.end, 1] <- logFC_i # log fold-change values
     big.logFC.tab[index.start:index.end, 3] <- rep(subj.id_i, n.fc) # subj.id
-    if(i > (n.subj / 2)) {
+    if(i > sub.subj) {
       big.logFC.tab[index.start:index.end, 2] <- rep(1, n.fc) # group2 = 1
     }
   }
@@ -126,10 +140,11 @@ quantitative.test <- function(file.path, n.subj, n.time, subsample = FALSE, inte
   return(lmm.summary$coefficients["group2", ])
 }
 
-doManyQuantTest <- function(n.set, folder.path, n.subj, n.time) {
+doManyQuantTest <- function(n.set, folder.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE) {
   registerDoParallel(cores = detectCores()-1)
-  res <- foreach(i = 1:n.set) %dopar% quantitative.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), n.subj, n.time)
-  res <- matrix(unlist(res), ncol = 5, byrow = TRUE)
+  res.list <- foreach(i = 1:n.set) %dopar% quantitative.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), 
+                                                             n.subj, n.time, n.interval, sub.subj, rand.interval)
+  res <- matrix(unlist(res.list), nrow = length(res.list), byrow = TRUE)
   return(res)
 }
 
@@ -144,13 +159,8 @@ doManyQuantTest <- function(n.set, folder.path, n.subj, n.time) {
 # binary: qualitative (TRUE) or quantitative (FALSE)
 # method: braycurtis, jaccard, kulczynski, gower, unifrac (requires phylo tree)
 
-mirkat.test <- function(file.path, n.subj, n.time, response, method = "bray", subsample = FALSE, interval = NULL) {
-  if (subsample) {
-    stopifnot(!is.null(interval))
-    sim.dataset <- subsample(file.path, n.subj, n.time, interval)
-  } else {
-    sim.dataset <- as.matrix(read.table(file = file.path))
-  }
+mirkat.test <- function(file.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, method = "bray") {
+  sim.dataset <- subsample(file.path, n.subj, n.time, n.interval, sub.subj, rand.interval)
   
   otus <- t(sim.dataset)
   sampID <- rownames(otus)
@@ -158,15 +168,17 @@ mirkat.test <- function(file.path, n.subj, n.time, response, method = "bray", su
   time <- sapply(strsplit(sampID, split = "[.]"), "[[", 2)
   metadata <- data.frame(subjID, sampID, time)
   
-  Ds <- pldist_all(otu = otus, metadata = metadata, method = c("bray"))
+  y <- c(rep(0, sub.subj), rep(1, sub.subj))
+  Ds <- pldist_all(otus = otus, metadata = metadata, method = method)
   Ks <- lapply(Ds, FUN = function(d) D2K(d))
-  res <- MiRKAT(y = response, Ks = Ks)
+  res <- MiRKAT(y = y, Ks = Ks)
   return(unlist(res))
 }
 
-doManyMirkatTest <- function(n.set, folder.path, n.subj, n.time, response, method = "bray", subsample = FALSE, interval = NULL) {
+doManyMirkatTest <- function(n.set, folder.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, method = "bray") {
   registerDoParallel(cores = detectCores()-1)
-  res.list <- foreach(i = 1:n.set) %dopar% mirkat.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), n.subj, n.time, response, binary, method)
+  res.list <- foreach(i = 1:n.set) %dopar% mirkat.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), 
+                                                       n.subj, n.time, n.interval, sub.subj, rand.interval, method)
   res <- matrix(unlist(res.list), nrow = length(res.list), byrow = TRUE)
   return(res)
 }
