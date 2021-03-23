@@ -228,20 +228,25 @@ reapp_prop_table <- function(input) {
 # function for creating table of state change (change in presence/absence) proportions
 # input: list of lists of OTU tables and subject IDs
 statechange_prop_table <- function(input) {
+  # results dataframe
   big.statechange.tab <- data.frame(otu.id = character(),
                                     subj.id = character(),
                                     prop.statechange = numeric(),
+                                    timepoints = numeric(),
                                     stringsAsFactors = FALSE)
   for (i in 1:length(input)) {
     sim.otutab_i <- input[[i]][[1]]
     subj.id_i <- input[[i]][[2]]
-    presence.tab <- sim.otutab_i > 0
-    statechange.tab <- presence.tab[ ,2:ncol(presence.tab)] - presence.tab[ ,1:(ncol(presence.tab) - 1)]
+    presence.tab <- sim.otutab_i > 0 # TRUE if OTU present, FALSE if absent
+    statechange.tab <- presence.tab[ ,2:ncol(presence.tab)] - presence.tab[ ,1:(ncol(presence.tab) - 1)] # state change from t to t+1
     res_i <- data.frame(otu.id = rownames(sim.otutab_i)) %>%
       mutate(subj.id = subj.id_i,
-             prop.statechange = apply(statechange.tab, 1, function(x) mean(x != 0)))
+             prop.statechange = apply(statechange.tab, 1, function(x) mean(x != 0)),   # proportion of state changes
+             timepoints = (ncol(sim.otutab_i)-1))                                      # number of possible state changes
+    
     big.statechange.tab <- rbind(big.statechange.tab, res_i)
   }
+  
   return(big.statechange.tab)
 }
 
