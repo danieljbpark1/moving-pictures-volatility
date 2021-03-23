@@ -53,24 +53,47 @@ subsample <- function(file.path, n.subj, n.time, n.interval, sub.subj = n.subj /
 ## DETECTING DIFFERENCE IN QUALITATIVE VOLATILITY
 ##
 
-qualitative.test <- function(file.path, n.subj, direction = "disappearance") {
-  sim.dataset <- as.matrix(read.table(file = file.path))
+qualitative.test <- function(file.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, direction = "both") {
+  sim.dataset <- subsample(file.path, n.subj, n.time, n.interval, sub.subj, rand.interval)   # subsampled OTU tab
+  otu.avg.abnd <- apply(sim.dataset, 1, mean)       # global OTU average abundances
+  otu.quintiles <- data.frame(otu.avg.abnd) %>%     # abundance-based OTU quintiles
+    rownames_to_column(var = "otu.id") %>%
+    mutate(quintile = ntile(otu.avg.abnd, n = 5)) 
+  
+  n.totalsubj <- sub.subj * 2 # total number of subsampled subjects
+  subj.ind <- c(1:sub.subj, (n.subj/2 + 1):(n.subj/2+sub.subj)) # subjIDs
   
   input_1 <- list() # group 1: otutab and subject ID
   input_2 <- list() # group 2
-  for (i in 1:n.subj) {
-    subj.id <- paste("SUBJ_", i, sep = "")
+  for (i in 1:n.totalsubj) {
+    subj.id <- paste("SUBJ_", subj.ind[i], sep = "")
     sim.otutab_i <- as.data.frame(sim.dataset) %>%
       dplyr::select(contains(paste(subj.id, ".", sep = "")))
-    if(i <= (n.subj/2)) {
+    if(i <= sub.subj) {
       input_1[[i]] <- list(sim.otutab_i, subj.id)
     }
     else {
-      input_2[[i-(n.subj/2)]] <- list(sim.otutab_i, subj.id)
+      input_2[[i-sub.subj]] <- list(sim.otutab_i, subj.id)
     } 
   }
   
-  if(direction == "disappearance") {
+  if(direction == "both") {
+    big.statechange.tab_1 <- statechange_prop_table(input_1) %>%
+      mutate(group2 = 0)
+    
+    big.statechange.tab_2 <- statechange_prop_table(input_2) %>%
+      mutate(group2 = 1)
+    
+    big.statechange.tab <- rbind(big.statechange.tab_1, big.statechange.tab_2)
+    big.statechange.tab <- left_join(x = big.statechange.tab, y = otu.quintiles, by = "otu.id")
+    big.statechange.tab$quintile <- as.factor(big.statechange.tab$quintile)
+    
+    glmm <- glmer(prop.statechange ~ 1 + group2 + quintile + (1 | subj.id) + (1 | otu.id),
+                  data = big.statechange.tab, 
+                  family = binomial, 
+                  weights = timepoints)
+    
+  } else if(direction == "disappearance") {
     big.disapp.tab_1 <- disapp_prop_table(input_1) %>%    # table of possible/actual disappearances
       mutate(group2 = 0)                                # indicator variable for membership in group 2
     big.disapp.tab_2 <- disapp_prop_table(input_2) %>%
@@ -94,14 +117,16 @@ qualitative.test <- function(file.path, n.subj, direction = "disappearance") {
                   family = binomial, 
                   weights = n.absences)
   }
+  
   glmm.summary <- summary(glmm)
   return(glmm.summary$coefficients["group2", ])
 }
 
-doManyQualTest <- function(n.set, folder.path, n.subj, direction = "disappearance") {
+doManyQualTest <- function(n.set, folder.path, n.subj, n.time, n.interval = n.time, sub.subj = n.subj / 2, rand.interval = FALSE, direction = "both") {
   registerDoParallel(cores = detectCores()-1)
-  res <- foreach(i = 1:n.set) %dopar% qualitative.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), n.subj, direction)
-  res <- matrix(unlist(res), ncol = 4, byrow = TRUE)
+  res <- foreach(i = 1:n.set) %dopar% qualitative.test(file.path = paste(folder.path, "/set", sprintf("%04d", i), ".txt", sep = ""), 
+                                                       n.subj, n.time, n.interval, sub.subj, rand.interval, direction)
+  res <- matrix(unlist(res), nrow = length(res), byrow = TRUE)
   return(res)
 }
 
