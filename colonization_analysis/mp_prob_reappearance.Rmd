@@ -74,29 +74,47 @@ ggplot(sim.reapp.tab, aes(x=prob.reappear, color=subj.id)) +
 
 ```{r}
 ## excluding singletons and doubletons
-# otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
-# otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
-# otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
-# otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
-# otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
+otutab.D <- dr.D.otutab[apply(dr.D.otutab > 0, 1, sum) > 2, ]
+otutab.E <- dr.E.otutab[apply(dr.E.otutab > 0, 1, sum) > 2, ]
+otutab.F <- dr.F.otutab[apply(dr.F.otutab > 0, 1, sum) > 2, ]
+otutab.F4 <- otu.counts.f4[apply(otu.counts.f4 > 0, 1, sum) > 2, ]
+otutab.M3 <- otu.counts.m3[apply(otu.counts.m3 > 0, 1, sum) > 2, ]
 
-# reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.D, 'D'),
-#                        prob.reapp.tab(otutab.E, 'E'),
-#                        prob.reapp.tab(otutab.F, 'F'),
-#                        prob.reapp.tab(otutab.F4, 'F4'),
-#                        prob.reapp.tab(otutab.M3, 'M3'))
-reapp.tab.ALL <- prob.reapp.tab(otutab.D, "D")
+reapp.tab.ALL <- rbind(prob.reapp.tab(otutab.D, 'D'),
+                       prob.reapp.tab(otutab.E, 'E'),
+                       prob.reapp.tab(otutab.F, 'F'),
+                       prob.reapp.tab(otutab.F4, 'F4'),
+                       prob.reapp.tab(otutab.M3, 'M3'))
 
-ggplot(reapp.tab.ALL, aes(x = avg.asin, y = prob.reappear)) +
+# reapp.tab.ALL <- prob.reapp.tab(otutab.D, "D")
+mp.reapp.tab <- reapp.tab.ALL %>%
+  filter(subj.id %in% c("F4", "M3"))
+dr.reapp.tab <- reapp.tab.ALL %>%
+  filter(subj.id %in% c("D", "E", "F"))
+
+mp.reapp.points <- ggplot(mp.reapp.tab, aes(x = avg.asin, y = prob.reappear)) +
   geom_point(aes(color = subj.id),
              alpha=.4) +
-  labs(y = "probability of reappearance",
-       x = "average within-subject arcsin Hellinger abundance",
-       title = "OTU Probabilities of Reappearance",
-       subtitle = "Observed Dethlefsen-Relman dataset",
+  labs(y = "Probability of reappearance",
+       x = "Average within-subject arcsin Hellinger abundance",
+       title = "Observed OTU Probabilities of Reappearance",
+       subtitle = "Moving Pictures dataset",
        color = "Subject ID") +
-  ylim(0,1) +
-  xlim(0,0.35)
+  ylim(0,1)
+
+dr.reapp.points <- ggplot(dr.reapp.tab, aes(x = avg.asin, y = prob.reappear)) +
+  geom_point(aes(color = subj.id),
+             alpha=.4) +
+  labs(y = "Probability of reappearance",
+       x = "Average within-subject arcsin Hellinger abundance",
+       title = "Observed OTU Probabilities of Reappearance",
+       subtitle = "Dethlefsen-Relman dataset",
+       color = "Subject ID") +
+  ylim(0,1) 
+```
+
+```{r}
+grid.arrange(arrangeGrob(mp.reapp.points, dr.reapp.points, ncol=2, nrow = 1))
 
 ggplot(reapp.tab.ALL, aes(x = prob.reappear, color = subj.id)) +
   geom_density(aes(fill = subj.id),
