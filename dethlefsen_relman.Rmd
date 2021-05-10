@@ -11,10 +11,447 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(dplyr)
+library(ggplot2)
+library(forcats)
+library(gridExtra)
+library(cowplot)
 library(data.table)
 library(phyloseq)
 library(microbiome)
+library(dirmult)
+library(reshape2)
 ```
+
+```{r}
+set.seed(0)
+rdir <- rdirichlet(n = 8, alpha = c(1,1,1,1,1,2,2,3,7,10))
+rdir <- as.data.frame(t(rdir)) %>%
+  rename(T1 = V1, T2 = V2, T3 = V3, T4 = V4, T5 = V5, T6 = V6, T7 = V7, T8 = V8) %>%
+  mutate(OTU = 1:ncol(rdir))
+
+sim.otusamples <- melt(rdir, id.vars = "OTU") %>%
+  rename(t = variable)
+
+lowvol.plot <- ggplot(sim.otusamples, aes(x = t,y = value, fill = as.factor(OTU))) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Low Volatility Subject", 
+       x = "Sample", y = "Relative Abundance", fill = "OTU") +
+  scale_fill_brewer(palette = "Paired") + 
+  theme(legend.position = "bottom")
+
+ralpha <- rmultinom(n = 8, size = 30, prob = rep(1,10))
+rdir2 <- apply(ralpha, 2, function(a) rdirichlet(alpha = a))
+rdir2 <- as.data.frame(rdir2) %>%
+  rename(T1 = V1, T2 = V2, T3 = V3, T4 = V4, T5 = V5, T6 = V6, T7 = V7, T8 = V8) %>%
+  mutate(OTU = 1:nrow(rdir2))
+
+sim.otusamples2 <- melt(rdir2, id.vars = "OTU") %>%
+  rename(t = variable)
+
+highvol.plot <- ggplot(sim.otusamples2, aes(x = t,y = value, fill = as.factor(OTU))) + 
+  geom_bar(stat = "identity") +
+  labs(title = "High Volatility Subject", 
+       x = "Sample", y = "", fill = "OTU") +
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "none")
+
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+shared.legend <- g_legend(lowvol.plot)
+lowvol.plot <- lowvol.plot + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(lowvol.plot, highvol.plot, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+```
+
+```{r}
+FC <- data.frame(fc = rdir$T5/rdir$T4,
+                 OTU = 1:10)
+FC2 <- data.frame(fc = rdir2$T5/rdir2$T4,
+                  OTU = 1:10)
+
+fcplot <- ggplot(FC, aes(x = as.factor(OTU), y = log(fc), fill = as.factor(OTU))) +
+  geom_bar(stat = "identity") +
+  labs(x = "OTU", y = "log(fold-change)", title = "Low Volatility Subject", subtitle = "T4 to T5") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylim(-3,5)
+
+fcplot2 <- ggplot(FC2, aes(x = as.factor(OTU), y = log(fc), fill = as.factor(OTU))) +
+  geom_bar(stat = "identity") +
+  labs(x = "OTU", y = "", title = "High Volatility Subject", subtitle = "T4 to T5") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylim(-3,5)
+
+grid.arrange(arrangeGrob(fcplot, fcplot2, ncol=2, nrow = 1))
+```
+
+# T = 120, N = 20
+
+```{r}
+d <- seq(from = 0, to = 1, by = 0.1) # qualitative true effect
+alpha <- 0.05
+
+powertable.t120 <- data.frame(effectsize = numeric(),
+                              power = numeric(),
+                              approach = character(),
+                              type = character())
+for (i in 1:length(d)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_d", d[i], "_s1_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_d", d[i], "_s1_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.tests <- as.matrix(read.table(paste("testresults/adhoc_bray_d", d[i], "_s1_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ , ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha), 
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             apply(adhoc.tests, 2, function(x) mean(x < alpha)))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(d[i], length(power))
+  
+  powertable.t120 <- rbind(powertable.t120, data.frame(effectsize, power, approach, type))
+}
+powertable.t120 <- powertable.t120 %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+
+qualplot.t120 <- ggplot(data = powertable.t120, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Qualitative Volatility", subtitle = bquote("120 Time Points, " ~ n[1] == {n[2] == 10}),
+       y = "Power", x = bquote("Effect Size " ~ Delta)) +
+  theme(aspect.ratio = 1, legend.position = "bottom")
+
+```
+
+```{r}
+f <- seq(from = 1, to = 1.5, by = 0.05) # quantitative true effect
+
+powertable.t120.quant <- data.frame(effectsize = numeric(),
+                                    power = numeric(),
+                                    approach = character(),
+                                    type = character())
+for (i in 1:length(f)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_b1_f", f[i], "_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_b1_f", f[i], "_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.tests <- as.matrix(read.table(paste("testresults/adhoc_bray_b1_f", f[i], "_nsub10_nint120.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ , ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha), 
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             apply(adhoc.tests, 2, function(x) mean(x < alpha)))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(f[i], length(power))
+  
+  powertable.t120.quant <- rbind(powertable.t120.quant, data.frame(effectsize, power, approach, type))
+}
+powertable.t120.quant <- powertable.t120.quant %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+
+quantplot.t120 <- ggplot(data = powertable.t120.quant, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Quantitative Volatility", subtitle = bquote("120 Time Points, " ~ n[1] == {n[2] == 10}),
+       y = "Power", x = "Effect Size r") +
+  theme(aspect.ratio = 1, legend.position = "none")
+
+```
+
+```{r}
+shared.legend <- g_legend(qualplot.t120)
+qualplot.t120 <- qualplot.t120 + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(qualplot.t120, quantplot.t120, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+```
+
+
+# T = 4, N = 100, BALANCED
+
+```{r}
+powertable.t4 <- data.frame(effectsize = numeric(),
+                            power = numeric(),
+                            approach = character(),
+                            type = character())
+for (i in 1:length(d)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_d", d[i], "_s1_nsub50_nint4.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_int30_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_d", d[i], "_s1_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ , ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ ,ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ ,ncol(adhoc.quant)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha),
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             mean(adhoc.qual.pvals < alpha), mean(adhoc.quant.pvals < alpha))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(d[i], length(power))
+  
+  powertable.t4 <- rbind(powertable.t4, data.frame(effectsize, power, approach, type))
+}
+powertable.t4 <- powertable.t4 %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+qualplot.t4 <- ggplot(data = powertable.t4, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Qualitative Volatility", subtitle = bquote("4 Time Points (balanced), " ~ n[1] == {n[2] == 50}),
+       y = "Power", x = bquote("Effect Size " ~ Delta)) +
+  theme(aspect.ratio = 1, legend.position = "bottom")
+```
+
+```{r}
+powertable.t4.quant <- data.frame(effectsize = numeric(),
+                                  power = numeric(),
+                                  approach = character(),
+                                  type = character())
+for (i in 1:length(f)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_b1_f", f[i], "_nsub50_nint4.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_int30_meanL2.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.qual <- as.matrix(read.table(paste("testresults/adhoc_bray_qual_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.quant <- as.matrix(read.table(paste("testresults/adhoc_bray_quant_b1_f", f[i], "_int30.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ , ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  adhoc.qual.pvals <- adhoc.qual[ ,ncol(adhoc.qual)]
+  adhoc.quant.pvals <- adhoc.quant[ ,ncol(adhoc.quant)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha), 
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             mean(adhoc.qual.pvals < alpha), mean(adhoc.quant.pvals < alpha))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(f[i], length(power))
+  
+  powertable.t4.quant <- rbind(powertable.t4.quant, data.frame(effectsize, power, approach, type))
+}
+powertable.t4.quant <- powertable.t4.quant %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+
+quantplot.t4 <- ggplot(data = powertable.t4.quant, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Quantitative Volatility", subtitle = bquote("4 Time Points (balanced), " ~ n[1] == {n[2] == 50}),
+       y = "Power", x = "Effect Size r") +
+  theme(aspect.ratio = 1, legend.position = "none")
+```
+
+```{r}
+shared.legend <- g_legend(qualplot.t4)
+qualplot.t4 <- qualplot.t4 + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(qualplot.t4, quantplot.t4, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+
+```
+
+
+# T = 4, N = 100, UNBALANCED
+
+```{r}
+powertable.t4.unbal <- data.frame(effectsize = numeric(),
+                                  power = numeric(),
+                                  approach = character(),
+                                  type = character())
+for (i in 1:length(d)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_d", d[i], "_s1_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_d", d[i], "_s1_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_d", d[i], "_s1_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.tests <- as.matrix(read.table(paste("testresults/adhoc_bray_d", d[i], "_s1_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ ,ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha), 
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             apply(adhoc.tests, 2, function(x) mean(x < alpha)))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(d[i], length(power))
+  
+  powertable.t4.unbal <- rbind(powertable.t4.unbal, data.frame(effectsize, power, approach, type))
+}
+powertable.t4.unbal <- powertable.t4.unbal %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+
+qualplot.t4.unbal <- ggplot(data = powertable.t4.unbal, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Qualitative Volatility", subtitle = bquote("4 Time Points (unbalanced), " ~ n[1] == {n[2] == 50}),
+       y = "Power", x = bquote("Effect Size " ~ Delta)) +
+  theme(aspect.ratio = 1, legend.position = "bottom")
+```
+
+```{r}
+powertable.t4.unbal.quant <- data.frame(effectsize = numeric(),
+                                        power = numeric(),
+                                        approach = character(),
+                                        type = character())
+for (i in 1:length(f)) {
+  qual.tests <- as.matrix(read.table(paste("testresults/qual_b1_f", f[i], "_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  quant.tests <- as.matrix(read.table(paste("testresults/quant_b1_f", f[i], "_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  pldist.tests <- as.matrix(read.table(paste("testresults/pldist_bray_b1_f", f[i], "_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+  adhoc.tests <- as.matrix(read.table(paste("testresults/adhoc_bray_b1_f", f[i], "_nsub50_nint4_rand.txt", sep = ""), header = TRUE, colClasses = c("numeric")))
+
+  qual.pvals <- qual.tests[ ,ncol(qual.tests)]
+  quant.pvals <- quant.tests[ , ncol(quant.tests)]
+  
+  power <- c(mean(qual.pvals < alpha), mean(quant.pvals < alpha), 
+             apply(pldist.tests, 2, function(x) mean(x < alpha))[1:2], 
+             apply(adhoc.tests, 2, function(x) mean(x < alpha)))
+  approach <- c(rep("LM VolTest", 2), rep("pldist", 2), rep("adhoc", 2))
+  type <- c(rep(c("qual", "quant"), 3))
+  effectsize <- rep(f[i], length(power))
+  
+  powertable.t4.unbal.quant <- rbind(powertable.t4.unbal.quant, data.frame(effectsize, power, approach, type))
+}
+powertable.t4.unbal.quant <- powertable.t4.unbal.quant %>%
+  mutate(approach = fct_relevel(approach, "adhoc", "pldist", "LM VolTest"))
+
+quantplot.t4.unbal <- ggplot(data = powertable.t4.unbal.quant, aes(x = effectsize, y = power, color = approach, linetype = type)) + 
+  geom_line() +
+  geom_point(aes(shape = type)) +
+  scale_color_manual(values = c("#0072B2", "#D55E00", "#CC79A7")) +
+  ylim(0,1) +
+  labs(title = "Difference in Quantitative Volatility", subtitle = bquote("4 Time Points (unbalanced), " ~ n[1] == {n[2] == 50}),
+       y = "Power", x = "Effect Size r") +
+  theme(aspect.ratio = 1, legend.position = "none")
+```
+
+```{r}
+shared.legend <- g_legend(qualplot.t4.unbal)
+qualplot.t4.unbal <- qualplot.t4.unbal + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(qualplot.t4.unbal, quantplot.t4.unbal, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+```
+
+## EMPIRICAL SIZE
+
+```{r}
+size.t120 <- (powertable.t120 %>%
+  filter(effectsize == 0) %>%
+  pull(power) +
+powertable.t120.quant %>%
+  filter(effectsize == 1) %>%
+  pull(power)) / 2
+
+opar <- par(mar=c(7,4.1,4.1,2.1))
+barplot(size.t120, 
+        names = c("Qual", "Quant",
+                  "Qual", "Quant",
+                  "Qual", "Quant"),
+        las = 2,
+        main = "Type 1 Error (T = 120)",
+        space = c(0.2,0.2,1,0.2,1,0.2), 
+        col = c(rep("lightblue", 2), rep("lightgreen", 2), rep("purple1", 2)), 
+        cex.names = 1.5, cex.axis = 1.5, cex.main = 1.5
+        )
+abline(h=0.05, col = "red", lty = 2, lwd = 2)
+mtext("LMVoltest", side = 1, line = 5, at = 1, cex=1.5)
+mtext("pldist", side = 1, line = 5, at = 4.5, cex=1.5)
+mtext("naive Bray", side = 1, line = 5, at = 7.85, cex=1.5)
+par(opar)
+```
+
+
+```{r}
+size.t4 <- (powertable.t4 %>%
+  filter(effectsize == 0) %>%
+  pull(power) +
+powertable.t4.quant %>%
+  filter(effectsize == 1) %>%
+  pull(power)
+) / 2
+
+opar <- par(mar=c(7,4.1,4.1,2.1))
+barplot(size.t4, 
+        names = c("Qual", "Quant",
+                  "Qual", "Quant",
+                  "Qual", "Quant"),
+        las = 2,
+        main = "Type 1 Error (T = 4)",
+        space = c(0.2,0.2,1,0.2,1,0.2), 
+        col = c(rep("lightblue", 2), rep("lightgreen", 2), rep("purple1", 2)), 
+        cex.names = 1.5, cex.axis = 1.5, cex.main = 1.5
+        )
+abline(h=0.05, col = "red", lty = 2, lwd = 2)
+mtext("LMVoltest", side = 1, line = 5, at = 1, cex=1.5)
+mtext("pldist", side = 1, line = 5, at = 4.5, cex=1.5)
+mtext("naive Bray", side = 1, line = 5, at = 7.85, cex=1.5)
+par(opar)
+
+size.t4ub <- (powertable.t4.unbal %>%
+  filter(effectsize == 0) %>%
+    pull(power) +
+powertable.t4.unbal.quant %>%
+  filter(effectsize == 1) %>%
+    pull(power)) / 2
+
+opar <- par(mar=c(7,4.1,4.1,2.1))
+barplot(size.t4ub, 
+        names = c("Qual", "Quant",
+                  "Qual", "Quant",
+                  "Qual", "Quant"),
+        las = 2,
+        main = "Type 1 Error (T = 4 unbalanced)",
+        space = c(0.2,0.2,1,0.2,1,0.2), 
+        col = c(rep("lightblue", 2), rep("lightgreen", 2), rep("purple1", 2)), 
+        cex.names = 1.5, cex.axis = 1.5, cex.main = 1.5
+        )
+abline(h=0.05, col = "red", lty = 2, lwd = 2)
+mtext("LMVoltest", side = 1, line = 5, at = 1, cex=1.5)
+mtext("pldist", side = 1, line = 5, at = 4.5, cex=1.5)
+mtext("naive Bray", side = 1, line = 5, at = 7.85, cex=1.5)
+par(opar)
+```
+
 
 # Only Qualitative Difference Scenarios
 
@@ -370,6 +807,30 @@ dr.D.med.clr <- apply(dr.D.clr.otutab, 1, median)
 dr.E.med.clr <- apply(dr.E.clr.otutab, 1, median)
 dr.F.med.clr <- apply(dr.F.clr.otutab, 1, median)
 ```
+
+```{r}
+otutab <- cbind(dr.D.df, dr.E.df, dr.F.df)
+otutab <- otutab[apply(otutab, 1, sum) > n.threshold, ]
+
+otutab <- phyloseq(otu_table(otutab, taxa_are_rows = TRUE))
+rel.otutab <- transform(otutab, transform = "compositional", target = 'OTU')
+
+avg.relabund <- apply(rel.otutab, 1, mean)
+taxon.quintiles <- avg.relabund %>% ntile(n = 5)
+
+abund.df <- as.data.frame(cbind(avg.relabund, taxon.quintiles))
+abund.df <- abund.df %>%
+  mutate(taxon.quintiles = as.factor(taxon.quintiles))
+
+summary(abund.df)
+
+ggplot(abund.df, aes(x = log(avg.relabund), y = taxon.quintiles)) +
+  geom_point(aes(color = taxon.quintiles)) +
+  labs(x = bquote(log(bar(y)[k])), y = "", color = "Quintile",
+       title = "Dethlefsen-Relman dataset (2010)") +
+  scale_color_brewer(palette = "Set1")
+```
+
 
 ```{r}
 # f4.metadata # 130 rows, 3 cols
