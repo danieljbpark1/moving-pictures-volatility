@@ -1,0 +1,521 @@
+---
+title: "pldist halfvarson analysis"
+author: "Anna Plantinga"
+date: "4/15/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(lme4)
+library(lmerTest)
+library(pldist)
+library(MiRKAT)
+library(vegan)
+library(tidyverse)
+library(phyloseq)
+library(microbiome)
+library(gridExtra)
+source("./mp_analysis_functions.R")
+```
+
+
+Read in data: 
+
+```{r} 
+metadata <- read.delim("Halfvarson 2017 IBS data/Halfvarson_2017_Metadata.txt")
+otus.orig <- read.delim("Halfvarson 2017 IBS data/Halfvarson_2017_OtuTable.txt")
+load("Halfvarson 2017 IBS data/Halfvarson_2017_Tree.Rda")
+```
+
+Prepare OTU table: 
+
+  - Filter to samples with at least 10,000 reads 
+  - Then filter to OTUs that appear in more than 2 samples 
+
+```{r} 
+## Total read counts of at least 10000 
+otus.rc <- otus.orig[, which(apply(otus.orig, 2, sum) >= 10000)]
+
+## 9178 OTUs => 6588 OTUs 
+num.nz <- apply(otus.rc, 1, FUN = function(x) sum(x!=0))
+otus.nz <- otus.rc[which(num.nz > 2), ] 
+
+## Keep only these sample IDs in metadata 
+metadata2 <- metadata %>% 
+  filter(sample_name %in% colnames(otus.nz))
+```
+
+Restrict to at least 4 time points: 
+
+  - 516 samples belonging to 84 patients 
+  - new.metadata: 504 samples belonging to 83 patients
+    - 8 HC, 75 IBD
+AND no missing BMI or f-cal
+  - 462 samples belonging to 77 patients
+
+```{r} 
+# when subjects have more than two samples at a time point, choose one arbitrarily 
+tab.tp.id <- table(metadata2$patientnumber, metadata2$timepoint) 
+problem.IDS <- names(which(apply(tab.tp.id, 1, 
+      FUN = function(x) sum(x > 1)) > 0))
+which.dup <- apply(
+  with(subset(metadata2, patientnumber %in% problem.IDS), 
+     table(patientnumber, timepoint)), 
+  1, FUN = function(x) which(x > 1))
+excl.dups <- c() 
+for (i in 1:length(which.dup)) {
+  this.patient <- names(which.dup)[i] 
+  this.time <- which.dup[i]
+  this.samps <- which(metadata2$patientnumber == as.numeric(this.patient) & 
+          metadata2$timepoint == this.time)
+  excl.dups <- c(excl.dups, this.samps[2:length(this.samps)])
+}
+
+metadata2 <- metadata2[-excl.dups, ]
+
+metadata3 <- metadata2 %>%
+  mutate(bmi = as.numeric(bmi), 
+         calprotectin = as.numeric(calprotectin)) %>%
+  filter(!is.na(bmi) & !is.na(calprotectin))
+
+# choose subjects with 4 or more time points with BMI and f-cal
+subjID <- metadata3 %>%
+  group_by(patientnumber) %>%
+  summarise(n = n()) %>%
+  filter(n >= 4) %>%
+  pull(patientnumber)
+subjID2 <- metadata3 %>%
+  filter(ibd_subtype != "HC") %>%
+  group_by(patientnumber) %>%
+  summarise(n = n()) %>%
+  filter(n >= 4) %>%
+  pull(patientnumber)
+
+n.totalsubj <- length(subjID2)
+
+# the new subjects' metadata
+new.metadata <- metadata3 %>%
+  filter(patientnumber %in% subjID) 
+
+new.metadata2 <- metadata3 %>%
+  filter(patientnumber %in% subjID2) 
+
+new.metadata2 %>% 
+  group_by(ibd_subtype) %>% 
+  distinct(patientnumber) %>% 
+  summarise(n = n())
+
+# the new subjects' samples
+new.otutab <- otus.nz[ , new.metadata$sample_name]
+rarefied.otutab <- t(rrarefy(t(new.otutab), min(colSums(new.otutab))))
+
+new.otutab2 <- otus.nz[ , new.metadata2$sample_name]
+```
+
+# PLDIST
+
+```{r}
+otus.pl <- t(new.otutab2)
+meta.pl <- data.frame(subjID = new.metadata2$patientnumber, 
+                      sampID = new.metadata2$sample_name, 
+                      time = as.numeric(new.metadata2$timepoint))
+plD <- pldist_all(otus = otus.pl, 
+           metadata = meta.pl, 
+           paired = FALSE, 
+           clr = FALSE, 
+           method = c("b", "u"), 
+           tree = hvs.tree)
+
+Ks <- lapply(plD, FUN = function(d) D2K(d))
+
+plD.patientnumber <- data.frame(patientnumber = as.integer(colnames(plD$D_braycurtis_qual)))
+
+outcome.df <- new.metadata2 %>%
+  group_by(patientnumber) %>%
+  slice(1) %>%
+  select(patientnumber, ibd_subtype)
+
+outcome.df <- left_join(plD.patientnumber, outcome.df, by = "patientnumber")
+# outcome.df <- outcome.df %>%
+#   mutate(y = if_else(ibd_subtype == "HC", 1, 0))
+
+X = new.metadata2 %>% 
+  group_by(patientnumber) %>%
+  summarise(bmi = mean(bmi),
+            calprotectin = mean(calprotectin), 
+            sex = first(sex)) %>%
+  mutate(bmi = scale(bmi),
+         calprotectin = scale(calprotectin))
+
+# sink("halfvarson-results/halfvarson-pldist3.txt")
+# print(MiRKAT(y = outcome.df$y, X = X, Ks = Ks))
+# print(names(Ks))
+# sink()
+```
+
+```{r}
+library(ape)
+
+pcoa_brayB <- pcoa(plD$D_braycurtis_qual)
+
+brayB.df <- as.data.frame(pcoa_brayB$vectors) %>%
+  mutate(y = outcome.df$y)
+
+pcoa_brayplot <- ggplot(brayB.df, aes(x = Axis.1, y = Axis.2)) +
+  geom_point(aes(color = as.factor(y))) +
+  labs(title = "PCoA of pldist-transformation distances", 
+       subtitle = "Binary Bray-Curtis dissimilarity",
+       x = "Axis 1", y = "Axis 2", color = "IBD Status") +
+  scale_color_manual(labels = c("ICD subgroups", "UC subgroups"),
+                     values = c("red", "turquoise")) +
+  theme(legend.position = "bottom")
+
+pcoa_unifracU <- pcoa(plD$D_UW)
+
+uniU.df <- as.data.frame(pcoa_unifracU$vectors) %>%
+  mutate(y = outcome.df$y)
+
+pcoa_uniplot <- ggplot(uniU.df, aes(x = Axis.1, y = Axis.2)) +
+  geom_point(aes(color = as.factor(y))) +
+  labs(title = "PCoA of pldist-transformation distances", 
+       subtitle = "Unweighted Unifrac Distance",
+       x = "Axis 1", y = "Axis 2", color = "IBD Status") +
+  scale_color_manual(labels = c("ICD subgroups", "UC subgroups"),
+                     values = c("red", "turquoise")) +
+  theme(legend.position = "none")
+
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+shared.legend <- g_legend(pcoa_brayplot)
+pcoa_brayplot <- pcoa_brayplot + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(pcoa_brayplot, pcoa_uniplot, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+
+```
+
+# LMVoltest
+
+1. read count btwn groups
+2. OTU distribution btwn groups
+
+```{r}
+# QUAL LMVoltest
+rel.otutab <- transform(otu_table(new.otutab2, taxa_are_rows = TRUE), transform = "compositional")
+rel.otutab.rfd <- transform(otu_table(rarefied.otutab, taxa_are_rows = TRUE), transform = "compositional")
+
+otu.avg.abnd <- apply(rel.otutab, 1, mean)       # global OTU average relative abundances
+otu.quintiles <- data.frame(otu.avg.abnd) %>%     # abundance-based OTU quintiles
+  rownames_to_column(var = "otu.id") %>%
+  mutate(quintile = ntile(otu.avg.abnd, n = 5)) 
+
+OTUDist.df <- data.frame(PropUnderThresh = numeric(n.totalsubj),
+                         PatientType = character(n.totalsubj))
+thresh <- 0.0001
+
+input_1 <- list() # group 1: otutab and subject ID
+input_2 <- list() # group 2
+for (i in 1:n.totalsubj) {
+  subj.id <- subjID2[i]
+  subj.metadata <- new.metadata2 %>%
+    filter(patientnumber == subj.id) %>%
+    mutate(date = as.Date(collection_timestamp, format = "%m/%d/%Y")) %>%
+    arrange(date)
+    
+  subj.otutab <- as.data.frame(rel.otutab.rfd[ , subj.metadata$sample_name])
+  subj.avg.abnd <- apply(subj.otutab, 1, mean)
+  subj.p <- mean(subj.avg.abnd < thresh)
+  if("UC" %in% subj.metadata$ibd_subtype) {
+    input_1[[length(input_1)+1]] <- list(subj.otutab, subj.id)
+    OTUDist.df[i ,] <- c(subj.p, "HC")
+  }
+  else {
+    input_2[[length(input_2)+1]] <- list(subj.otutab, subj.id)
+    OTUDist.df[i ,] <- c(subj.p, "IBD")
+  } 
+}
+
+big.statechange.tab_1 <- statechange_prop_table(input_1) %>%
+  mutate(outcome = 0) # UC patients
+big.statechange.tab_1 <- left_join(big.statechange.tab_1, X %>% rename(subj.id = patientnumber), 
+                                   by = c("subj.id"))
+
+big.statechange.tab_2 <- statechange_prop_table(input_2) %>%
+  mutate(outcome = 1) # CCD and ICD patients
+big.statechange.tab_2 <- left_join(big.statechange.tab_2, X %>% rename(subj.id = patientnumber), 
+                                   by = c("subj.id"))
+
+big.statechange.tab <- rbind(big.statechange.tab_1, big.statechange.tab_2)
+big.statechange.tab <- left_join(x = big.statechange.tab, y = otu.quintiles, by = "otu.id")
+big.statechange.tab <- big.statechange.tab %>%
+  mutate(bmi = scale(bmi),
+         calprotectin = scale(calprotectin),
+         quintile = as.factor(quintile))
+
+glmm <- glmer(prop.statechange ~ 1 + outcome + bmi + calprotectin + sex + quintile + (1|subj.id) + (1|otu.id),
+              data = big.statechange.tab, 
+              family = binomial, 
+              weights = timepoints,
+              verbose = 1,
+              control = glmerControl(optCtrl = list(maxfun = 1000)))
+
+glmm3 <- glmer(prop.statechange ~ 1 + outcome + bmi + calprotectin + sex + (1|subj.id) + (1|otu.id),
+               data = big.statechange.tab,
+               family = binomial,
+               weights = timepoints,
+               verbose = 1,
+               control = glmerControl(optCtrl = list(maxfun = 1000)))
+
+ss <- getME(glmm, c("theta", "fixef"))
+glmm2 <- update(glmm, start = ss, control = glmerControl(optCtrl = list(maxfun = 2e4)))
+
+summary(glmm2)
+fe <- coef(glmm2)
+re <- ranef(glmm2)
+
+sink("halfvarson-results/lmvoltest-qual2.txt")
+print(summary(glmm2))
+sink()
+```
+
+```{r}
+group2coef <- coef(summary(glmm2))["outcome", 1]
+
+subjRE <- re$subj.id %>%
+  mutate(patientnumber = as.integer(rownames(re$subj.id)))
+
+RE.df <- left_join(outcome.df, subjRE, by = "patientnumber")
+RE.df <- RE.df %>% 
+  mutate(intercept = if_else(ibd_subtype == "HC", `(Intercept)`, `(Intercept)` + group2coef))
+
+lmvoltest.qual.plot <- ggplot(RE.df, aes(x = as.factor(y), y = intercept)) +
+  geom_beeswarm(aes(color = as.factor(y)), cex = 4) +
+  labs(title = "LMVoltest Subject-Specific \n Random Intercepts", 
+       subtitle = "Adjusted by Group Fixed Effect Coefficient",
+       x = "", color = "IBD status") +
+  scale_color_manual(labels = c("IBD", "Healthy Control"),
+                     values = c("#0072B2", "#D55E00")) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom")
+
+OTUDist.df$PropUnderThresh <- as.numeric(OTUDist.df$PropUnderThresh)
+ggplot(OTUDist.df, aes(x = PatientType, y = PropUnderThresh)) +
+  geom_boxplot()
+
+x <- OTUDist.df %>% filter(PatientType == "IBD") %>% select(PropUnderThresh)
+y <- OTUDist.df %>% filter(PatientType == "HC") %>% select(PropUnderThresh)
+t.test(x, y)
+
+readcounts <- colSums(new.otutab)
+RC.metadata <- new.metadata %>%
+  select(sample_name, ibd_subtype)
+RC.metadata$ReadCounts <- readcounts[RC.metadata$sample_name]
+RC.metadata$PatientType <- if_else(RC.metadata$ibd_subtype == "HC", "HC", "IBD")
+ggplot(RC.metadata, aes(x = PatientType, y = log(ReadCounts))) +
+  geom_boxplot()
+
+wilcox.test(x = RC.metadata %>% filter(PatientType == "IBD") %>% pull(ReadCounts),
+            y = RC.metadata %>% filter(PatientType == "HC") %>% pull(ReadCounts))
+```
+
+
+```{r}
+# QUANT LMVoltest
+big.logFC.tab <- data.frame()
+
+for (i in 1:n.totalsubj) {
+  subj.id <- subjID[i]
+  subj.metadata <- new.metadata %>%
+    filter(patientnumber == subj.id) %>%
+    arrange(timepoint)
+  subj.otutab <- as.data.frame(new.otutab[ , subj.metadata$sample_name])
+  sim.logFC.tab <- fold_difference_table(subj.otutab, logRatio = TRUE)
+  # within-sample squared L2 norm of log fold-changes excluding dis/reappearances and continued absences
+  logFC_i <- apply(sim.logFC.tab, 2, FUN = function(x) mean((x[is.finite(x)])**2, na.rm = TRUE))
+  
+  if("HC" %in% subj.metadata$ibd_subtype) {
+    outcome = rep(0, length(logFC_i))
+  } else {
+    outcome = rep(1, length(logFC_i))
+  }
+  
+  subj.df <- data.frame(logFC = logFC_i,
+                        outcome = outcome,
+                        bmi = subj.metadata$bmi[2:(length(logFC_i)+1)],
+                        calprotectin = subj.metadata$calprotectin[2:(length(logFC_i)+1)],
+                        sex = rep(subj.metadata$sex[1], length(logFC_i)),
+                        subj.id = rep(subj.id, length(logFC_i)))
+  big.logFC.tab <- rbind(big.logFC.tab, subj.df)
+}
+
+big.logFC.tab <- big.logFC.tab %>%
+  mutate(bmi = scale(bmi),
+         calprotectin = scale(calprotectin))
+
+lmm <- lmer(logFC ~ 1 + outcome + bmi + calprotectin + sex + (1|subj.id), 
+            data = big.logFC.tab)
+
+re <- ranef(lmm)
+
+sink("halfvarson-results/lmvoltest-quant2.txt")
+print(summary(lmm))
+sink()
+```
+
+```{r}
+group2coef <- coef(summary(lmm))["outcome", 1]
+
+subjRE <- re$subj.id %>%
+  mutate(patientnumber = as.integer(rownames(re$subj.id)))
+
+RE.df <- left_join(outcome.df, subjRE, by = "patientnumber")
+RE.df <- RE.df %>% 
+  mutate(outcome = if_else(ibd_subtype == "HC", "HC", "IBD"),
+         intercept = if_else(ibd_subtype == "HC", `(Intercept)`, `(Intercept)` + group2coef))
+
+lmvoltest.quant.plot <- ggplot(RE.df, aes(x = as.factor(y), y = intercept)) +
+  geom_beeswarm(aes(color = as.factor(y)), cex = 4) +
+  labs(title = "LMVoltest Subject-Specific \n Random Intercepts", 
+       subtitle = "Adjusted by Group Fixed Effect Coefficient",
+       x = "", color = "IBD status") +
+  scale_color_manual(values = c("#0072B2", "#D55E00")) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "none")
+
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+shared.legend <- g_legend(lmvoltest.qual.plot)
+lmvoltest.qual.plot <- lmvoltest.qual.plot + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(lmvoltest.qual.plot, lmvoltest.quant.plot, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+```
+
+# ADHOC
+
+```{r}
+## create data dataset with: distance, subj.id, group2
+## binary (qualitative) and quantitative distances
+big.dist.tab.qual <- data.frame()
+big.dist.tab.quant <- data.frame()
+for (i in 1:n.totalsubj) {
+  subj.id <- subjID[i]
+  subj.metadata <- new.metadata %>%
+    filter(patientnumber == subj.id) %>%
+    arrange(timepoint)
+  subj.otutab <- as.data.frame(new.otutab[ , subj.metadata$sample_name])
+  
+  n.pairs <- ncol(subj.otutab) - 1 # number of consecutive pairs of samples
+  
+  if ("HC" %in% subj.metadata$ibd_subtype) {
+    group2 <- rep(0, n.pairs) # not in group2 if subject is healthy
+  } else {
+    group2 <- rep(1, n.pairs) # in group2 if subject has IBD
+  }
+  
+  dist.mat.qual <- as.matrix(vegdist(x = t(subj.otutab), method = "bray", binary = TRUE)) # sample-sample distance matrix
+  dist.tab.qual_i <- data.frame(distance = diag(dist.mat.qual[2:nrow(dist.mat.qual), 1:(nrow(dist.mat.qual)-1)]),
+                                group2 = group2,
+                                bmi = subj.metadata$bmi[2:(n.pairs+1)],
+                                calprotectin = subj.metadata$calprotectin[2:(n.pairs+1)],
+                                sex = rep(subj.metadata$sex[1], length(n.pairs)),
+                                subj.id = rep(subj.id, n.pairs))
+  dist.mat.quant <- as.matrix(vegdist(x = t(subj.otutab), method = "bray", binary = FALSE)) # sample-sample distance matrix
+  dist.tab.quant_i <- data.frame(distance = diag(dist.mat.quant[2:nrow(dist.mat.quant), 1:(nrow(dist.mat.quant)-1)]),
+                                 group2 = group2,
+                                bmi = subj.metadata$bmi[2:(n.pairs+1)],
+                                calprotectin = subj.metadata$calprotectin[2:(n.pairs+1)],
+                                sex = rep(subj.metadata$sex[1], length(n.pairs)),
+                                 subj.id = rep(subj.id, n.pairs))
+  ## rbind with data dataset
+  big.dist.tab.qual <- rbind(big.dist.tab.qual, dist.tab.qual_i)
+  big.dist.tab.quant <- rbind(big.dist.tab.quant, dist.tab.quant_i)
+}
+
+big.dist.tab.qual <- big.dist.tab.qual %>%
+  mutate(bmi = scale(bmi),
+         calprotectin = scale(calprotectin))
+big.dist.tab.quant <- big.dist.tab.quant %>%
+  mutate(bmi = scale(bmi),
+         calprotectin = scale(calprotectin))
+
+library(glmmTMB)
+# LMM: distance ~ 1 + group2 + (1|subj.id)
+lmm.qual <- lmer(distance ~ 1 + group2 + bmi + calprotectin + sex + (1|subj.id), 
+                 data = big.dist.tab.qual)
+# lmm.qual <- glmmTMB(distance ~ 1 + group2 + bmi + calprotectin + sex + (1|subj.id), 
+#                     data = big.dist.tab.qual, 
+#                     family = beta_family)
+sink("halfvarson-results/bray-qual3.txt")
+print(summary(lmm.qual))
+sink()
+
+lmm.quant <- lmer(distance ~ 1 + group2 + bmi + calprotectin + sex + (1|subj.id), 
+                  data = big.dist.tab.quant)
+# lmm.quant <- glmmTMB(distance ~ 1 + group2 + (1 | subj.id), 
+#                     data = big.dist.tab.quant, 
+#                     family = beta_family)
+sink("halfvarson-results/bray-quant3.txt")
+print(summary(lmm.quant))
+sink()
+```
+
+```{r}
+brayplot_qual <- ggplot(big.dist.tab.qual, aes(x = as.factor(group2), y = distance)) +
+  geom_boxplot(aes(fill = as.factor(group2))) +
+  labs(title = "Intra-subject Pairwise Dissimilarities", x = "", y = "Bray-Curtis dissimilarity (binary)",
+       fill = "IBD subgroup") +
+  scale_fill_manual(labels = c("ICD", "UC"),
+                     values = c("red", "turquoise")) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom")
+
+brayplot_quant <- ggplot(big.dist.tab.quant, aes(x = as.factor(group2), y = distance)) +
+  geom_boxplot(aes(fill = as.factor(group2))) +
+  labs(title = "Intra-subject Pairwise Dissimilarities", x = "", y = "Bray-Curtis dissimilarity (quantitative)",
+       fill = "IBD subgroup") +
+  scale_fill_manual(labels = c("ICD", "UC"),
+                     values = c("red", "turquoise")) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "none")
+
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+shared.legend <- g_legend(brayplot_qual)
+brayplot_qual <- brayplot_qual + theme(legend.position = "none")
+
+par(mar = c(5.1, 4.1, 4.1, 2.1))
+grid.arrange(arrangeGrob(brayplot_qual, brayplot_quant, ncol=2, nrow = 1), 
+             arrangeGrob(shared.legend, ncol=1, nrow=1), 
+             nrow = 2, 
+             heights = c(4, 1))
+```

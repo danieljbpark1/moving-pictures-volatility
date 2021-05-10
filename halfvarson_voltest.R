@@ -37,6 +37,12 @@ rel.otutab <- transform(otu_table(new.otutab, taxa_are_rows = TRUE), transform =
 new.metadata <- new.metadata %>%
   filter(sample_name %in% colnames(new.otutab))
 
+new.metadata %>%
+  group_by(patientnumber) %>%
+  slice(1) %>%
+  group_by(ibd_subtype) %>%
+  summarise(n())
+
 # QUAL LMVoltest
 
 otu.avg.abnd <- apply(rel.otutab, 1, mean)       # global OTU average relative abundances
@@ -130,7 +136,62 @@ pt <- pltransform(otu.data = dp, paired = FALSE)
 Ds <- pldist_all(otus = otus, metadata = metadata, paired = FALSE, method = "bray")
 Ks <- lapply(Ds, FUN = function(d) D2K(d))
 
-res <- MiRKAT(y = y, Ks = Ks)
-
 ## NAIVE Bray 
 
+## create data dataset with: distance, subj.id, group2
+## binary (qualitative) and quantitative distances
+big.dist.tab.qual <- data.frame(distance = numeric(),
+                                group2 = numeric(),
+                                subj.id = character(),
+                                stringsAsFactors = FALSE)
+big.dist.tab.quant <- data.frame(distance = numeric(),
+                                 group2 = numeric(),
+                                 subj.id = character(),
+                                 stringsAsFactors = FALSE)
+for (i in 1:n.totalsubj) {
+  subj.id <- subjID[i]
+  subj.metadata <- new.metadata %>%
+    filter(patientnumber == subj.id) %>%
+    arrange(timepoint)
+  subj.otutab <- as.data.frame(new.otutab[ , subj.metadata$sample_name])
+  
+  n.pairs <- ncol(subj.otutab) - 1 # number of consecutive pairs of samples
+  
+  if ("HC" %in% subj.metadata$ibd_subtype) {
+    group2 <- rep(0, n.pairs) # not in group2 if subject is healthy
+  } else {
+    group2 <- rep(1, n.pairs) # in group2 if subject has IBD
+  }
+  
+  dist.mat.qual <- as.matrix(vegdist(x = t(subj.otutab), method = "bray", binary = TRUE)) # sample-sample distance matrix
+  dist.tab.qual_i <- data.frame(distance = diag(dist.mat.qual[2:nrow(dist.mat.qual), 1:(nrow(dist.mat.qual)-1)]),
+                                group2 = group2,
+                                subj.id = rep(subj.id, n.pairs))
+  dist.mat.quant <- as.matrix(vegdist(x = t(subj.otutab), method = "bray", binary = FALSE)) # sample-sample distance matrix
+  dist.tab.quant_i <- data.frame(distance = diag(dist.mat.quant[2:nrow(dist.mat.quant), 1:(nrow(dist.mat.quant)-1)]),
+                                 group2 = group2,
+                                 subj.id = rep(subj.id, n.pairs))
+  ## rbind with data dataset
+  big.dist.tab.qual <- rbind(big.dist.tab.qual, dist.tab.qual_i)
+  big.dist.tab.quant <- rbind(big.dist.tab.quant, dist.tab.quant_i)
+}
+
+library(glmmTMB)
+# LMM: distance ~ 1 + group2 + (1|subj.id)
+lmm.qual <- lmer(distance ~ 1 + group2 + (1 | subj.id), 
+                  data = big.dist.tab.qual)
+lmm.qual <- glmmTMB(distance ~ 1 + group2 + (1 | subj.id), 
+                    data = big.dist.tab.qual, 
+                    family = beta_family)
+sink("halfvarson-bray-qual.txt")
+print(summary(lmm.qual))
+sink()
+
+lmm.quant <- lmer(distance ~ 1 + group2 + (1 | subj.id), 
+                  data = big.dist.tab.quant)
+lmm.quant <- glmmTMB(distance ~ 1 + group2 + (1 | subj.id), 
+                    data = big.dist.tab.quant, 
+                    family = beta_family)
+sink("halfvarson-bray-quant.txt")
+print(summary(lmm.quant))
+sink()
