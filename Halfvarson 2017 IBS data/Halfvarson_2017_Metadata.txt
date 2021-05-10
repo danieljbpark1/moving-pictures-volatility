@@ -1,0 +1,684 @@
+sample_name	bmi	calprotectin	cd_behavior	cd_location	cd_resection	collection_timestamp	description	diagnosis_full	host_subject_id	host_taxid	ibd_subtype	patientnumber	perianal_disease	timepoint	sex	uc_extent	year_diagnosed
+SubjectIBD001	25	63.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/17/2010	SubjectIBD001	CD	1629:1	9606	CCD	1	no	2	male	not applicable	1988
+SubjectIBD002	25	212.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/16/2010	SubjectIBD002	CD	1629:1	9606	CCD	1	no	3	male	not applicable	1988
+SubjectIBD003	25	258.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/04/2011	SubjectIBD003	CD	1629:1	9606	CCD	1	no	4	male	not applicable	1988
+SubjectIBD004	25	499.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/07/2011	SubjectIBD004	CD	1629:1	9606	CCD	1	no	5	male	not applicable	1988
+SubjectIBD005	25	104.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/28/2011	SubjectIBD005	CD	1629:1	9606	CCD	1	no	6	male	not applicable	1988
+SubjectIBD006	missing: not provided	1029.0	not applicable	not applicable	not applicable	08/24/2010	SubjectIBD006	UC	1629:19	9606	UC	19	not applicable	5	female	Left sided (E2)	1998
+SubjectIBD007	missing: not provided	14.4	not applicable	not applicable	not applicable	11/18/2010	SubjectIBD007	UC	1629:19	9606	UC	19	not applicable	6	female	Left sided (E2)	1998
+SubjectIBD008	missing: not provided	41.0	not applicable	not applicable	not applicable	09/03/2009	SubjectIBD008	UC	1629:19	9606	UC	19	not applicable	1	female	Left sided (E2)	1998
+SubjectIBD009	missing: not provided	14.1	not applicable	not applicable	not applicable	12/03/2009	SubjectIBD009	UC	1629:19	9606	UC	19	not applicable	2	female	Left sided (E2)	1998
+SubjectIBD010	25	145.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD010	UC	1629:21	9606	UC	21	not applicable	5	female	Extensive (E3)	1971
+SubjectIBD011	25	16.2	not applicable	not applicable	not applicable	06/15/2010	SubjectIBD011	UC	1629:21	9606	UC	21	not applicable	6	female	Extensive (E3)	1971
+SubjectIBD012	25	204.0	not applicable	not applicable	not applicable	09/02/2010	SubjectIBD012	UC	1629:21	9606	UC	21	not applicable	7	female	Extensive (E3)	1971
+SubjectIBD013	25	254.0	not applicable	not applicable	not applicable	12/01/2010	SubjectIBD013	UC	1629:21	9606	UC	21	not applicable	8	female	Extensive (E3)	1971
+SubjectIBD014	25	165.0	not applicable	not applicable	not applicable	03/11/2009	SubjectIBD014	UC	1629:21	9606	UC	21	not applicable	1	female	Extensive (E3)	1971
+SubjectIBD015	25	214.0	not applicable	not applicable	not applicable	05/27/2009	SubjectIBD015	UC	1629:21	9606	UC	21	not applicable	2	female	Extensive (E3)	1971
+SubjectIBD016	25	160.0	not applicable	not applicable	not applicable	12/09/2009	SubjectIBD016	UC	1629:21	9606	UC	21	not applicable	4	female	Extensive (E3)	1971
+SubjectIBD017	21	33.0	not applicable	not applicable	not applicable	06/09/2010	SubjectIBD017	UC	1629:31	9606	UC	31	not applicable	2	male	Proctitis (E1)	1980
+SubjectIBD018	21	18.5	not applicable	not applicable	not applicable	09/08/2010	SubjectIBD018	UC	1629:31	9606	UC	31	not applicable	3	male	Proctitis (E1)	1980
+SubjectIBD019	21	23.0	not applicable	not applicable	not applicable	11/24/2010	SubjectIBD019	UC	1629:31	9606	UC	31	not applicable	4	male	Proctitis (E1)	1980
+SubjectIBD020	21	30.0	not applicable	not applicable	not applicable	02/23/2011	SubjectIBD020	UC	1629:31	9606	UC	31	not applicable	5	male	Proctitis (E1)	1980
+SubjectIBD021	24	131.0	not applicable	not applicable	not applicable	03/31/2009	SubjectIBD021	UC	1629:50	9606	UC	50	not applicable	1	male	Left sided (E2)	2006
+SubjectIBD022	24	62.0	not applicable	not applicable	not applicable	07/28/2009	SubjectIBD022	UC	1629:50	9606	UC	50	not applicable	2	male	Left sided (E2)	2006
+SubjectIBD023	31	577.0	Stricturing (B2)	Ileal (L1)	yes	03/23/2010	SubjectIBD023	CD	1629:69	9606	ICD_r	69	no	5	male	not applicable	1979
+SubjectIBD024	31	184.0	Stricturing (B2)	Ileal (L1)	yes	05/27/2010	SubjectIBD024	CD	1629:69	9606	ICD_r	69	no	6	male	not applicable	1979
+SubjectIBD025	31	646.0	Stricturing (B2)	Ileal (L1)	yes	09/15/2010	SubjectIBD025	CD	1629:69	9606	ICD_r	69	no	7	male	not applicable	1979
+SubjectIBD026	31	161.0	Stricturing (B2)	Ileal (L1)	yes	12/08/2010	SubjectIBD026	CD	1629:69	9606	ICD_r	69	no	8	male	not applicable	1979
+SubjectIBD027	31	259.0	Stricturing (B2)	Ileal (L1)	yes	03/26/2009	SubjectIBD027	CD	1629:69	9606	ICD_r	69	no	1	male	not applicable	1979
+SubjectIBD028	31	307.0	Stricturing (B2)	Ileal (L1)	yes	06/08/2009	SubjectIBD028	CD	1629:69	9606	ICD_r	69	no	2	male	not applicable	1979
+SubjectIBD029	31	708.0	Stricturing (B2)	Ileal (L1)	yes	09/15/2009	SubjectIBD029	CD	1629:69	9606	ICD_r	69	no	3	male	not applicable	1979
+SubjectIBD030	31	587.0	Stricturing (B2)	Ileal (L1)	yes	12/10/2009	SubjectIBD030	CD	1629:69	9606	ICD_r	69	no	4	male	not applicable	1979
+SubjectIBD031	22	402.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	08/26/2010	SubjectIBD031	CD	1629:74	9606	ICD_r	74	no	7	female	not applicable	1973
+SubjectIBD032	22	428.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	03/12/2009	SubjectIBD032	CD	1629:74	9606	ICD_r	74	no	1	female	not applicable	1973
+SubjectIBD033	22	501.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	09/02/2009	SubjectIBD033	CD	1629:74	9606	ICD_r	74	no	3	female	not applicable	1973
+SubjectIBD034	22	293.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	11/26/2009	SubjectIBD034	CD	1629:74	9606	ICD_r	74	no	4	female	not applicable	1973
+SubjectIBD035	19	40.0	not applicable	not applicable	not applicable	03/23/2010	SubjectIBD035	UC	1629:78	9606	UC	78	not applicable	4	female	Extensive (E3)	1979
+SubjectIBD036	19	25.0	not applicable	not applicable	not applicable	06/30/2010	SubjectIBD036	UC	1629:78	9606	UC	78	not applicable	5	female	Extensive (E3)	1979
+SubjectIBD037	19	24.0	not applicable	not applicable	not applicable	09/09/2010	SubjectIBD037	UC	1629:78	9606	UC	78	not applicable	6	female	Extensive (E3)	1979
+SubjectIBD038	19	33.0	not applicable	not applicable	not applicable	12/20/2010	SubjectIBD038	UC	1629:78	9606	UC	78	not applicable	7	female	Extensive (E3)	1979
+SubjectIBD039	19	56.0	not applicable	not applicable	not applicable	03/13/2011	SubjectIBD039	UC	1629:78	9606	UC	78	not applicable	8	female	Extensive (E3)	1979
+SubjectIBD040	19	74.0	not applicable	not applicable	not applicable	06/25/2009	SubjectIBD040	UC	1629:78	9606	UC	78	not applicable	1	female	Extensive (E3)	1979
+SubjectIBD041	19	46.0	not applicable	not applicable	not applicable	09/23/2009	SubjectIBD041	UC	1629:78	9606	UC	78	not applicable	2	female	Extensive (E3)	1979
+SubjectIBD042	19	60.0	not applicable	not applicable	not applicable	12/16/2009	SubjectIBD042	UC	1629:78	9606	UC	78	not applicable	3	female	Extensive (E3)	1979
+SubjectIBD043	33	181.0	Stricturing (B2)	Ileal (L1)	no	02/17/2010	SubjectIBD043	CD	1629:93	9606	ICD_nr	93	no	3	female	not applicable	1975
+SubjectIBD044	33	120.0	Stricturing (B2)	Ileal (L1)	no	05/19/2010	SubjectIBD044	CD	1629:93	9606	ICD_nr	93	no	4	female	not applicable	1975
+SubjectIBD045	33	184.0	Stricturing (B2)	Ileal (L1)	no	08/17/2010	SubjectIBD045	CD	1629:93	9606	ICD_nr	93	no	5	female	not applicable	1975
+SubjectIBD046	33	255.0	Stricturing (B2)	Ileal (L1)	no	11/11/2010	SubjectIBD046	CD	1629:93	9606	ICD_nr	93	no	6	female	not applicable	1975
+SubjectIBD047	33	468.0	Stricturing (B2)	Ileal (L1)	no	02/10/2011	SubjectIBD047	CD	1629:93	9606	ICD_nr	93	no	7	female	not applicable	1975
+SubjectIBD048	33	404.0	Stricturing (B2)	Ileal (L1)	no	05/17/2011	SubjectIBD048	CD	1629:93	9606	ICD_nr	93	no	8	female	not applicable	1975
+SubjectIBD049	33	541.0	Stricturing (B2)	Ileal (L1)	no	08/25/2009	SubjectIBD049	CD	1629:93	9606	ICD_nr	93	no	1	female	not applicable	1975
+SubjectIBD050	33	263.0	Stricturing (B2)	Ileal (L1)	no	11/17/2009	SubjectIBD050	CD	1629:93	9606	ICD_nr	93	no	2	female	not applicable	1975
+SubjectIBD051	26	235.0	Non-stricturing, non-penetrating (B1)	Ileal and Upper-GI (L1+L4)	yes	05/19/2009	SubjectIBD051	CD	1629:105	9606	ICD_r	105	no	1	female	not applicable	2006
+SubjectIBD052	26	113.0	Non-stricturing, non-penetrating (B1)	Ileal and Upper-GI (L1+L4)	yes	08/11/2009	SubjectIBD052	CD	1629:105	9606	ICD_r	105	no	2	female	not applicable	2006
+SubjectIBD053	26	34.0	Non-stricturing, non-penetrating (B1)	Ileal and Upper-GI (L1+L4)	yes	12/15/2009	SubjectIBD053	CD	1629:105	9606	ICD_r	105	no	3	female	not applicable	2006
+SubjectIBD054	24	88.0	not applicable	not applicable	not applicable	02/17/2010	SubjectIBD054	UC	1629:122	9606	UC	122	not applicable	2	male	Extensive (E3)	2001
+SubjectIBD055	24	20.0	not applicable	not applicable	not applicable	05/19/2010	SubjectIBD055	UC	1629:122	9606	UC	122	not applicable	3	male	Extensive (E3)	2001
+SubjectIBD056	24	44.0	not applicable	not applicable	not applicable	08/11/2010	SubjectIBD056	UC	1629:122	9606	UC	122	not applicable	4	male	Extensive (E3)	2001
+SubjectIBD057	24	14.9	not applicable	not applicable	not applicable	11/15/2010	SubjectIBD057	UC	1629:122	9606	UC	122	not applicable	5	male	Extensive (E3)	2001
+SubjectIBD058	24	19.9	not applicable	not applicable	not applicable	02/21/2011	SubjectIBD058	UC	1629:122	9606	UC	122	not applicable	6	male	Extensive (E3)	2001
+SubjectIBD059	24	15.7	not applicable	not applicable	not applicable	05/12/2011	SubjectIBD059	UC	1629:122	9606	UC	122	not applicable	7	male	Extensive (E3)	2001
+SubjectIBD060	24	19.1	not applicable	not applicable	not applicable	08/17/2011	SubjectIBD060	UC	1629:122	9606	UC	122	not applicable	8	male	Extensive (E3)	2001
+SubjectIBD061	24	302.0	not applicable	not applicable	not applicable	11/30/2009	SubjectIBD061	UC	1629:122	9606	UC	122	not applicable	1	male	Extensive (E3)	2001
+SubjectIBD062	22	57.0	Stricturing (B2)	Ileal (L1)	yes	05/18/2010	SubjectIBD062	CD	1629:129	9606	ICD_r	129	no	1	female	not applicable	1972
+SubjectIBD063	22	67.0	Stricturing (B2)	Ileal (L1)	yes	08/24/2010	SubjectIBD063	CD	1629:129	9606	ICD_r	129	no	2	female	not applicable	1972
+SubjectIBD064	22	42.0	Stricturing (B2)	Ileal (L1)	yes	11/30/2010	SubjectIBD064	CD	1629:129	9606	ICD_r	129	no	3	female	not applicable	1972
+SubjectIBD065	22	75.0	Stricturing (B2)	Ileal (L1)	yes	02/24/2011	SubjectIBD065	CD	1629:129	9606	ICD_r	129	no	4	female	not applicable	1972
+SubjectIBD066	24	35.0	not applicable	not applicable	not applicable	01/21/2010	SubjectIBD066	UC	1629:136	9606	UC	136	not applicable	1	female	Left sided (E2)	2003
+SubjectIBD067	24	47.0	not applicable	not applicable	not applicable	04/15/2010	SubjectIBD067	UC	1629:136	9606	UC	136	not applicable	2	female	Left sided (E2)	2003
+SubjectIBD068	24	30.0	not applicable	not applicable	not applicable	07/14/2010	SubjectIBD068	UC	1629:136	9606	UC	136	not applicable	3	female	Left sided (E2)	2003
+SubjectIBD069	24	73.0	not applicable	not applicable	not applicable	10/12/2010	SubjectIBD069	UC	1629:136	9606	UC	136	not applicable	4	female	Left sided (E2)	2003
+SubjectIBD070	24	229.0	not applicable	not applicable	not applicable	01/13/2011	SubjectIBD070	UC	1629:136	9606	UC	136	not applicable	5	female	Left sided (E2)	2003
+SubjectIBD071	24	104.0	not applicable	not applicable	not applicable	04/14/2011	SubjectIBD071	UC	1629:136	9606	UC	136	not applicable	6	female	Left sided (E2)	2003
+SubjectIBD072	26	62.0	not applicable	not applicable	not applicable	01/21/2010	SubjectIBD072	UC	1629:138	9606	UC	138	not applicable	4	male	Left sided (E2)	2007
+SubjectIBD073	26	90.0	not applicable	not applicable	not applicable	04/19/2010	SubjectIBD073	UC	1629:138	9606	UC	138	not applicable	5	male	Left sided (E2)	2007
+SubjectIBD074	26	36.0	not applicable	not applicable	not applicable	08/05/2010	SubjectIBD074	UC	1629:138	9606	UC	138	not applicable	6	male	Left sided (E2)	2007
+SubjectIBD075	26	56.0	not applicable	not applicable	not applicable	10/28/2010	SubjectIBD075	UC	1629:138	9606	UC	138	not applicable	7	male	Left sided (E2)	2007
+SubjectIBD076	26	120.0	not applicable	not applicable	not applicable	01/13/2011	SubjectIBD076	UC	1629:138	9606	UC	138	not applicable	8	male	Left sided (E2)	2007
+SubjectIBD077	26	1636.0	not applicable	not applicable	not applicable	04/08/2009	SubjectIBD077	UC	1629:138	9606	UC	138	not applicable	1	male	Left sided (E2)	2007
+SubjectIBD078	26	47.0	not applicable	not applicable	not applicable	10/07/2009	SubjectIBD078	UC	1629:138	9606	UC	138	not applicable	3	male	Left sided (E2)	2007
+SubjectIBD079	21	437.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/17/2010	SubjectIBD079	CD	1629:141	9606	CCD	141	no	2	female	not applicable	2004
+SubjectIBD080	21	1117.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	05/19/2010	SubjectIBD080	CD	1629:141	9606	CCD	141	no	3	female	not applicable	2004
+SubjectIBD081	21	1803.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/10/2010	SubjectIBD081	CD	1629:141	9606	CCD	141	no	4	female	not applicable	2004
+SubjectIBD082	21	332.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/10/2010	SubjectIBD082	CD	1629:141	9606	CCD	141	no	5	female	not applicable	2004
+SubjectIBD083	21	867.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/16/2011	SubjectIBD083	CD	1629:141	9606	CCD	141	no	6	female	not applicable	2004
+SubjectIBD084	21	1578.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/18/2009	SubjectIBD084	CD	1629:141	9606	CCD	141	no	1	female	not applicable	2004
+SubjectIBD085	27	18.6	not applicable	not applicable	not applicable	03/23/2010	SubjectIBD085	UC	1629:143	9606	UC	143	not applicable	3	female	Extensive (E3)	2007
+SubjectIBD086	27	503.0	not applicable	not applicable	not applicable	06/07/2010	SubjectIBD086	UC	1629:143	9606	UC	143	not applicable	4	female	Extensive (E3)	2007
+SubjectIBD087	27	47.0	not applicable	not applicable	not applicable	09/03/2009	SubjectIBD087	UC	1629:143	9606	UC	143	not applicable	1	female	Extensive (E3)	2007
+SubjectIBD088	27	16.1	not applicable	not applicable	not applicable	12/01/2009	SubjectIBD088	UC	1629:143	9606	UC	143	not applicable	2	female	Extensive (E3)	2007
+SubjectIBD089	23	27.0	not applicable	not applicable	not applicable	04/14/2010	SubjectIBD089	UC	1629:147	9606	UC	147	not applicable	1	female	Extensive (E3)	1969
+SubjectIBD090	30	212.0	not applicable	not applicable	not applicable	05/25/2010	SubjectIBD090	UC	1629:152	9606	UC	152	not applicable	3	female	Left sided (E2)	1977
+SubjectIBD091	30	1949.0	not applicable	not applicable	not applicable	09/10/2010	SubjectIBD091	UC	1629:152	9606	UC	152	not applicable	4	female	Left sided (E2)	1977
+SubjectIBD092	30	518.0	not applicable	not applicable	not applicable	03/02/2011	SubjectIBD092	UC	1629:152	9606	UC	152	not applicable	6	female	Left sided (E2)	1977
+SubjectIBD093	30	274.0	not applicable	not applicable	not applicable	08/23/2011	SubjectIBD093	UC	1629:152	9606	UC	152	not applicable	8	female	Left sided (E2)	1977
+SubjectIBD094	30	103.0	not applicable	not applicable	not applicable	12/03/2009	SubjectIBD094	UC	1629:152	9606	UC	152	not applicable	1	female	Left sided (E2)	1977
+SubjectIBD095	27	195.0	not applicable	not applicable	not applicable	02/24/2010	SubjectIBD095	UC	1629:162	9606	UC	162	not applicable	3	male	Left sided (E2)	2003
+SubjectIBD096	27	308.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD096	UC	1629:162	9606	UC	162	not applicable	4	male	Left sided (E2)	2003
+SubjectIBD097	27	307.0	not applicable	not applicable	not applicable	08/19/2010	SubjectIBD097	UC	1629:162	9606	UC	162	not applicable	5	male	Left sided (E2)	2003
+SubjectIBD098	27	161.0	not applicable	not applicable	not applicable	11/16/2010	SubjectIBD098	UC	1629:162	9606	UC	162	not applicable	6	male	Left sided (E2)	2003
+SubjectIBD099	27	233.0	not applicable	not applicable	not applicable	02/15/2011	SubjectIBD099	UC	1629:162	9606	UC	162	not applicable	7	male	Left sided (E2)	2003
+SubjectIBD100	27	201.0	not applicable	not applicable	not applicable	08/26/2009	SubjectIBD100	UC	1629:162	9606	UC	162	not applicable	1	male	Left sided (E2)	2003
+SubjectIBD101	27	212.0	not applicable	not applicable	not applicable	11/26/2009	SubjectIBD101	UC	1629:162	9606	UC	162	not applicable	2	male	Left sided (E2)	2003
+SubjectIBD102	27	30.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/17/2010	SubjectIBD102	CD	1629:187	9606	CCD	187	no	2	female	not applicable	1982
+SubjectIBD103	21	285.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/08/2010	SubjectIBD103	CD	1629:187	9606	CCD	187	no	3	female	not applicable	1982
+SubjectIBD104	27	15.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/08/2010	SubjectIBD104	CD	1629:187	9606	CCD	187	no	4	female	not applicable	1982
+SubjectIBD105	27	39.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/17/2009	SubjectIBD105	CD	1629:187	9606	CCD	187	no	1	female	not applicable	1982
+SubjectIBD106	23	318.0	Stricturing (B2)	Ileal (L1)	yes	01/13/2010	SubjectIBD106	CD	1629:190	9606	ICD_r	190	no	4	female	not applicable	2000
+SubjectIBD107	23	161.0	Stricturing (B2)	Ileal (L1)	yes	04/08/2010	SubjectIBD107	CD	1629:190	9606	ICD_r	190	no	5	female	not applicable	2000
+SubjectIBD108	23	216.0	Stricturing (B2)	Ileal (L1)	yes	07/16/2010	SubjectIBD108	CD	1629:190	9606	ICD_r	190	no	6	female	not applicable	2000
+SubjectIBD109	23	413.0	Stricturing (B2)	Ileal (L1)	yes	12/23/2010	SubjectIBD109	CD	1629:190	9606	ICD_r	190	no	8	female	not applicable	2000
+SubjectIBD110	23	217.0	Stricturing (B2)	Ileal (L1)	yes	07/03/2009	SubjectIBD110	CD	1629:190	9606	ICD_r	190	no	2	female	not applicable	2000
+SubjectIBD111	23	273.0	Stricturing (B2)	Ileal (L1)	yes	09/30/2009	SubjectIBD111	CD	1629:190	9606	ICD_r	190	no	3	female	not applicable	2000
+SubjectIBD112	18	766.0	Stricturing (B2)	Ileocolonic (L3)	yes	01/15/2010	SubjectIBD112	CD	1629:191	9606	ICD_r	191	no	4	female	not applicable	1990
+SubjectIBD113	18	655.0	Stricturing (B2)	Ileocolonic (L3)	yes	04/14/2010	SubjectIBD113	CD	1629:191	9606	ICD_r	191	no	5	female	not applicable	1990
+SubjectIBD114	18	427.0	Stricturing (B2)	Ileocolonic (L3)	yes	07/15/2010	SubjectIBD114	CD	1629:191	9606	ICD_r	191	no	6	female	not applicable	1990
+SubjectIBD115	18	654.0	Stricturing (B2)	Ileocolonic (L3)	yes	01/12/2011	SubjectIBD115	CD	1629:191	9606	ICD_r	191	no	8	female	not applicable	1990
+SubjectIBD116	18	284.0	Stricturing (B2)	Ileocolonic (L3)	yes	04/27/2009	SubjectIBD116	CD	1629:191	9606	ICD_r	191	no	1	female	not applicable	1990
+SubjectIBD117	18	441.0	Stricturing (B2)	Ileocolonic (L3)	yes	07/09/2009	SubjectIBD117	CD	1629:191	9606	ICD_r	191	no	2	female	not applicable	1990
+SubjectIBD118	18	565.0	Stricturing (B2)	Ileocolonic (L3)	yes	10/15/2009	SubjectIBD118	CD	1629:191	9606	ICD_r	191	no	3	female	not applicable	1990
+SubjectIBD119	22	96.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/15/2010	SubjectIBD119	CD	1629:193	9606	CCD	193	no	4	female	not applicable	1989
+SubjectIBD120	22	50.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/21/2010	SubjectIBD120	CD	1629:193	9606	CCD	193	no	5	female	not applicable	1989
+SubjectIBD121	22	196.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/20/2011	SubjectIBD121	CD	1629:193	9606	CCD	193	no	7	female	not applicable	1989
+SubjectIBD122	22	315.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/17/2011	SubjectIBD122	CD	1629:193	9606	CCD	193	no	8	female	not applicable	1989
+SubjectIBD123	22	36.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/20/2011	SubjectIBD123	CD	1629:193	9606	CCD	193	no	9	female	not applicable	1989
+SubjectIBD124	22	278.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/30/2009	SubjectIBD124	CD	1629:193	9606	CCD	193	no	1	female	not applicable	1989
+SubjectIBD125	22	414.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/29/2009	SubjectIBD125	CD	1629:193	9606	CCD	193	no	2	female	not applicable	1989
+SubjectIBD126	26	57.0	not applicable	not applicable	not applicable	02/18/2010	SubjectIBD126	UC	1629:195	9606	UC	195	not applicable	2	female	Proctitis (E1)	1984
+SubjectIBD127	26	53.0	not applicable	not applicable	not applicable	12/02/2010	SubjectIBD127	UC	1629:195	9606	UC	195	not applicable	5	female	Proctitis (E1)	1984
+SubjectIBD128	26	58.0	not applicable	not applicable	not applicable	02/16/2011	SubjectIBD128	UC	1629:195	9606	UC	195	not applicable	6	female	Proctitis (E1)	1984
+SubjectIBD129	26	29.0	not applicable	not applicable	not applicable	08/25/2011	SubjectIBD129	UC	1629:195	9606	UC	195	not applicable	8	female	Proctitis (E1)	1984
+SubjectIBD130	27	807.0	not applicable	not applicable	not applicable	02/08/2010	SubjectIBD130	UC	1629:206	9606	UC	206	not applicable	1	male	Left sided (E2)	1980
+SubjectIBD131	27	1583.0	not applicable	not applicable	not applicable	03/30/2010	SubjectIBD131	UC	1629:206	9606	UC	206	not applicable	2	male	Left sided (E2)	1980
+SubjectIBD132	27	2881.0	not applicable	not applicable	not applicable	04/22/2010	SubjectIBD132	UC	1629:206	9606	UC	206	not applicable	3	male	Left sided (E2)	1980
+SubjectIBD133	27	1565.0	not applicable	not applicable	not applicable	07/27/2010	SubjectIBD133	UC	1629:206	9606	UC	206	not applicable	4	male	Left sided (E2)	1980
+SubjectIBD134	27	2351.0	not applicable	not applicable	not applicable	10/21/2010	SubjectIBD134	UC	1629:206	9606	UC	206	not applicable	5	male	Left sided (E2)	1980
+SubjectIBD135	27	1858.0	not applicable	not applicable	not applicable	01/25/2011	SubjectIBD135	UC	1629:206	9606	UC	206	not applicable	6	male	Left sided (E2)	1980
+SubjectIBD136	27	98.0	not applicable	not applicable	not applicable	04/26/2011	SubjectIBD136	UC	1629:206	9606	UC	206	not applicable	7	male	Left sided (E2)	1980
+SubjectIBD137	27	85.0	not applicable	not applicable	not applicable	07/27/2011	SubjectIBD137	UC	1629:206	9606	UC	206	not applicable	8	male	Left sided (E2)	1980
+SubjectIBD138	23	not applicable	Stricturing (B2)	Ileocolonic (L3)	yes	02/10/2010	SubjectIBD138	CD	1629:211	9606	ICD_r	211	no	4	male	not applicable	1984
+SubjectIBD139	23	not applicable	Stricturing (B2)	Ileocolonic (L3)	yes	05/04/2010	SubjectIBD139	CD	1629:211	9606	ICD_r	211	no	5	male	not applicable	1984
+SubjectIBD140	23	not applicable	Stricturing (B2)	Ileocolonic (L3)	yes	09/09/2010	SubjectIBD140	CD	1629:211	9606	ICD_r	211	no	6	male	not applicable	1984
+SubjectIBD141	23	10.9	Stricturing (B2)	Ileocolonic (L3)	yes	11/10/2010	SubjectIBD141	CD	1629:211	9606	ICD_r	211	no	7	male	not applicable	1984
+SubjectIBD142	23	11.6	Stricturing (B2)	Ileocolonic (L3)	yes	02/03/2011	SubjectIBD142	CD	1629:211	9606	ICD_r	211	no	8	male	not applicable	1984
+SubjectIBD143	23	68.0	Stricturing (B2)	Ileocolonic (L3)	yes	05/12/2009	SubjectIBD143	CD	1629:211	9606	ICD_r	211	no	1	male	not applicable	1984
+SubjectIBD144	23	24.0	Stricturing (B2)	Ileocolonic (L3)	yes	08/11/2009	SubjectIBD144	CD	1629:211	9606	ICD_r	211	no	2	male	not applicable	1984
+SubjectIBD145	23	14.8	Stricturing (B2)	Ileocolonic (L3)	yes	11/03/2009	SubjectIBD145	CD	1629:211	9606	ICD_r	211	no	3	male	not applicable	1984
+SubjectIBD146	22	90.0	Stricturing (B2)	Ileocolonic (L3)	yes	03/08/2010	SubjectIBD146	CD	1629:217	9606	ICD_r	217	yes	1	male	not applicable	1990
+SubjectIBD147	24	86.0	not applicable	not applicable	not applicable	02/10/2010	SubjectIBD147	UC	1629:235	9606	UC	235	not applicable	2	female	Left sided (E2)	2002
+SubjectIBD148	24	429.0	not applicable	not applicable	not applicable	05/05/2010	SubjectIBD148	UC	1629:235	9606	UC	235	not applicable	3	female	Left sided (E2)	2002
+SubjectIBD149	24	105.0	not applicable	not applicable	not applicable	11/03/2010	SubjectIBD149	UC	1629:235	9606	UC	235	not applicable	5	female	Left sided (E2)	2002
+SubjectIBD150	24	51.0	not applicable	not applicable	not applicable	12/09/2010	SubjectIBD150	UC	1629:235	9606	UC	235	not applicable	6	female	Left sided (E2)	2002
+SubjectIBD151	24	28.0	not applicable	not applicable	not applicable	02/02/2011	SubjectIBD151	UC	1629:235	9606	UC	235	not applicable	7	female	Left sided (E2)	2002
+SubjectIBD152	24	81.0	not applicable	not applicable	not applicable	05/04/2011	SubjectIBD152	UC	1629:235	9606	UC	235	not applicable	8	female	Left sided (E2)	2002
+SubjectIBD153	24	213.0	not applicable	not applicable	not applicable	07/28/2011	SubjectIBD153	UC	1629:235	9606	UC	235	not applicable	9	female	Left sided (E2)	2002
+SubjectIBD154	24	68.0	not applicable	not applicable	not applicable	11/04/2009	SubjectIBD154	UC	1629:235	9606	UC	235	not applicable	1	female	Left sided (E2)	2002
+SubjectIBD155	25	553.0	not applicable	not applicable	not applicable	05/06/2010	SubjectIBD155	UC	1629:242	9606	UC	242	not applicable	1	male	Proctitis (E1)	2004
+SubjectIBD156	25	not collected	not applicable	not applicable	not applicable	06/01/2010	SubjectIBD156	UC	1629:242	9606	UC	242	not applicable	2	male	Proctitis (E1)	2004
+SubjectIBD157	25	25.0	not applicable	not applicable	not applicable	08/19/2010	SubjectIBD157	UC	1629:242	9606	UC	242	not applicable	3	male	Proctitis (E1)	2004
+SubjectIBD158	25	18.9	not applicable	not applicable	not applicable	11/30/2010	SubjectIBD158	UC	1629:242	9606	UC	242	not applicable	4	male	Proctitis (E1)	2004
+SubjectIBD159	25	30.0	not applicable	not applicable	not applicable	02/24/2011	SubjectIBD159	UC	1629:242	9606	UC	242	not applicable	5	male	Proctitis (E1)	2004
+SubjectIBD160	25	16.6	not applicable	not applicable	not applicable	08/30/2011	SubjectIBD160	UC	1629:242	9606	UC	242	not applicable	7	male	Proctitis (E1)	2004
+SubjectIBD161	31	25.0	Stricturing (B2)	Ileal (L1)	yes	03/10/2010	SubjectIBD161	CD	1629:245	9606	ICD_r	245	no	4	female	not applicable	1965
+SubjectIBD162	31	21.0	Stricturing (B2)	Ileal (L1)	yes	06/10/2010	SubjectIBD162	CD	1629:245	9606	ICD_r	245	no	5	female	not applicable	1965
+SubjectIBD163	31	not applicable	Stricturing (B2)	Ileal (L1)	yes	12/07/2010	SubjectIBD163	CD	1629:245	9606	ICD_r	245	no	7	female	not applicable	1965
+SubjectIBD164	31	56.0	Stricturing (B2)	Ileal (L1)	yes	03/09/2011	SubjectIBD164	CD	1629:245	9606	ICD_r	245	no	8	female	not applicable	1965
+SubjectIBD165	31	35.0	Stricturing (B2)	Ileal (L1)	yes	06/09/2009	SubjectIBD165	CD	1629:245	9606	ICD_r	245	no	1	female	not applicable	1965
+SubjectIBD166	31	not applicable	Stricturing (B2)	Ileal (L1)	yes	09/09/2009	SubjectIBD166	CD	1629:245	9606	ICD_r	245	no	2	female	not applicable	1965
+SubjectIBD167	31	34.0	Stricturing (B2)	Ileal (L1)	yes	12/09/2009	SubjectIBD167	CD	1629:245	9606	ICD_r	245	no	3	female	not applicable	1965
+SubjectIBD168	32	14.2	not applicable	not applicable	not applicable	04/26/2010	SubjectIBD168	UC	1629:251	9606	UC	251	not applicable	1	female	Proctitis (E1)	2005
+SubjectIBD169	32	50.0	not applicable	not applicable	not applicable	07/08/2010	SubjectIBD169	UC	1629:251	9606	UC	251	not applicable	2	female	Proctitis (E1)	2005
+SubjectIBD170	32	14.6	not applicable	not applicable	not applicable	04/19/2011	SubjectIBD170	UC	1629:251	9606	UC	251	not applicable	5	female	Proctitis (E1)	2005
+SubjectIBD171	21	481.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	03/03/2010	SubjectIBD171	CD	1629:260	9606	ICD_r	260	no	2	male	not applicable	1983
+SubjectIBD172	21	285.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	06/23/2010	SubjectIBD172	CD	1629:260	9606	ICD_r	260	no	3	male	not applicable	1983
+SubjectIBD173	21	252.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	11/09/2010	SubjectIBD173	CD	1629:260	9606	ICD_r	260	no	4	male	not applicable	1983
+SubjectIBD174	21	510.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	02/23/2011	SubjectIBD174	CD	1629:260	9606	ICD_r	260	no	5	male	not applicable	1983
+SubjectIBD175	21	333.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	05/19/2011	SubjectIBD175	CD	1629:260	9606	ICD_r	260	no	6	male	not applicable	1983
+SubjectIBD176	21	414.0	Stricturing (B2)	Ileocolonic and Upper-GI (L3+L4)	yes	10/21/2009	SubjectIBD176	CD	1629:260	9606	ICD_r	260	no	1	male	not applicable	1983
+SubjectIBD177	missing: not provided	241.0	not applicable	not applicable	not applicable	02/11/2010	SubjectIBD177	UC	1629:264	9606	UC	264	not applicable	6	male	Left sided (E2)	1978
+SubjectIBD178	missing: not provided	184.0	not applicable	not applicable	not applicable	05/19/2010	SubjectIBD178	UC	1629:264	9606	UC	264	not applicable	7	male	Left sided (E2)	1978
+SubjectIBD179	missing: not provided	163.0	not applicable	not applicable	not applicable	11/09/2010	SubjectIBD179	UC	1629:264	9606	UC	264	not applicable	9	male	Left sided (E2)	1978
+SubjectIBD180	missing: not provided	236.0	not applicable	not applicable	not applicable	11/24/2010	SubjectIBD180	UC	1629:264	9606	UC	264	not applicable	10	male	Left sided (E2)	1978
+SubjectIBD181	missing: not provided	100.0	not applicable	not applicable	not applicable	02/25/2009	SubjectIBD181	UC	1629:264	9606	UC	264	not applicable	1	male	Left sided (E2)	1978
+SubjectIBD182	missing: not provided	226.0	not applicable	not applicable	not applicable	03/19/2009	SubjectIBD182	UC	1629:264	9606	UC	264	not applicable	2	male	Left sided (E2)	1978
+SubjectIBD183	missing: not provided	404.0	not applicable	not applicable	not applicable	05/12/2009	SubjectIBD183	UC	1629:264	9606	UC	264	not applicable	3	male	Left sided (E2)	1978
+SubjectIBD184	missing: not provided	552.0	not applicable	not applicable	not applicable	08/19/2009	SubjectIBD184	UC	1629:264	9606	UC	264	not applicable	4	male	Left sided (E2)	1978
+SubjectIBD185	missing: not provided	282.0	not applicable	not applicable	not applicable	11/17/2009	SubjectIBD185	UC	1629:264	9606	UC	264	not applicable	5	male	Left sided (E2)	1978
+SubjectIBD186	29	not applicable	not applicable	not applicable	not applicable	05/13/2009	SubjectIBD186	UC	1629:284	9606	UC	284	not applicable	1	female	Proctitis (E1)	1986
+SubjectIBD187	26	171.0	Penetrating (B3)	Colonic (L2)	no	05/20/2010	SubjectIBD187	CD	1629:288	9606	CCD	288	yes	1	male	not applicable	1993
+SubjectIBD188	26	114.0	Penetrating (B3)	Colonic (L2)	no	09/14/2010	SubjectIBD188	CD	1629:288	9606	CCD	288	yes	2	male	not applicable	1993
+SubjectIBD189	26	85.0	Penetrating (B3)	Colonic (L2)	no	02/16/2011	SubjectIBD189	CD	1629:288	9606	CCD	288	yes	3	male	not applicable	1993
+SubjectIBD190	26	72.0	Penetrating (B3)	Colonic (L2)	no	05/10/2011	SubjectIBD190	CD	1629:288	9606	CCD	288	yes	4	male	not applicable	1993
+SubjectIBD191	26	30.0	Penetrating (B3)	Colonic (L2)	no	08/16/2011	SubjectIBD191	CD	1629:288	9606	CCD	288	yes	5	male	not applicable	1993
+SubjectIBD192	27	214.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD192	UC	1629:295	9606	UC	295	not applicable	5	male	Extensive (E3)	1982
+SubjectIBD193	27	29.0	not applicable	not applicable	not applicable	09/16/2010	SubjectIBD193	UC	1629:295	9606	UC	295	not applicable	6	male	Extensive (E3)	1982
+SubjectIBD194	27	79.0	not applicable	not applicable	not applicable	01/11/2011	SubjectIBD194	UC	1629:295	9606	UC	295	not applicable	7	male	Extensive (E3)	1982
+SubjectIBD195	27	345.0	not applicable	not applicable	not applicable	03/26/2009	SubjectIBD195	UC	1629:295	9606	UC	295	not applicable	1	male	Extensive (E3)	1982
+SubjectIBD196	27	312.0	not applicable	not applicable	not applicable	06/16/2009	SubjectIBD196	UC	1629:295	9606	UC	295	not applicable	2	male	Extensive (E3)	1982
+SubjectIBD197	27	487.0	not applicable	not applicable	not applicable	09/21/2009	SubjectIBD197	UC	1629:295	9606	UC	295	not applicable	3	male	Extensive (E3)	1982
+SubjectIBD198	27	155.0	not applicable	not applicable	not applicable	12/15/2009	SubjectIBD198	UC	1629:295	9606	UC	295	not applicable	4	male	not applicable	1982
+SubjectIBD199	28	196.0	not applicable	not applicable	not applicable	03/25/2010	SubjectIBD199	UC	1629:304	9606	UC	304	not applicable	1	male	Left sided (E2)	1999
+SubjectIBD200	28	411.0	not applicable	not applicable	not applicable	06/15/2010	SubjectIBD200	UC	1629:304	9606	UC	304	not applicable	2	male	Left sided (E2)	1999
+SubjectIBD201	28	559.0	not applicable	not applicable	not applicable	09/07/2010	SubjectIBD201	UC	1629:304	9606	UC	304	not applicable	3	male	Left sided (E2)	1999
+SubjectIBD202	28	220.0	not applicable	not applicable	not applicable	03/15/2011	SubjectIBD202	UC	1629:304	9606	UC	304	not applicable	5	male	Left sided (E2)	1999
+SubjectIBD203	28	302.0	not applicable	not applicable	not applicable	06/14/2011	SubjectIBD203	UC	1629:304	9606	UC	304	not applicable	6	male	Left sided (E2)	1999
+SubjectIBD204	23	510.0	Penetrating (B3)	Ileal (L1)	yes	01/26/2010	SubjectIBD204	CD	1629:315	9606	ICD_r	315	no	1	male	not applicable	1983
+SubjectIBD205	23	281.0	Penetrating (B3)	Ileal (L1)	yes	04/13/2010	SubjectIBD205	CD	1629:315	9606	ICD_r	315	no	2	male	not applicable	1983
+SubjectIBD206	23	281.0	Penetrating (B3)	Ileal (L1)	yes	04/13/2010	SubjectIBD206	CD	1629:315	9606	ICD_r	315	no	2	male	not applicable	1983
+SubjectIBD207	23	396.0	Penetrating (B3)	Ileal (L1)	yes	07/08/2010	SubjectIBD207	CD	1629:315	9606	ICD_r	315	no	3	male	not applicable	1983
+SubjectIBD208	23	316.0	Penetrating (B3)	Ileal (L1)	yes	10/19/2010	SubjectIBD208	CD	1629:315	9606	ICD_r	315	no	4	male	not applicable	1983
+SubjectIBD209	23	289.0	Penetrating (B3)	Ileal (L1)	yes	04/15/2011	SubjectIBD209	CD	1629:315	9606	ICD_r	315	no	6	male	not applicable	1983
+SubjectIBD210	29	76.0	not applicable	not applicable	not applicable	02/09/2010	SubjectIBD210	UC	1629:316	9606	UC	316	not applicable	2	male	Left sided (E2)	1981
+SubjectIBD211	29	86.0	not applicable	not applicable	not applicable	05/06/2010	SubjectIBD211	UC	1629:316	9606	UC	316	not applicable	3	male	Left sided (E2)	1981
+SubjectIBD212	29	234.0	not applicable	not applicable	not applicable	08/10/2010	SubjectIBD212	UC	1629:316	9606	UC	316	not applicable	4	male	Left sided (E2)	1981
+SubjectIBD213	29	44.0	not applicable	not applicable	not applicable	11/17/2010	SubjectIBD213	UC	1629:316	9606	UC	316	not applicable	5	male	Left sided (E2)	1981
+SubjectIBD214	29	53.0	not applicable	not applicable	not applicable	02/03/2011	SubjectIBD214	UC	1629:316	9606	UC	316	not applicable	6	male	Left sided (E2)	1981
+SubjectIBD215	29	48.0	not applicable	not applicable	not applicable	05/05/2011	SubjectIBD215	UC	1629:316	9606	UC	316	not applicable	7	male	Left sided (E2)	1981
+SubjectIBD216	29	27.0	not applicable	not applicable	not applicable	08/18/2011	SubjectIBD216	UC	1629:316	9606	UC	316	not applicable	8	male	Left sided (E2)	1981
+SubjectIBD217	29	35.0	not applicable	not applicable	not applicable	11/16/2009	SubjectIBD217	UC	1629:316	9606	UC	316	not applicable	1	male	Left sided (E2)	1981
+SubjectIBD218	29	254.0	Stricturing (B2)	Ileal (L1)	yes	06/17/2010	SubjectIBD218	CD	1629:318	9606	ICD_r	318	no	2	male	not applicable	2001
+SubjectIBD219	18	505.0	not applicable	not applicable	not applicable	01/20/2010	SubjectIBD219	UC	1629:319	9606	UC	319	not applicable	1	female	Extensive (E3)	2005
+SubjectIBD220	27	162.0	not applicable	not applicable	not applicable	03/15/2010	SubjectIBD220	UC	1629:326	9606	UC	326	not applicable	3	male	Extensive (E3)	1997
+SubjectIBD221	27	1314.0	not applicable	not applicable	not applicable	08/19/2009	SubjectIBD221	UC	1629:326	9606	UC	326	not applicable	1	male	Extensive (E3)	1997
+SubjectIBD222	27	785.0	not applicable	not applicable	not applicable	11/16/2009	SubjectIBD222	UC	1629:326	9606	UC	326	not applicable	2	male	Extensive (E3)	1997
+SubjectIBD223	34	216.0	not applicable	not applicable	not applicable	01/20/2010	SubjectIBD223	UC	1629:336	9606	UC	336	not applicable	1	male	Extensive (E3)	1999
+SubjectIBD224	34	712.0	not applicable	not applicable	not applicable	04/13/2010	SubjectIBD224	UC	1629:336	9606	UC	336	not applicable	2	male	Extensive (E3)	1999
+SubjectIBD225	34	78.0	not applicable	not applicable	not applicable	09/09/2010	SubjectIBD225	UC	1629:336	9606	UC	336	not applicable	3	male	Extensive (E3)	1999
+SubjectIBD226	34	155.0	not applicable	not applicable	not applicable	01/25/2011	SubjectIBD226	UC	1629:336	9606	UC	336	not applicable	4	male	Extensive (E3)	1999
+SubjectIBD227	34	351.0	not applicable	not applicable	not applicable	04/28/2011	SubjectIBD227	UC	1629:336	9606	UC	336	not applicable	5	male	Extensive (E3)	1999
+SubjectIBD228	34	209.0	not applicable	not applicable	not applicable	07/13/2011	SubjectIBD228	UC	1629:336	9606	UC	336	not applicable	6	male	Extensive (E3)	1999
+SubjectIBD229	22	28.0	not applicable	not applicable	not applicable	04/13/2010	SubjectIBD229	UC	1629:347	9606	UC	347	not applicable	1	female	Left sided (E2)	2004
+SubjectIBD230	22	21.0	not applicable	not applicable	not applicable	08/05/2010	SubjectIBD230	UC	1629:347	9606	UC	347	not applicable	2	female	Left sided (E2)	2004
+SubjectIBD231	22	71.0	not applicable	not applicable	not applicable	04/07/2011	SubjectIBD231	UC	1629:347	9606	UC	347	not applicable	3	female	Left sided (E2)	2004
+SubjectIBD232	22	19.4	not applicable	not applicable	not applicable	08/02/2011	SubjectIBD232	UC	1629:347	9606	UC	347	not applicable	4	female	Left sided (E2)	2004
+SubjectIBD233	20	411.0	Stricturing (B2)	Ileal (L1)	yes	04/20/2010	SubjectIBD233	CD	1629:352	9606	ICD_r	352	no	1	female	not applicable	1970
+SubjectIBD234	29	960.0	Non-stricturing, non-penetrating (B1)	Ileocolonic and Upper-GI (L3+L4)	no	07/01/2010	SubjectIBD234	CD	1629:372	9606	ICD_nr	372	no	2	male	not applicable	2000
+SubjectIBD235	28	81.0	not applicable	not applicable	not applicable	03/18/2010	SubjectIBD235	UC	1629:385	9606	UC	385	not applicable	2	male	Extensive (E3)	1998
+SubjectIBD236	28	46.0	not applicable	not applicable	not applicable	06/21/2010	SubjectIBD236	UC	1629:862	9606	UC	862	not applicable	5	male	Extensive (E3)	1998
+SubjectIBD237	28	1080.0	not applicable	not applicable	not applicable	06/21/2010	SubjectIBD237	UC	1629:385	9606	UC	385	not applicable	3	male	Extensive (E3)	1998
+SubjectIBD238	28	785.0	not applicable	not applicable	not applicable	09/24/2010	SubjectIBD238	UC	1629:385	9606	UC	385	not applicable	4	male	Extensive (E3)	1998
+SubjectIBD239	28	700.0	not applicable	not applicable	not applicable	04/07/2011	SubjectIBD239	UC	1629:385	9606	UC	385	not applicable	6	male	Extensive (E3)	1998
+SubjectIBD240	28	455.0	not applicable	not applicable	not applicable	06/30/2011	SubjectIBD240	UC	1629:385	9606	UC	385	not applicable	7	male	Extensive (E3)	1998
+SubjectIBD241	28	338.0	not applicable	not applicable	not applicable	09/23/2009	SubjectIBD241	UC	1629:385	9606	UC	385	not applicable	1	male	Extensive (E3)	1998
+SubjectIBD242	26	157.0	Stricturing (B2)	Ileal (L1)	yes	03/30/2010	SubjectIBD242	CD	1629:390	9606	ICD_r	390	yes	2	male	not applicable	1991
+SubjectIBD243	26	109.0	Stricturing (B2)	Ileal (L1)	yes	07/17/2010	SubjectIBD243	CD	1629:390	9606	ICD_r	390	yes	3	male	not applicable	1991
+SubjectIBD244	28	41.0	Stricturing (B2)	Ileal (L1)	yes	10/05/2010	SubjectIBD244	CD	1629:390	9606	ICD_r	390	yes	4	male	not applicable	1991
+SubjectIBD245	28	552.0	Stricturing (B2)	Ileal (L1)	yes	12/15/2010	SubjectIBD245	CD	1629:390	9606	ICD_r	390	yes	5	male	not applicable	1991
+SubjectIBD246	28	72.0	Stricturing (B2)	Ileal (L1)	yes	04/06/2011	SubjectIBD246	CD	1629:390	9606	ICD_r	390	yes	6	male	not applicable	1991
+SubjectIBD247	26	231.0	Stricturing (B2)	Ileal (L1)	yes	12/22/2009	SubjectIBD247	CD	1629:390	9606	ICD_r	390	yes	1	male	not applicable	1991
+SubjectIBD248	27	827.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/25/2010	SubjectIBD248	CD	1629:413	9606	CCD	413	no	4	male	not applicable	1990
+SubjectIBD249	27	44.0	not applicable	Colonic (L2)	not applicable	08/26/2010	SubjectIBD249	UC	1629:122	9606	CCD	122	not applicable	4	male	Extensive (E3)	2001
+SubjectIBD250	27	67.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/26/2010	SubjectIBD250	CD	1629:413	9606	CCD	413	no	6	male	not applicable	1990
+SubjectIBD251	27	55.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/25/2010	SubjectIBD251	CD	1629:413	9606	CCD	413	no	7	male	not applicable	1990
+SubjectIBD252	27	1270.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/24/2011	SubjectIBD252	CD	1629:413	9606	CCD	413	no	8	male	not applicable	1990
+SubjectIBD253	27	71.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/10/2009	SubjectIBD253	CD	1629:413	9606	CCD	413	no	1	male	not applicable	1990
+SubjectIBD254	27	61.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/03/2009	SubjectIBD254	CD	1629:413	9606	CCD	413	no	2	male	not applicable	1990
+SubjectIBD255	27	2814.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/26/2009	SubjectIBD255	CD	1629:413	9606	CCD	413	no	3	male	not applicable	1990
+SubjectIBD256	38	827.0	Stricturing (B2)	Ileal (L1)	yes	03/16/2010	SubjectIBD256	CD	1629:416	9606	ICD_r	416	no	2	male	not applicable	1994
+SubjectIBD257	38	561.0	Stricturing (B2)	Ileal (L1)	yes	06/10/2010	SubjectIBD257	CD	1629:416	9606	ICD_r	416	no	3	male	not applicable	1994
+SubjectIBD258	38	670.0	Stricturing (B2)	Ileal (L1)	yes	09/14/2010	SubjectIBD258	CD	1629:416	9606	ICD_r	416	no	4	male	not applicable	1994
+SubjectIBD259	38	482.0	Stricturing (B2)	Ileal (L1)	yes	03/01/2011	SubjectIBD259	CD	1629:416	9606	ICD_r	416	no	6	male	not applicable	1994
+SubjectIBD260	38	593.0	Stricturing (B2)	Ileal (L1)	yes	12/16/2009	SubjectIBD260	CD	1629:416	9606	ICD_r	416	no	1	male	not applicable	1994
+SubjectIBD261	29	97.0	Penetrating (B3)	Ileocolonic (L3)	yes	05/19/2009	SubjectIBD261	CD	1629:423	9606	ICD_r	423	no	1	male	not applicable	1994
+SubjectIBD262	29	17.3	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/04/2010	SubjectIBD262	CD	1629:427	9606	CCD	427	yes	5	female	not applicable	1985
+SubjectIBD263	29	10.2	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/03/2010	SubjectIBD263	CD	1629:427	9606	CCD	427	yes	6	female	not applicable	1985
+SubjectIBD264	29	not applicable	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/07/2010	SubjectIBD264	CD	1629:427	9606	CCD	427	yes	7	female	not applicable	1985
+SubjectIBD265	29	15.8	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/07/2010	SubjectIBD265	CD	1629:427	9606	CCD	427	yes	8	female	not applicable	1985
+SubjectIBD266	29	29.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/09/2009	SubjectIBD266	CD	1629:427	9606	CCD	427	yes	2	female	not applicable	1985
+SubjectIBD267	29	not applicable	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/03/2009	SubjectIBD267	CD	1629:427	9606	CCD	427	yes	3	female	not applicable	1985
+SubjectIBD268	29	12.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/08/2009	SubjectIBD268	CD	1629:427	9606	CCD	427	yes	4	female	not applicable	1985
+SubjectIBD269	28	519.0	not applicable	not applicable	not applicable	01/14/2010	SubjectIBD269	UC	1629:446	9606	UC	446	not applicable	1	female	Left sided (E2)	2003
+SubjectIBD270	28	71.0	not applicable	not applicable	not applicable	05/19/2010	SubjectIBD270	UC	1629:446	9606	UC	446	not applicable	2	female	Left sided (E2)	2003
+SubjectIBD271	34	35.0	not applicable	not applicable	not applicable	01/05/2010	SubjectIBD271	UC	1629:450	9606	UC	450	not applicable	2	female	Left sided (E2)	2003
+SubjectIBD272	34	392.0	not applicable	not applicable	not applicable	03/25/2010	SubjectIBD272	UC	1629:450	9606	UC	450	not applicable	3	female	Left sided (E2)	2003
+SubjectIBD273	34	29.0	not applicable	not applicable	not applicable	09/07/2010	SubjectIBD273	UC	1629:450	9606	UC	450	not applicable	4	female	Left sided (E2)	2003
+SubjectIBD274	34	28.0	not applicable	not applicable	not applicable	01/20/2011	SubjectIBD274	UC	1629:450	9606	UC	450	not applicable	5	female	Left sided (E2)	2003
+SubjectIBD275	20	90.0	not applicable	not applicable	not applicable	02/17/2010	SubjectIBD275	UC	1629:456	9606	UC	456	not applicable	4	female	Extensive (E3)	1994
+SubjectIBD276	20	237.0	not applicable	not applicable	not applicable	05/06/2010	SubjectIBD276	UC	1629:456	9606	UC	456	not applicable	5	female	Extensive (E3)	1994
+SubjectIBD277	20	32.0	not applicable	not applicable	not applicable	08/05/2010	SubjectIBD277	UC	1629:456	9606	UC	456	not applicable	6	female	Extensive (E3)	1994
+SubjectIBD278	20	179.0	not applicable	not applicable	not applicable	11/09/2010	SubjectIBD278	UC	1629:456	9606	UC	456	not applicable	7	female	Extensive (E3)	1994
+SubjectIBD279	20	81.0	not applicable	not applicable	not applicable	02/08/2011	SubjectIBD279	UC	1629:456	9606	UC	456	not applicable	8	female	Extensive (E3)	1994
+SubjectIBD280	20	405.0	not applicable	not applicable	not applicable	08/13/2009	SubjectIBD280	UC	1629:456	9606	UC	456	not applicable	2	female	Extensive (E3)	1994
+SubjectIBD281	20	98.0	not applicable	not applicable	not applicable	11/05/2009	SubjectIBD281	UC	1629:456	9606	UC	456	not applicable	3	female	Extensive (E3)	1994
+SubjectIBD282	23	28.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/06/2010	SubjectIBD282	CD	1629:465	9606	CCD	465	no	3	female	not applicable	1980
+SubjectIBD283	23	22.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/11/2009	SubjectIBD283	CD	1629:465	9606	CCD	465	no	1	female	not applicable	1980
+SubjectIBD284	23	16.6	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/16/2009	SubjectIBD284	CD	1629:465	9606	CCD	465	no	2	female	not applicable	1980
+SubjectIBD285	22	715.0	not applicable	not applicable	not applicable	03/30/2010	SubjectIBD285	UC	1629:467	9606	UC	467	not applicable	2	male	Left sided (E2)	1983
+SubjectIBD286	22	436.0	not applicable	not applicable	not applicable	07/06/2010	SubjectIBD286	UC	1629:467	9606	UC	467	not applicable	3	male	Left sided (E2)	1983
+SubjectIBD287	22	92.0	not applicable	not applicable	not applicable	01/11/2011	SubjectIBD287	UC	1629:467	9606	UC	467	not applicable	5	male	Left sided (E2)	1983
+SubjectIBD288	22	360.0	not applicable	not applicable	not applicable	03/31/2011	SubjectIBD288	UC	1629:467	9606	UC	467	not applicable	6	male	Left sided (E2)	1983
+SubjectIBD289	22	850.0	not applicable	not applicable	not applicable	12/29/2009	SubjectIBD289	UC	1629:467	9606	UC	467	not applicable	1	male	Left sided (E2)	1983
+SubjectIBD290	34	226.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD290	UC	1629:471	9606	UC	471	not applicable	5	female	Left sided (E2)	1979
+SubjectIBD291	34	568.0	not applicable	not applicable	not applicable	06/02/2010	SubjectIBD291	UC	1629:471	9606	UC	471	not applicable	6	female	Left sided (E2)	1979
+SubjectIBD292	34	465.0	not applicable	not applicable	not applicable	08/26/2010	SubjectIBD292	UC	1629:471	9606	UC	471	not applicable	7	female	Left sided (E2)	1979
+SubjectIBD293	34	186.0	not applicable	not applicable	not applicable	11/24/2010	SubjectIBD293	UC	1629:471	9606	UC	471	not applicable	8	female	Left sided (E2)	1979
+SubjectIBD294	34	141.0	not applicable	not applicable	not applicable	03/11/2009	SubjectIBD294	UC	1629:471	9606	UC	471	not applicable	1	female	Left sided (E2)	1979
+SubjectIBD295	34	681.0	not applicable	not applicable	not applicable	06/09/2009	SubjectIBD295	UC	1629:471	9606	UC	471	not applicable	2	female	Left sided (E2)	1979
+SubjectIBD296	34	545.0	not applicable	not applicable	not applicable	09/02/2009	SubjectIBD296	UC	1629:471	9606	UC	471	not applicable	3	female	Left sided (E2)	1979
+SubjectIBD297	29	252.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD297	UC	1629:482	9606	UC	482	not applicable	1	female	Proctitis (E1)	2005
+SubjectIBD298	24	808.0	not applicable	not applicable	not applicable	04/14/2010	SubjectIBD298	UC	1629:487	9606	UC	487	not applicable	1	female	Extensive (E3)	1986
+SubjectIBD299	24	692.0	not applicable	not applicable	not applicable	07/14/2010	SubjectIBD299	UC	1629:487	9606	UC	487	not applicable	2	female	Extensive (E3)	1986
+SubjectIBD300	24	22.0	not applicable	not applicable	not applicable	10/13/2010	SubjectIBD300	UC	1629:487	9606	UC	487	not applicable	3	female	Extensive (E3)	1986
+SubjectIBD301	24	27.0	not applicable	not applicable	not applicable	01/18/2011	SubjectIBD301	UC	1629:487	9606	UC	487	not applicable	4	female	Extensive (E3)	1986
+SubjectIBD302	24	37.0	not applicable	not applicable	not applicable	04/13/2011	SubjectIBD302	UC	1629:487	9606	UC	487	not applicable	5	female	Extensive (E3)	1986
+SubjectIBD303	24	151.0	not applicable	not applicable	not applicable	07/19/2011	SubjectIBD303	UC	1629:487	9606	UC	487	not applicable	6	female	Extensive (E3)	1986
+SubjectIBD304	25	1068.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	03/25/2010	SubjectIBD304	CD	1629:492	9606	ICD_nr	492	no	3	female	not applicable	1990
+SubjectIBD305	25	992.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	06/22/2010	SubjectIBD305	CD	1629:492	9606	ICD_nr	492	no	4	female	not applicable	1990
+SubjectIBD306	25	1456.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	09/16/2010	SubjectIBD306	CD	1629:492	9606	ICD_nr	492	no	5	female	not applicable	1990
+SubjectIBD307	25	1173.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	12/16/2010	SubjectIBD307	CD	1629:492	9606	ICD_nr	492	no	6	female	not applicable	1990
+SubjectIBD308	25	579.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	03/30/2009	SubjectIBD308	CD	1629:492	9606	ICD_nr	492	no	1	female	not applicable	1990
+SubjectIBD309	25	628.0	Non-stricturing, non-penetrating (B1)	Ileal (L1)	no	07/09/2009	SubjectIBD309	CD	1629:492	9606	ICD_nr	492	no	2	female	not applicable	1990
+SubjectIBD310	29	174.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	01/19/2010	SubjectIBD310	CD	1629:507	9606	ICD_r	507	no	1	female	not applicable	1965
+SubjectIBD311	29	119.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	04/08/2010	SubjectIBD311	CD	1629:507	9606	ICD_r	507	no	2	female	not applicable	1965
+SubjectIBD312	29	145.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	07/14/2010	SubjectIBD312	CD	1629:507	9606	ICD_r	507	no	3	female	not applicable	1965
+SubjectIBD313	29	184.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	10/13/2010	SubjectIBD313	CD	1629:507	9606	ICD_r	507	no	4	female	not applicable	1965
+SubjectIBD314	29	208.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	01/12/2011	SubjectIBD314	CD	1629:507	9606	ICD_r	507	no	5	female	not applicable	1965
+SubjectIBD315	29	104.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	04/13/2011	SubjectIBD315	CD	1629:507	9606	ICD_r	507	no	6	female	not applicable	1965
+SubjectIBD316	29	246.0	Penetrating (B3)	Ileocolonic and Upper-GI (L3+L4)	yes	07/21/2011	SubjectIBD316	CD	1629:507	9606	ICD_r	507	no	7	female	not applicable	1965
+SubjectIBD317	missing: not provided	390.0	Stricturing (B2)	Ileocolonic (L3)	yes	02/16/2010	SubjectIBD317	CD	1629:508	9606	ICD_r	508	no	1	female	not applicable	1976
+SubjectIBD318	21	28.0	not applicable	not applicable	not applicable	03/10/2010	SubjectIBD318	UC	1629:521	9606	UC	521	not applicable	1	female	Left sided (E2)	1977
+SubjectIBD319	21	21.0	not applicable	not applicable	not applicable	06/07/2010	SubjectIBD319	UC	1629:521	9606	UC	521	not applicable	2	female	Left sided (E2)	1977
+SubjectIBD320	21	42.0	not applicable	not applicable	not applicable	12/06/2010	SubjectIBD320	UC	1629:521	9606	UC	521	not applicable	4	female	Left sided (E2)	1977
+SubjectIBD321	21	13.8	not applicable	not applicable	not applicable	03/01/2011	SubjectIBD321	UC	1629:521	9606	UC	521	not applicable	5	female	Left sided (E2)	1977
+SubjectIBD322	21	24.0	not applicable	not applicable	not applicable	06/09/2011	SubjectIBD322	UC	1629:521	9606	UC	521	not applicable	6	female	Left sided (E2)	1977
+SubjectIBD323	26	435.0	Stricturing (B2)	Ileal (L1)	yes	03/01/2010	SubjectIBD323	CD	1629:525	9606	ICD_r	525	no	1	male	not applicable	2002
+SubjectIBD324	26	404.0	Stricturing (B2)	Ileal (L1)	yes	05/17/2010	SubjectIBD324	CD	1629:525	9606	ICD_r	525	no	2	male	not applicable	2002
+SubjectIBD325	26	571.0	Stricturing (B2)	Ileal (L1)	yes	07/02/2010	SubjectIBD325	CD	1629:525	9606	ICD_r	525	no	3	male	not applicable	2002
+SubjectIBD326	26	1029.0	Stricturing (B2)	Ileal (L1)	yes	08/19/2010	SubjectIBD326	CD	1629:525	9606	ICD_r	525	no	4	male	not applicable	2002
+SubjectIBD327	26	1227.0	Stricturing (B2)	Ileal (L1)	yes	12/20/2010	SubjectIBD327	CD	1629:525	9606	ICD_r	525	no	5	male	not applicable	2002
+SubjectIBD328	26	538.0	Stricturing (B2)	Ileal (L1)	yes	05/23/2011	SubjectIBD328	CD	1629:525	9606	ICD_r	525	no	6	male	not applicable	2002
+SubjectIBD329	25	35.0	Penetrating (B3)	Ileal (L1)	yes	03/03/2010	SubjectIBD329	CD	1629:543	9606	ICD_r	543	yes	2	male	not applicable	1982
+SubjectIBD330	25	43.0	Penetrating (B3)	Ileal (L1)	yes	06/02/2010	SubjectIBD330	CD	1629:543	9606	ICD_r	543	yes	3	male	not applicable	1982
+SubjectIBD331	25	93.0	Penetrating (B3)	Ileal (L1)	yes	09/02/2010	SubjectIBD331	CD	1629:543	9606	ICD_r	543	yes	4	male	not applicable	1982
+SubjectIBD332	25	29.0	Penetrating (B3)	Ileal (L1)	yes	11/24/2010	SubjectIBD332	CD	1629:543	9606	ICD_r	543	yes	5	male	not applicable	1982
+SubjectIBD333	25	35.0	Penetrating (B3)	Ileal (L1)	yes	04/05/2011	SubjectIBD333	CD	1629:543	9606	ICD_r	543	yes	6	male	not applicable	1982
+SubjectIBD334	25	32.0	Penetrating (B3)	Ileal (L1)	yes	12/02/2009	SubjectIBD334	CD	1629:543	9606	ICD_r	543	yes	1	male	not applicable	1982
+SubjectIBD335	23	57.0	not applicable	not applicable	not applicable	03/09/2010	SubjectIBD335	UC	1629:552	9606	UC	552	not applicable	1	female	Proctitis (E1)	2003
+SubjectIBD336	21	28.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD336	UC	1629:552	9606	UC	552	not applicable	2	female	Proctitis (E1)	2003
+SubjectIBD337	23	12.8	not applicable	not applicable	not applicable	08/04/2010	SubjectIBD337	UC	1629:552	9606	UC	552	not applicable	3	female	Proctitis (E1)	2003
+SubjectIBD338	23	47.0	not applicable	not applicable	not applicable	06/16/2010	SubjectIBD338	UC	1629:552	9606	UC	552	not applicable	4	female	Proctitis (E1)	2003
+SubjectIBD339	29	172.0	Penetrating (B3)	Ileocolonic (L3)	yes	03/25/2010	SubjectIBD339	CD	1629:553	9606	ICD_r	553	no	5	female	not applicable	2004
+SubjectIBD340	29	191.0	Penetrating (B3)	Ileocolonic (L3)	yes	09/30/2010	SubjectIBD340	CD	1629:553	9606	ICD_r	553	no	6	female	not applicable	2004
+SubjectIBD341	29	142.0	Penetrating (B3)	Ileocolonic (L3)	yes	04/16/2009	SubjectIBD341	CD	1629:553	9606	ICD_r	553	no	1	female	not applicable	2004
+SubjectIBD342	29	176.0	Penetrating (B3)	Ileocolonic (L3)	yes	07/28/2009	SubjectIBD342	CD	1629:553	9606	ICD_r	553	no	2	female	not applicable	2004
+SubjectIBD343	31	2270.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/25/2010	SubjectIBD343	CD	1629:560	9606	CCD	560	no	1	male	not applicable	1952
+SubjectIBD344	31	276.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/03/2010	SubjectIBD344	CD	1629:560	9606	CCD	560	no	2	male	not applicable	1952
+SubjectIBD345	27	898.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/03/2010	SubjectIBD345	CD	1629:564	9606	CCD	564	no	5	male	not applicable	2004
+SubjectIBD346	27	1032.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	07/14/2009	SubjectIBD346	CD	1629:564	9606	CCD	564	no	1	male	not applicable	2004
+SubjectIBD347	27	1986.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/23/2009	SubjectIBD347	CD	1629:564	9606	CCD	564	no	2	male	not applicable	2004
+SubjectIBD348	27	111.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/17/2009	SubjectIBD348	CD	1629:564	9606	CCD	564	no	3	male	not applicable	2004
+SubjectIBD349	27	94.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/08/2009	SubjectIBD349	CD	1629:564	9606	CCD	564	no	4	male	not applicable	2004
+SubjectIBD350	24	12.3	not applicable	not applicable	not applicable	01/19/2010	SubjectIBD350	UC	1629:566	9606	UC	566	not applicable	4	female	Proctitis (E1)	1996
+SubjectIBD351	24	10.8	not applicable	not applicable	not applicable	04/08/2010	SubjectIBD351	UC	1629:566	9606	UC	566	not applicable	5	female	Proctitis (E1)	1996
+SubjectIBD352	24	21.0	not applicable	not applicable	not applicable	06/29/2010	SubjectIBD352	UC	1629:566	9606	UC	566	not applicable	6	female	Proctitis (E1)	1996
+SubjectIBD353	24	73.0	not applicable	not applicable	not applicable	09/30/2010	SubjectIBD353	UC	1629:566	9606	UC	566	not applicable	7	female	Proctitis (E1)	1996
+SubjectIBD354	24	941.0	not applicable	not applicable	not applicable	03/16/2011	SubjectIBD354	UC	1629:566	9606	UC	566	not applicable	9	female	Proctitis (E1)	1996
+SubjectIBD355	24	10.8	not applicable	not applicable	not applicable	06/24/2009	SubjectIBD355	UC	1629:566	9606	UC	566	not applicable	2	female	Proctitis (E1)	1996
+SubjectIBD356	24	25.0	not applicable	not applicable	not applicable	09/29/2009	SubjectIBD356	UC	1629:566	9606	UC	566	not applicable	3	female	Proctitis (E1)	1996
+SubjectIBD357	25	990.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/28/2009	SubjectIBD357	CD	1629:570	9606	CCD	570	no	1	female	not applicable	2000
+SubjectIBD358	25	36.0	not applicable	not applicable	not applicable	02/24/2010	SubjectIBD358	UC	1629:575	9606	UC	575	not applicable	1	male	Extensive (E3)	2001
+SubjectIBD359	27	125.0	not applicable	not applicable	not applicable	02/27/2009	SubjectIBD359	UC	1629:590	9606	UC	590	not applicable	1	male	Extensive (E3)	1999
+SubjectIBD360	28	398.0	not applicable	not applicable	not applicable	05/26/2010	SubjectIBD360	UC	1629:623	9606	UC	623	not applicable	6	male	Left sided (E2)	2007
+SubjectIBD361	28	445.0	not applicable	not applicable	not applicable	08/31/2010	SubjectIBD361	UC	1629:623	9606	UC	623	not applicable	7	male	Left sided (E2)	2007
+SubjectIBD362	28	754.0	not applicable	not applicable	not applicable	03/02/2009	SubjectIBD362	UC	1629:623	9606	UC	623	not applicable	1	male	Left sided (E2)	2007
+SubjectIBD363	28	513.0	not applicable	not applicable	not applicable	05/28/2009	SubjectIBD363	UC	1629:623	9606	UC	623	not applicable	2	male	Left sided (E2)	2007
+SubjectIBD364	28	774.0	not applicable	not applicable	not applicable	09/15/2009	SubjectIBD364	UC	1629:623	9606	UC	623	not applicable	3	male	Left sided (E2)	2007
+SubjectIBD365	28	710.0	not applicable	not applicable	not applicable	12/07/2009	SubjectIBD365	UC	1629:623	9606	UC	623	not applicable	4	male	Left sided (E2)	2007
+SubjectIBD366	22	1958.0	not applicable	not applicable	not applicable	04/06/2009	SubjectIBD366	UC	1629:629	9606	UC	629	not applicable	1	female	Extensive (E3)	2002
+SubjectIBD367	21	485.0	not applicable	not applicable	not applicable	07/01/2009	SubjectIBD367	UC	1629:629	9606	UC	629	not applicable	2	female	Extensive (E3)	2002
+SubjectIBD368	37	500.0	not applicable	not applicable	not applicable	04/06/2010	SubjectIBD368	UC	1629:634	9606	UC	634	not applicable	1	male	Left sided (E2)	1999
+SubjectIBD369	37	301.0	not applicable	not applicable	not applicable	06/17/2010	SubjectIBD369	UC	1629:634	9606	UC	634	not applicable	2	male	Left sided (E2)	1999
+SubjectIBD370	37	371.0	not applicable	not applicable	not applicable	12/16/2010	SubjectIBD370	UC	1629:634	9606	UC	634	not applicable	4	male	Left sided (E2)	1999
+SubjectIBD371	37	92.0	not applicable	not applicable	not applicable	03/29/2011	SubjectIBD371	UC	1629:634	9606	UC	634	not applicable	5	male	Left sided (E2)	1999
+SubjectIBD372	25	170.0	not applicable	not applicable	not applicable	05/20/2010	SubjectIBD372	UC	1629:640	9606	UC	640	not applicable	1	male	Extensive (E3)	1966
+SubjectIBD373	25	1372.0	not applicable	not applicable	not applicable	08/18/2010	SubjectIBD373	UC	1629:640	9606	UC	640	not applicable	2	male	Extensive (E3)	1966
+SubjectIBD374	25	71.0	not applicable	not applicable	not applicable	11/16/2010	SubjectIBD374	UC	1629:640	9606	UC	640	not applicable	3	male	Extensive (E3)	1966
+SubjectIBD375	25	1280.0	not applicable	not applicable	not applicable	02/09/2011	SubjectIBD375	UC	1629:640	9606	UC	640	not applicable	4	male	Extensive (E3)	1966
+SubjectIBD376	25	589.0	not applicable	not applicable	not applicable	05/17/2011	SubjectIBD376	UC	1629:640	9606	UC	640	not applicable	5	male	Extensive (E3)	1966
+SubjectIBD377	25	232.0	not applicable	not applicable	not applicable	08/22/2011	SubjectIBD377	UC	1629:640	9606	UC	640	not applicable	6	male	Extensive (E3)	1966
+SubjectIBD378	24	23832.0	not applicable	not applicable	not applicable	01/27/2010	SubjectIBD378	UC	1629:643	9606	UC	643	not applicable	2	female	Proctitis (E1)	2002
+SubjectIBD379	24	1843.0	not applicable	not applicable	not applicable	03/10/2010	SubjectIBD379	UC	1629:643	9606	UC	643	not applicable	3	female	Proctitis (E1)	2002
+SubjectIBD380	21	1552.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	01/20/2010	SubjectIBD380	CD	1629:646	9606	ICD_nr	646	no	2	female	not applicable	1996
+SubjectIBD381	21	1432.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	03/10/2010	SubjectIBD381	CD	1629:646	9606	ICD_nr	646	no	3	female	not applicable	1996
+SubjectIBD382	21	1687.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	09/15/2009	SubjectIBD382	CD	1629:646	9606	ICD_nr	646	no	1	female	not applicable	1996
+SubjectIBD383	28	231.0	Stricturing (B2)	Ileocolonic (L3)	no	02/23/2010	SubjectIBD383	CD	1629:651	9606	ICD_nr	651	no	5	male	not applicable	1972
+SubjectIBD384	28	234.0	Stricturing (B2)	Ileocolonic (L3)	no	05/25/2010	SubjectIBD384	CD	1629:651	9606	ICD_nr	651	no	6	male	not applicable	1972
+SubjectIBD385	28	40.0	Stricturing (B2)	Ileocolonic (L3)	no	08/24/2010	SubjectIBD385	CD	1629:651	9606	ICD_nr	651	no	7	male	not applicable	1972
+SubjectIBD386	28	348.0	Stricturing (B2)	Ileocolonic (L3)	no	03/03/2009	SubjectIBD386	CD	1629:651	9606	ICD_nr	651	no	1	male	not applicable	1972
+SubjectIBD387	28	559.0	Stricturing (B2)	Ileocolonic (L3)	no	05/22/2009	SubjectIBD387	CD	1629:651	9606	ICD_nr	651	no	2	male	not applicable	1972
+SubjectIBD388	28	721.0	Stricturing (B2)	Ileocolonic (L3)	no	08/25/2009	SubjectIBD388	CD	1629:651	9606	ICD_nr	651	no	3	male	not applicable	1972
+SubjectIBD389	28	320.0	Stricturing (B2)	Ileocolonic (L3)	no	11/26/2009	SubjectIBD389	CD	1629:651	9606	ICD_nr	651	no	4	male	not applicable	1972
+SubjectIBD390	21	649.0	Stricturing (B2)	Ileal (L1)	yes	03/25/2010	SubjectIBD390	CD	1629:671	9606	ICD_r	671	yes	1	male	not applicable	2000
+SubjectIBD391	21	426.0	Stricturing (B2)	Ileal (L1)	yes	06/14/2010	SubjectIBD391	CD	1629:671	9606	ICD_r	671	yes	2	male	not applicable	2000
+SubjectIBD392	21	698.0	Stricturing (B2)	Ileal (L1)	yes	12/15/2010	SubjectIBD392	CD	1629:671	9606	ICD_r	671	yes	4	male	not applicable	2000
+SubjectIBD393	18	458.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/26/2010	SubjectIBD393	CD	1629:680	9606	CCD	680	no	2	female	not applicable	2007
+SubjectIBD394	18	389.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/10/2010	SubjectIBD394	CD	1629:680	9606	CCD	680	no	3	female	not applicable	2007
+SubjectIBD395	18	427.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/10/2010	SubjectIBD395	CD	1629:680	9606	CCD	680	no	4	female	not applicable	2007
+SubjectIBD396	18	289.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/26/2010	SubjectIBD396	CD	1629:680	9606	CCD	680	no	5	female	not applicable	2007
+SubjectIBD397	18	578.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/08/2010	SubjectIBD397	CD	1629:680	9606	CCD	680	no	6	female	not applicable	2007
+SubjectIBD398	18	443.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/22/2011	SubjectIBD398	CD	1629:680	9606	CCD	680	no	7	female	not applicable	2007
+SubjectIBD399	18	879.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/10/2009	SubjectIBD399	CD	1629:680	9606	CCD	680	no	1	female	not applicable	2007
+SubjectIBD400	27	119.0	not applicable	not applicable	not applicable	02/10/2010	SubjectIBD400	UC	1629:683	9606	UC	683	not applicable	3	male	Left sided (E2)	2007
+SubjectIBD401	27	1208.0	not applicable	not applicable	not applicable	05/11/2010	SubjectIBD401	UC	1629:683	9606	UC	683	not applicable	4	male	Left sided (E2)	2007
+SubjectIBD402	27	2645.0	not applicable	not applicable	not applicable	08/26/2010	SubjectIBD402	UC	1629:683	9606	UC	683	not applicable	5	male	Left sided (E2)	2007
+SubjectIBD403	27	356.0	not applicable	not applicable	not applicable	11/03/2010	SubjectIBD403	UC	1629:768	9606	UC	768	not applicable	3	female	Left sided (E2)	2007
+SubjectIBD404	27	364.0	not applicable	not applicable	not applicable	02/02/2011	SubjectIBD404	UC	1629:683	9606	UC	683	not applicable	8	male	Left sided (E2)	2007
+SubjectIBD405	27	24.0	not applicable	not applicable	not applicable	11/11/2009	SubjectIBD405	UC	1629:683	9606	UC	683	not applicable	2	male	Left sided (E2)	2007
+SubjectIBD406	32	303.0	not applicable	not applicable	not applicable	03/01/2010	SubjectIBD406	UC	1629:693	9606	UC	693	not applicable	6	female	Extensive (E3)	2008
+SubjectIBD407	32	1013.0	not applicable	not applicable	not applicable	06/15/2010	SubjectIBD407	UC	1629:693	9606	UC	693	not applicable	7	female	Extensive (E3)	2008
+SubjectIBD408	32	1993.0	not applicable	not applicable	not applicable	09/01/2010	SubjectIBD408	UC	1629:683	9606	UC	683	not applicable	6	male	Left sided (E2)	2007
+SubjectIBD409	32	1351.0	not applicable	not applicable	not applicable	12/28/2010	SubjectIBD409	UC	1629:693	9606	UC	693	not applicable	9	female	Extensive (E3)	2008
+SubjectIBD410	32	1276.0	not applicable	not applicable	not applicable	02/02/2011	SubjectIBD410	UC	1629:693	9606	UC	693	not applicable	10	female	Extensive (E3)	2008
+SubjectIBD411	32	1375.0	not applicable	not applicable	not applicable	02/23/2009	SubjectIBD411	UC	1629:693	9606	UC	693	not applicable	1	female	Extensive (E3)	2008
+SubjectIBD412	32	1280.0	not applicable	not applicable	not applicable	03/23/2009	SubjectIBD412	UC	1629:693	9606	UC	693	not applicable	2	female	Extensive (E3)	2008
+SubjectIBD413	32	496.0	not applicable	not applicable	not applicable	05/13/2009	SubjectIBD413	UC	1629:693	9606	UC	693	not applicable	3	female	Extensive (E3)	2008
+SubjectIBD414	32	758.0	not applicable	not applicable	not applicable	09/03/2009	SubjectIBD414	UC	1629:693	9606	UC	693	not applicable	4	female	Extensive (E3)	2008
+SubjectIBD415	32	491.0	not applicable	not applicable	not applicable	11/26/2009	SubjectIBD415	UC	1629:693	9606	UC	693	not applicable	5	female	Extensive (E3)	2008
+SubjectIBD416	23	35.0	not applicable	not applicable	not applicable	03/25/2010	SubjectIBD416	UC	1629:696	9606	UC	696	not applicable	2	female	Left sided (E2)	2003
+SubjectIBD417	23	34.0	not applicable	not applicable	not applicable	09/16/2010	SubjectIBD417	UC	1629:862	9606	UC	862	not applicable	6	male	Extensive (E3)	1998
+SubjectIBD418	23	24.0	not applicable	not applicable	not applicable	01/13/2011	SubjectIBD418	UC	1629:696	9606	UC	696	not applicable	5	female	Left sided (E2)	2003
+SubjectIBD419	23	45.0	not applicable	not applicable	not applicable	12/16/2009	SubjectIBD419	UC	1629:696	9606	UC	696	not applicable	1	female	Left sided (E2)	2003
+SubjectIBD420	26	27.0	not applicable	not applicable	not applicable	03/09/2010	SubjectIBD420	UC	1629:718	9606	UC	718	not applicable	4	female	Extensive (E3)	1993
+SubjectIBD421	26	1013.0	not applicable	not applicable	not applicable	06/15/2010	SubjectIBD421	UC	1629:693	9606	UC	693	not applicable	7	female	Extensive (E3)	2008
+SubjectIBD422	26	67.0	Non-stricturing, non-penetrating (B1)	not applicable	no	09/02/2010	SubjectIBD422	CD	1629:413	9606	UC	413	no	6	male	not applicable	1990
+SubjectIBD423	26	1325.0	not applicable	not applicable	not applicable	11/25/2010	SubjectIBD423	UC	1629:683	9606	UC	683	not applicable	7	male	Left sided (E2)	2007
+SubjectIBD424	26	93.0	not applicable	not applicable	not applicable	11/25/2010	SubjectIBD424	UC	1629:718	9606	UC	718	not applicable	7	female	Extensive (E3)	1993
+SubjectIBD425	26	128.0	not applicable	not applicable	not applicable	03/10/2009	SubjectIBD425	UC	1629:718	9606	UC	718	not applicable	1	female	Extensive (E3)	1993
+SubjectIBD426	26	180.0	not applicable	not applicable	not applicable	06/03/2009	SubjectIBD426	UC	1629:718	9606	UC	718	not applicable	2	female	Extensive (E3)	1993
+SubjectIBD427	26	38.0	not applicable	not applicable	not applicable	09/03/2009	SubjectIBD427	UC	1629:718	9606	UC	718	not applicable	3	female	Extensive (E3)	1993
+SubjectIBD428	27	125.0	Stricturing (B2)	Ileal (L1)	yes	03/11/2009	SubjectIBD428	CD	1629:739	9606	ICD_r	739	yes	1	male	not applicable	1966
+SubjectIBD429	27	not applicable	Stricturing (B2)	Ileal (L1)	yes	09/02/2009	SubjectIBD429	CD	1629:739	9606	ICD_r	739	yes	3	male	not applicable	1966
+SubjectIBD430	27	12.8	Stricturing (B2)	Ileal (L1)	yes	11/04/2009	SubjectIBD430	CD	1629:739	9606	ICD_r	739	yes	4	male	not applicable	1966
+SubjectIBD431	29	865.0	not applicable	not applicable	not applicable	03/23/2010	SubjectIBD431	UC	1629:768	9606	UC	768	not applicable	1	female	Left sided (E2)	2007
+SubjectIBD432	29	836.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD432	UC	1629:768	9606	UC	768	not applicable	2	female	Left sided (E2)	2007
+SubjectIBD433	29	141.0	not applicable	not applicable	not applicable	09/16/2010	SubjectIBD433	UC	1629:842	9606	UC	842	not applicable	7	female	Extensive (E3)	1966
+SubjectIBD434	29	94.0	not applicable	not applicable	not applicable	12/09/2010	SubjectIBD434	UC	1629:768	9606	UC	768	not applicable	4	female	Left sided (E2)	2007
+SubjectIBD435	27	347.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/20/2010	SubjectIBD435	CD	1629:769	9606	CCD	769	no	3	male	not applicable	2007
+SubjectIBD436	27	71.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/14/2010	SubjectIBD436	CD	1629:769	9606	CCD	769	no	4	male	not applicable	2007
+SubjectIBD437	27	138.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	07/13/2010	SubjectIBD437	CD	1629:769	9606	CCD	769	no	5	male	not applicable	2007
+SubjectIBD438	27	180.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	10/26/2010	SubjectIBD438	CD	1629:769	9606	CCD	769	no	6	male	not applicable	2007
+SubjectIBD439	27	157.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/20/2011	SubjectIBD439	CD	1629:769	9606	CCD	769	no	7	male	not applicable	2007
+SubjectIBD440	27	241.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/28/2011	SubjectIBD440	CD	1629:769	9606	CCD	769	no	8	male	not applicable	2007
+SubjectIBD441	27	80.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	07/24/2009	SubjectIBD441	CD	1629:769	9606	CCD	769	no	1	male	not applicable	2007
+SubjectIBD442	27	75.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	10/19/2009	SubjectIBD442	CD	1629:769	9606	CCD	769	no	2	male	not applicable	2007
+SubjectIBD443	22	30.0	not applicable	not applicable	not applicable	03/29/2010	SubjectIBD443	UC	1629:789	9606	UC	789	not applicable	1	female	Extensive (E3)	1989
+SubjectIBD444	22	25.0	not applicable	not applicable	not applicable	07/14/2010	SubjectIBD444	UC	1629:696	9606	UC	696	not applicable	3	female	Left sided (E2)	2003
+SubjectIBD445	22	26.0	not applicable	not applicable	not applicable	11/25/2010	SubjectIBD445	UC	1629:696	9606	UC	696	not applicable	4	female	Left sided (E2)	2003
+SubjectIBD446	22	328.0	not applicable	not applicable	not applicable	11/25/2010	SubjectIBD446	UC	1629:789	9606	UC	789	not applicable	3	female	Extensive (E3)	1989
+SubjectIBD447	20	394.0	not applicable	not applicable	not applicable	06/25/2009	SubjectIBD447	UC	1629:814	9606	UC	814	not applicable	1	male	Extensive (E3)	2000
+SubjectIBD448	28	150.0	not applicable	not applicable	not applicable	03/15/2010	SubjectIBD448	UC	1629:842	9606	UC	842	not applicable	5	female	Extensive (E3)	1966
+SubjectIBD449	28	171.0	not applicable	not applicable	not applicable	06/07/2010	SubjectIBD449	UC	1629:842	9606	UC	842	not applicable	6	female	Extensive (E3)	1966
+SubjectIBD450	28	697.0	not applicable	not applicable	not applicable	09/07/2010	SubjectIBD450	UC	1629:693	9606	UC	693	not applicable	8	female	Extensive (E3)	2008
+SubjectIBD451	28	93.0	not applicable	not applicable	not applicable	12/14/2010	SubjectIBD451	UC	1629:842	9606	UC	842	not applicable	8	female	Extensive (E3)	1966
+SubjectIBD452	28	not collected	not applicable	not applicable	not applicable	03/16/2009	SubjectIBD452	UC	1629:842	9606	UC	842	not applicable	1	female	Extensive (E3)	1966
+SubjectIBD453	28	75.0	not applicable	not applicable	not applicable	06/10/2009	SubjectIBD453	UC	1629:842	9606	UC	842	not applicable	2	female	Extensive (E3)	1966
+SubjectIBD454	28	52.0	not applicable	not applicable	not applicable	09/09/2009	SubjectIBD454	UC	1629:842	9606	UC	842	not applicable	3	female	Extensive (E3)	1966
+SubjectIBD455	28	23.0	not applicable	not applicable	not applicable	12/08/2009	SubjectIBD455	UC	1629:842	9606	UC	842	not applicable	4	female	Extensive (E3)	1966
+SubjectIBD456	22	50.0	Stricturing (B2)	Ileal (L1)	yes	05/11/2010	SubjectIBD456	CD	1629:846	9606	ICD_r	846	no	1	female	not applicable	1986
+SubjectIBD457	26	903.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/25/2010	SubjectIBD457	CD	1629:849	9606	CCD	849	no	2	male	not applicable	2008
+SubjectIBD458	26	19.1	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/03/2010	SubjectIBD458	CD	1629:849	9606	CCD	849	no	4	male	not applicable	2008
+SubjectIBD459	26	11.2	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/02/2009	SubjectIBD459	CD	1629:849	9606	CCD	849	no	1	male	not applicable	2008
+SubjectIBD460	30	38.0	not applicable	not applicable	not applicable	03/26/2009	SubjectIBD460	UC	1629:850	9606	UC	850	not applicable	1	male	Left sided (E2)	1977
+SubjectIBD461	30	39.0	not applicable	not applicable	not applicable	09/10/2009	SubjectIBD461	UC	1629:850	9606	UC	850	not applicable	2	male	Left sided (E2)	1977
+SubjectIBD462	25	597.0	not applicable	not applicable	not applicable	06/10/2009	SubjectIBD462	UC	1629:857	9606	UC	857	not applicable	1	male	Extensive (E3)	1997
+SubjectIBD463	28	36.0	not applicable	not applicable	not applicable	03/17/2010	SubjectIBD463	UC	1629:862	9606	UC	862	not applicable	4	male	Extensive (E3)	1998
+SubjectIBD464	28	62.0	not applicable	not applicable	not applicable	06/16/2010	SubjectIBD464	UC	1629:718	9606	UC	718	not applicable	5	female	Extensive (E3)	1993
+SubjectIBD465	28	40.0	not applicable	not applicable	not applicable	09/09/2010	SubjectIBD465	UC	1629:718	9606	UC	718	not applicable	6	female	Extensive (E3)	1993
+SubjectIBD466	19	11.2	not applicable	not applicable	not applicable	06/24/2009	SubjectIBD466	UC	1629:862	9606	UC	862	not applicable	1	male	Extensive (E3)	1998
+SubjectIBD467	28	26.0	not applicable	not applicable	not applicable	09/10/2009	SubjectIBD467	UC	1629:862	9606	UC	862	not applicable	2	male	Extensive (E3)	1998
+SubjectIBD468	28	39.0	not applicable	not applicable	not applicable	12/15/2009	SubjectIBD468	UC	1629:862	9606	UC	862	not applicable	3	male	Extensive (E3)	1998
+SubjectIBD469	29	180.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/02/2010	SubjectIBD469	CD	1629:875	9606	CCD	875	no	5	female	not applicable	1995
+SubjectIBD470	29	149.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	04/29/2010	SubjectIBD470	CD	1629:875	9606	CCD	875	no	6	female	not applicable	1995
+SubjectIBD471	29	73.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/03/2010	SubjectIBD471	CD	1629:875	9606	CCD	875	no	7	female	not applicable	1995
+SubjectIBD472	29	219.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	11/02/2010	SubjectIBD472	CD	1629:875	9606	CCD	875	no	8	female	not applicable	1995
+SubjectIBD473	29	428.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	01/27/2011	SubjectIBD473	CD	1629:875	9606	CCD	875	no	9	female	not applicable	1995
+SubjectIBD474	29	186.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	05/12/2009	SubjectIBD474	CD	1629:875	9606	CCD	875	no	2	female	not applicable	1995
+SubjectIBD475	29	80.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	08/04/2009	SubjectIBD475	CD	1629:875	9606	CCD	875	no	3	female	not applicable	1995
+SubjectIBD476	24	462.0	not applicable	not applicable	not applicable	01/14/2010	SubjectIBD476	UC	1629:881	9606	UC	881	not applicable	4	female	Extensive (E3)	1977
+SubjectIBD477	24	126.0	not applicable	not applicable	not applicable	04/08/2010	SubjectIBD477	UC	1629:881	9606	UC	881	not applicable	5	female	Extensive (E3)	1977
+SubjectIBD478	24	28.0	not applicable	not applicable	not applicable	04/07/2009	SubjectIBD478	UC	1629:881	9606	UC	881	not applicable	1	female	Extensive (E3)	1977
+SubjectIBD479	24	1169.0	not applicable	not applicable	not applicable	07/07/2009	SubjectIBD479	UC	1629:881	9606	UC	881	not applicable	2	female	Extensive (E3)	1977
+SubjectIBD480	24	578.0	not applicable	not applicable	not applicable	10/06/2009	SubjectIBD480	UC	1629:881	9606	UC	881	not applicable	3	female	Extensive (E3)	1977
+SubjectIBD481	25	69.0	not applicable	not applicable	not applicable	03/30/2010	SubjectIBD481	HC	1629:882	9606	HC	882	not applicable	4	male	not applicable	not applicable
+SubjectIBD482	25	64.0	not applicable	not applicable	not applicable	07/06/2010	SubjectIBD482	HC	1629:882	9606	HC	882	not applicable	5	male	not applicable	not applicable
+SubjectIBD483	25	147.0	not applicable	not applicable	not applicable	09/16/2010	SubjectIBD483	HC	1629:882	9606	HC	882	not applicable	6	male	not applicable	not applicable
+SubjectIBD484	25	69.0	not applicable	not applicable	not applicable	12/15/2010	SubjectIBD484	HC	1629:882	9606	HC	882	not applicable	7	male	not applicable	not applicable
+SubjectIBD485	25	229.0	not applicable	not applicable	not applicable	03/16/2011	SubjectIBD485	HC	1629:882	9606	HC	882	not applicable	8	male	not applicable	not applicable
+SubjectIBD486	25	43.0	not applicable	not applicable	not applicable	06/23/2009	SubjectIBD486	HC	1629:882	9606	HC	882	not applicable	1	male	not applicable	not applicable
+SubjectIBD487	25	61.0	not applicable	not applicable	not applicable	09/15/2009	SubjectIBD487	HC	1629:882	9606	HC	882	not applicable	2	male	not applicable	not applicable
+SubjectIBD488	25	120.0	not applicable	not applicable	not applicable	12/17/2009	SubjectIBD488	HC	1629:882	9606	HC	882	not applicable	3	male	not applicable	not applicable
+SubjectIBD489	26	21.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/25/2010	SubjectIBD489	CD	1629:884	9606	CCD	884	no	4	male	not applicable	2008
+SubjectIBD490	26	27.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	06/09/2009	SubjectIBD490	CD	1629:884	9606	CCD	884	no	1	male	not applicable	2008
+SubjectIBD491	26	49.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/03/2009	SubjectIBD491	CD	1629:884	9606	CCD	884	no	3	male	not applicable	2008
+SubjectIBD492	30	29.0	not applicable	not applicable	not applicable	02/18/2010	SubjectIBD492	UC	1629:892	9606	UC	892	not applicable	2	male	Left sided (E2)	1986
+SubjectIBD493	30	40.0	not applicable	not applicable	not applicable	05/27/2010	SubjectIBD493	UC	1629:892	9606	UC	892	not applicable	3	male	Left sided (E2)	1986
+SubjectIBD494	30	16.3	not applicable	not applicable	not applicable	11/23/2009	SubjectIBD494	UC	1629:892	9606	UC	892	not applicable	1	male	Left sided (E2)	1986
+SubjectIBD495	21	18.2	not applicable	not applicable	not applicable	02/24/2010	SubjectIBD495	HC	1629:893	9606	HC	893	not applicable	2	female	not applicable	not applicable
+SubjectIBD496	21	20.0	not applicable	not applicable	not applicable	10/21/2009	SubjectIBD496	HC	1629:893	9606	HC	893	not applicable	1	female	not applicable	not applicable
+SubjectIBD497	25	38.0	not applicable	not applicable	not applicable	01/28/2010	SubjectIBD497	HC	1629:895	9606	HC	895	not applicable	2	female	not applicable	not applicable
+SubjectIBD498	25	36.0	not applicable	not applicable	not applicable	05/18/2010	SubjectIBD498	HC	1629:895	9606	HC	895	not applicable	3	female	not applicable	not applicable
+SubjectIBD499	25	18.3	not applicable	not applicable	not applicable	11/09/2009	SubjectIBD499	HC	1629:895	9606	HC	895	not applicable	1	female	not applicable	not applicable
+SubjectIBD500	24	10.3	not applicable	not applicable	not applicable	02/01/2010	SubjectIBD500	HC	1629:896	9606	HC	896	not applicable	1	female	not applicable	not applicable
+SubjectIBD501	24	16.6	not applicable	not applicable	not applicable	04/12/2010	SubjectIBD501	HC	1629:896	9606	HC	896	not applicable	2	female	not applicable	not applicable
+SubjectIBD502	24	41.0	not applicable	not applicable	not applicable	07/19/2010	SubjectIBD502	HC	1629:896	9606	HC	896	not applicable	3	female	not applicable	not applicable
+SubjectIBD503	24	17.0	not applicable	not applicable	not applicable	10/11/2010	SubjectIBD503	HC	1629:896	9606	HC	896	not applicable	4	female	not applicable	not applicable
+SubjectIBD504	24	30.0	not applicable	not applicable	not applicable	01/07/2011	SubjectIBD504	HC	1629:896	9606	HC	896	not applicable	5	female	not applicable	not applicable
+SubjectIBD505	24	30.0	not applicable	not applicable	not applicable	01/07/2011	SubjectIBD505	HC	1629:896	9606	HC	896	not applicable	5	female	not applicable	not applicable
+SubjectIBD506	24	10.9	not applicable	not applicable	not applicable	09/12/2011	SubjectIBD506	HC	1629:896	9606	HC	896	not applicable	8	female	not applicable	not applicable
+SubjectIBD507	28	not applicable	not applicable	not applicable	not applicable	01/07/2010	SubjectIBD507	HC	1629:898	9606	HC	898	not applicable	4	male	not applicable	not applicable
+SubjectIBD508	28	not applicable	not applicable	not applicable	not applicable	03/24/2010	SubjectIBD508	HC	1629:898	9606	HC	898	not applicable	5	male	not applicable	not applicable
+SubjectIBD509	28	25.0	not applicable	not applicable	not applicable	07/12/2010	SubjectIBD509	HC	1629:898	9606	HC	898	not applicable	6	male	not applicable	not applicable
+SubjectIBD510	28	17.9	not applicable	not applicable	not applicable	10/04/2010	SubjectIBD510	HC	1629:898	9606	HC	898	not applicable	7	male	not applicable	not applicable
+SubjectIBD511	28	45.0	not applicable	not applicable	not applicable	01/18/2011	SubjectIBD511	HC	1629:898	9606	HC	898	not applicable	8	male	not applicable	not applicable
+SubjectIBD512	28	81.0	not applicable	not applicable	not applicable	04/07/2009	SubjectIBD512	HC	1629:898	9606	HC	898	not applicable	1	male	not applicable	not applicable
+SubjectIBD513	28	27.0	not applicable	not applicable	not applicable	06/23/2009	SubjectIBD513	HC	1629:898	9606	HC	898	not applicable	2	male	not applicable	not applicable
+SubjectIBD514	28	126.0	not applicable	not applicable	not applicable	09/23/2009	SubjectIBD514	HC	1629:898	9606	HC	898	not applicable	3	male	not applicable	not applicable
+SubjectIBD515	24	298.0	not applicable	not applicable	not applicable	01/14/2010	SubjectIBD515	HC	1629:900	9606	HC	900	not applicable	4	female	not applicable	not applicable
+SubjectIBD516	24	175.0	not applicable	not applicable	not applicable	03/31/2010	SubjectIBD516	HC	1629:900	9606	HC	900	not applicable	5	female	not applicable	not applicable
+SubjectIBD517	24	292.0	not applicable	not applicable	not applicable	07/09/2010	SubjectIBD517	HC	1629:900	9606	HC	900	not applicable	6	female	not applicable	not applicable
+SubjectIBD518	24	235.0	not applicable	not applicable	not applicable	01/14/2011	SubjectIBD518	HC	1629:900	9606	HC	900	not applicable	8	female	not applicable	not applicable
+SubjectIBD519	24	156.0	not applicable	not applicable	not applicable	04/06/2009	SubjectIBD519	HC	1629:900	9606	HC	900	not applicable	1	female	not applicable	not applicable
+SubjectIBD520	24	284.0	not applicable	not applicable	not applicable	06/24/2009	SubjectIBD520	HC	1629:900	9606	HC	900	not applicable	2	female	not applicable	not applicable
+SubjectIBD521	24	127.0	not applicable	not applicable	not applicable	09/24/2009	SubjectIBD521	HC	1629:900	9606	HC	900	not applicable	3	female	not applicable	not applicable
+SubjectIBD522	20	not applicable	not applicable	not applicable	not applicable	01/14/2010	SubjectIBD522	HC	1629:901	9606	HC	901	not applicable	2	female	not applicable	not applicable
+SubjectIBD523	20	25.0	not applicable	not applicable	not applicable	04/09/2010	SubjectIBD523	HC	1629:901	9606	HC	901	not applicable	3	female	not applicable	not applicable
+SubjectIBD524	20	10.5	not applicable	not applicable	not applicable	07/07/2010	SubjectIBD524	HC	1629:901	9606	HC	901	not applicable	4	female	not applicable	not applicable
+SubjectIBD525	20	12.8	not applicable	not applicable	not applicable	10/15/2010	SubjectIBD525	HC	1629:901	9606	HC	901	not applicable	5	female	not applicable	not applicable
+SubjectIBD526	20	13.8	not applicable	not applicable	not applicable	01/20/2011	SubjectIBD526	HC	1629:901	9606	HC	901	not applicable	6	female	not applicable	not applicable
+SubjectIBD527	20	not applicable	not applicable	not applicable	not applicable	04/28/2011	SubjectIBD527	HC	1629:901	9606	HC	901	not applicable	7	female	not applicable	not applicable
+SubjectIBD528	20	15.0	not applicable	not applicable	not applicable	10/16/2009	SubjectIBD528	HC	1629:901	9606	HC	901	not applicable	1	female	not applicable	not applicable
+SubjectIBD529	28	575.0	not applicable	not applicable	not applicable	02/10/2010	SubjectIBD529	UC	1629:902	9606	UC	902	not applicable	1	male	Extensive (E3)	1992
+SubjectIBD530	28	474.0	not applicable	not applicable	not applicable	05/05/2010	SubjectIBD530	UC	1629:902	9606	UC	902	not applicable	2	male	Extensive (E3)	1992
+SubjectIBD531	24	156.0	Stricturing (B2)	Colonic (L2)	not applicable	06/24/2009	SubjectIBD531	CD	1629:905	9606	CCD	905	yes	1	female	not applicable	2004
+SubjectIBD532	23	68.0	not applicable	not applicable	not applicable	01/08/2010	SubjectIBD532	HC	1629:906	9606	HC	906	not applicable	4	male	not applicable	not applicable
+SubjectIBD533	23	79.0	not applicable	not applicable	not applicable	04/29/2010	SubjectIBD533	HC	1629:906	9606	HC	906	not applicable	5	male	not applicable	not applicable
+SubjectIBD534	23	15.8	not applicable	not applicable	not applicable	10/04/2010	SubjectIBD534	HC	1629:906	9606	HC	906	not applicable	6	male	not applicable	not applicable
+SubjectIBD535	23	22.0	not applicable	not applicable	not applicable	12/27/2010	SubjectIBD535	HC	1629:906	9606	HC	906	not applicable	7	male	not applicable	not applicable
+SubjectIBD536	23	84.0	not applicable	not applicable	not applicable	03/02/2009	SubjectIBD536	HC	1629:906	9606	HC	906	not applicable	1	male	not applicable	not applicable
+SubjectIBD537	23	27.0	not applicable	not applicable	not applicable	08/28/2009	SubjectIBD537	HC	1629:906	9606	HC	906	not applicable	3	male	not applicable	not applicable
+SubjectIBD538	22	35.0	not applicable	not applicable	not applicable	01/08/2010	SubjectIBD538	HC	1629:908	9606	HC	908	not applicable	4	female	not applicable	not applicable
+SubjectIBD539	22	63.0	not applicable	not applicable	not applicable	05/11/2010	SubjectIBD539	HC	1629:908	9606	HC	908	not applicable	5	female	not applicable	not applicable
+SubjectIBD540	22	84.0	not applicable	not applicable	not applicable	08/25/2010	SubjectIBD540	HC	1629:908	9606	HC	908	not applicable	6	female	not applicable	not applicable
+SubjectIBD541	22	46.0	not applicable	not applicable	not applicable	02/23/2009	SubjectIBD541	HC	1629:908	9606	HC	908	not applicable	1	female	not applicable	not applicable
+SubjectIBD542	22	98.0	not applicable	not applicable	not applicable	05/25/2009	SubjectIBD542	HC	1629:908	9606	HC	908	not applicable	2	female	not applicable	not applicable
+SubjectIBD543	22	41.0	not applicable	not applicable	not applicable	09/07/2009	SubjectIBD543	HC	1629:908	9606	HC	908	not applicable	3	female	not applicable	not applicable
+SubjectIBD544	18	377.0	Penetrating (B3)	Ileocolonic (L3)	yes	02/25/2010	SubjectIBD544	CD	1629:910	9606	ICD_r	910	no	1	female	not applicable	1993
+SubjectIBD545	25	220.0	not applicable	not applicable	not applicable	01/26/2010	SubjectIBD545	UC	1629:912	9606	UC	912	not applicable	2	female	Left sided (E2)	2004
+SubjectIBD546	25	408.0	not applicable	not applicable	not applicable	03/10/2010	SubjectIBD546	UC	1629:912	9606	UC	912	not applicable	3	female	Left sided (E2)	2004
+SubjectIBD547	25	866.0	not applicable	not applicable	not applicable	04/07/2010	SubjectIBD547	UC	1629:912	9606	UC	912	not applicable	4	female	Left sided (E2)	2004
+SubjectIBD548	25	95.0	not applicable	not applicable	not applicable	12/15/2009	SubjectIBD548	UC	1629:912	9606	UC	912	not applicable	1	female	Left sided (E2)	2004
+SubjectIBD549	30	1123.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	03/16/2010	SubjectIBD549	CD	1629:913	9606	ICD_nr	913	no	4	female	not applicable	2008
+SubjectIBD550	30	1538.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	03/17/2009	SubjectIBD550	CD	1629:913	9606	ICD_nr	913	no	1	female	not applicable	2008
+SubjectIBD551	30	730.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	09/03/2024	SubjectIBD551	CD	1629:913	9606	ICD_nr	913	no	2	female	not applicable	2008
+SubjectIBD552	30	1103.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	12/16/2009	SubjectIBD552	CD	1629:913	9606	ICD_nr	913	no	3	female	not applicable	2008
+SubjectIBD553	20	513.0	not applicable	not applicable	not applicable	02/23/2010	SubjectIBD553	UC	1629:915	9606	UC	915	not applicable	1	male	Left sided (E2)	2007
+SubjectIBD554	20	1930.0	not applicable	not applicable	not applicable	03/30/2010	SubjectIBD554	UC	1629:915	9606	UC	915	not applicable	2	male	Left sided (E2)	2007
+SubjectIBD555	18	371.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	05/26/2010	SubjectIBD555	CD	1629:916	9606	CCD	916	no	1	female	not applicable	2009
+SubjectIBD556	27	94.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	05/27/2010	SubjectIBD556	CD	1629:413	9606	CCD	413	no	5	male	not applicable	1990
+SubjectIBD557	missing: not provided	379.0	not applicable	not applicable	not applicable	05/10/2010	SubjectIBD557	CC	1629:1009	9606	CC	1009	not applicable	2	female	not applicable	not applicable
+SubjectIBD558	22	142.0	not applicable	not applicable	not applicable	07/14/2010	SubjectIBD558	UC	1629:789	9606	UC	789	not applicable	2	female	Extensive (E3)	1989
+SubjectIBD559	23	126.0	Stricturing (B2)	Ileal (L1)	yes	04/06/2009	SubjectIBD559	CD	1629:190	9606	ICD_r	190	no	1	female	not applicable	2000
+SubjectIBD560	26	23.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/16/2009	SubjectIBD560	CD	1629:884	9606	CCD	884	no	2	male	not applicable	2008
+SubjectIBD561	missing: not provided	153.0	not applicable	not applicable	not applicable	08/11/2009	SubjectIBD561	CC	1629:1012	9606	CC	1012	not applicable	1	male	not applicable	not applicable
+SubjectIBD563	38	670.0	Stricturing (B2)	Ileal (L1)	yes	09/14/2010	SubjectIBD563	CD	1629:416	9606	ICD_r	416	no	4	male	not applicable	1994
+SubjectIBD564	24	51.0	not applicable	not applicable	not applicable	12/09/2010	SubjectIBD564	UC	1629:235	9606	UC	235	not applicable	6	female	Left sided (E2)	2002
+SubjectIBD565	missing: not provided	1052.0	not applicable	not applicable	not applicable	02/02/2010	SubjectIBD565	LC	1629:1001	9606	LC	1001	not applicable	1	female	not applicable	not applicable
+SubjectIBD567	29	191.0	Penetrating (B3)	Ileocolonic (L3)	yes	09/30/2010	SubjectIBD567	CD	1629:553	9606	ICD_r	553	no	6	female	not applicable	2004
+SubjectIBD568	missing: not provided	not applicable	not applicable	not applicable	not applicable	05/20/2010	SubjectIBD568	UC	1629:19	9606	UC	19	not applicable	4	female	Left sided (E2)	1998
+SubjectIBD569	missing: not provided	55.0	not applicable	not applicable	not applicable	05/18/2010	SubjectIBD569	CC	1629:1012	9606	CC	1012	not applicable	4	male	not applicable	not applicable
+SubjectIBD571	missing: not provided	133.0	not applicable	not applicable	not applicable	02/23/2010	SubjectIBD571	CC	1629:1011	9606	CC	1011	not applicable	1	female	not applicable	not applicable
+SubjectIBD572	missing: not provided	722.0	not applicable	not applicable	not applicable	02/17/2010	SubjectIBD572	CC	1629:1007	9606	CC	1007	not applicable	1	female	not applicable	not applicable
+SubjectIBD573	missing: not provided	56.0	not applicable	not applicable	not applicable	02/25/2010	SubjectIBD573	CC	1629:1010	9606	CC	1010	not applicable	2	male	not applicable	not applicable
+SubjectIBD574	23	not applicable	Stricturing (B2)	Ileocolonic (L3)	yes	09/09/2010	SubjectIBD574	CD	1629:211	9606	ICD_r	211	no	6	male	not applicable	1984
+SubjectIBD575	23	430.0	Penetrating (B3)	Ileal (L1)	yes	01/12/2011	SubjectIBD575	CD	1629:315	9606	ICD_r	315	no	5	male	not applicable	1983
+SubjectIBD576	25	430.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/30/2010	SubjectIBD576	CD	1629:1	9606	CCD	1	no	1	male	not applicable	1988
+SubjectIBD577	missing: not provided	141.0	not applicable	not applicable	not applicable	01/20/2010	SubjectIBD577	CC	1629:1013	9606	CC	1013	not applicable	1	female	not applicable	not applicable
+SubjectIBD578	22	345.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	03/08/2010	SubjectIBD578	CD	1629:74	9606	ICD_r	74	no	5	female	not applicable	1973
+SubjectIBD579	missing: not provided	256.0	not applicable	not applicable	not applicable	04/14/2010	SubjectIBD579	LC	1629:1002	9606	LC	1002	not applicable	1	female	not applicable	not applicable
+SubjectIBD580	missing: not provided	57.0	not applicable	not applicable	not applicable	04/22/2010	SubjectIBD580	CC	1629:1005	9606	CC	1005	not applicable	2	female	not applicable	not applicable
+SubjectIBD581	22	126.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/23/2010	SubjectIBD581	CD	1629:193	9606	CCD	193	no	3	female	not applicable	1989
+SubjectIBD582	22	376.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	12/02/2010	SubjectIBD582	CD	1629:74	9606	ICD_r	74	no	8	female	not applicable	1973
+SubjectIBD584	26	86.0	not applicable	not applicable	not applicable	08/05/2010	SubjectIBD584	UC	1629:195	9606	UC	195	not applicable	4	female	Proctitis (E1)	1984
+SubjectIBD586	missing: not provided	11.1	not applicable	not applicable	not applicable	03/16/2010	SubjectIBD586	CC	1629:1016	9606	CC	1016	not applicable	3	male	not applicable	not applicable
+SubjectIBD587	30	114.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD587	UC	1629:152	9606	UC	152	not applicable	2	female	Left sided (E2)	1977
+SubjectIBD589	26	46.0	not applicable	not applicable	not applicable	11/19/2009	SubjectIBD589	UC	1629:195	9606	UC	195	not applicable	1	female	Proctitis (E1)	1984
+SubjectIBD591	26	16.3	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	12/07/2010	SubjectIBD591	CD	1629:849	9606	CCD	849	no	5	male	not applicable	2008
+SubjectIBD594	23	223.0	Stricturing (B2)	Ileal (L1)	yes	09/30/2010	SubjectIBD594	CD	1629:190	9606	ICD_r	190	no	7	female	not applicable	2000
+SubjectIBD597	missing: not provided	21.0	not applicable	not applicable	not applicable	08/13/2009	SubjectIBD597	UC	1629:683	9606	UC	683	not applicable	1	male	Left sided (E2)	2007
+SubjectIBD599	25	40.0	not applicable	not applicable	not applicable	08/19/2010	SubjectIBD599	HC	1629:895	9606	HC	895	not applicable	4	female	not applicable	not applicable
+SubjectIBD600	34	696.0	not applicable	not applicable	not applicable	12/03/2009	SubjectIBD600	UC	1629:471	9606	UC	471	not applicable	4	female	Left sided (E2)	1979
+SubjectIBD601	missing: not provided	164.0	not applicable	not applicable	not applicable	05/19/2010	SubjectIBD601	CC	1629:1013	9606	CC	1013	not applicable	2	female	not applicable	not applicable
+SubjectIBD602	missing: not provided	46.0	not applicable	not applicable	not applicable	03/30/2009	SubjectIBD602	CC	1629:1014	9606	CC	1014	not applicable	1	female	not applicable	not applicable
+SubjectIBD607	missing: not provided	66.0	not applicable	not applicable	not applicable	02/10/2010	SubjectIBD607	CC	1629:1012	9606	CC	1012	not applicable	3	male	not applicable	not applicable
+SubjectIBD609	missing: not provided	24.0	not applicable	not applicable	not applicable	04/29/2010	SubjectIBD609	CC	1629:1006	9606	CC	1006	not applicable	1	male	not applicable	not applicable
+SubjectIBD611	23	413.0	Stricturing (B2)	Ileal (L1)	yes	12/23/2010	SubjectIBD611	CD	1629:190	9606	ICD_r	190	no	8	female	not applicable	2000
+SubjectIBD612	missing: not provided	263.0	not applicable	not applicable	not applicable	02/08/2010	SubjectIBD612	CC	1629:1009	9606	CC	1009	not applicable	1	female	not applicable	not applicable
+SubjectIBD613	22	576.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	05/27/2010	SubjectIBD613	CD	1629:74	9606	ICD_r	74	no	6	female	not applicable	1973
+SubjectIBD614	missing: not provided	135.0	not applicable	not applicable	not applicable	02/18/2010	SubjectIBD614	LC	1629:1003	9606	LC	1003	not applicable	2	female	not applicable	not applicable
+SubjectIBD615	26	58.0	not applicable	not applicable	not applicable	05/26/2010	SubjectIBD615	UC	1629:195	9606	UC	195	not applicable	3	female	Proctitis (E1)	1984
+SubjectIBD616	25	866.0	not applicable	not applicable	not applicable	04/07/2010	SubjectIBD616	UC	1629:912	9606	UC	912	not applicable	4	female	Left sided (E2)	2004
+SubjectIBD617	missing: not provided	24.0	not applicable	not applicable	not applicable	03/23/2010	SubjectIBD617	CC	1629:1014	9606	CC	1014	not applicable	5	female	not applicable	not applicable
+SubjectIBD618	29	942.0	not applicable	not applicable	not applicable	03/16/2011	SubjectIBD618	UC	1629:768	9606	UC	768	not applicable	5	female	Left sided (E2)	2007
+SubjectIBD620	missing: not provided	not applicable	not applicable	not applicable	not applicable	05/20/2010	SubjectIBD620	UC	1629:19	9606	UC	19	not applicable	4	female	Left sided (E2)	1998
+SubjectIBD621	30	114.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD621	UC	1629:152	9606	UC	152	not applicable	2	female	Left sided (E2)	1977
+SubjectIBD622	32	36.0	not applicable	not applicable	not applicable	10/26/2010	SubjectIBD622	UC	1629:251	9606	UC	251	not applicable	3	female	Proctitis (E1)	2005
+SubjectIBD623	missing: not provided	223.0	not applicable	not applicable	not applicable	02/09/2010	SubjectIBD623	CC	1629:1004	9606	CC	1004	not applicable	1	female	not applicable	not applicable
+SubjectIBD624	missing: not provided	740.0	not applicable	not applicable	not applicable	04/07/2010	SubjectIBD624	CC	1629:249	9606	CC	249	not applicable	1	female	not applicable	not applicable
+SubjectIBD625	24	854.0	not applicable	not applicable	not applicable	10/28/2009	SubjectIBD625	UC	1629:643	9606	UC	643	not applicable	1	female	Proctitis (E1)	2002
+SubjectIBD626	25	19.9	not applicable	not applicable	not applicable	11/17/2010	SubjectIBD626	HC	1629:895	9606	HC	895	not applicable	5	female	not applicable	not applicable
+SubjectIBD627	missing: not provided	56.0	not applicable	not applicable	not applicable	11/05/2009	SubjectIBD627	CC	1629:1012	9606	CC	1012	not applicable	2	male	not applicable	not applicable
+SubjectIBD628	missing: not provided	43.0	not applicable	not applicable	not applicable	04/22/2009	SubjectIBD628	CC	1629:1017	9606	CC	1017	not applicable	1	female	not applicable	not applicable
+SubjectIBD630	missing: not provided	484.0	not applicable	not applicable	not applicable	05/05/2010	SubjectIBD630	CC	1629:1007	9606	CC	1007	not applicable	2	female	not applicable	not applicable
+SubjectIBD631	29	195.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	10/30/2009	SubjectIBD631	CD	1629:875	9606	CCD	875	no	4	female	not applicable	1995
+SubjectIBD632	34	696.0	not applicable	not applicable	not applicable	12/03/2009	SubjectIBD632	UC	1629:471	9606	UC	471	not applicable	4	female	Left sided (E2)	1979
+SubjectIBD633	28	857.0	not applicable	not applicable	not applicable	01/07/2011	SubjectIBD633	UC	1629:385	9606	UC	385	not applicable	5	male	Extensive (E3)	1998
+SubjectIBD635	24	33.0	not applicable	not applicable	not applicable	04/06/2009	SubjectIBD635	UC	1629:566	9606	UC	566	not applicable	1	female	Proctitis (E1)	1996
+SubjectIBD637	missing: not provided	59.0	not applicable	not applicable	not applicable	12/22/2009	SubjectIBD637	CC	1629:1014	9606	CC	1014	not applicable	4	female	not applicable	not applicable
+SubjectIBD639	24	112.0	not applicable	not applicable	not applicable	10/04/2010	SubjectIBD639	HC	1629:900	9606	HC	900	not applicable	7	female	not applicable	not applicable
+SubjectIBD640	25	38.0	not applicable	not applicable	not applicable	06/17/2011	SubjectIBD640	HC	1629:895	9606	HC	895	not applicable	7	female	not applicable	not applicable
+SubjectIBD641	21	31.0	not applicable	not applicable	not applicable	03/03/2010	SubjectIBD641	UC	1629:31	9606	UC	31	not applicable	1	male	Proctitis (E1)	1980
+SubjectIBD642	missing: not provided	12.8	not applicable	not applicable	not applicable	06/24/2009	SubjectIBD642	CC	1629:1014	9606	CC	1014	not applicable	2	female	not applicable	not applicable
+SubjectIBD643	missing: not provided	23.0	not applicable	not applicable	not applicable	01/28/2010	SubjectIBD643	CC	1629:1005	9606	CC	1005	not applicable	1	female	not applicable	not applicable
+SubjectIBD644	26	21.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	05/20/2010	SubjectIBD644	CD	1629:849	9606	CCD	849	no	3	male	not applicable	2008
+SubjectIBD645	21	1232.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	no	09/24/2010	SubjectIBD645	CD	1629:646	9606	ICD_nr	646	no	4	female	not applicable	1996
+SubjectIBD646	28	268.0	not applicable	not applicable	not applicable	03/09/2010	SubjectIBD646	UC	1629:623	9606	UC	623	not applicable	5	male	Left sided (E2)	2007
+SubjectIBD647	23	430.0	Penetrating (B3)	Ileal (L1)	yes	01/12/2011	SubjectIBD647	CD	1629:315	9606	ICD_r	315	no	5	male	not applicable	1983
+SubjectIBD650	20	92.0	not applicable	not applicable	not applicable	05/19/2009	SubjectIBD650	UC	1629:456	9606	UC	456	not applicable	1	female	Extensive (E3)	1994
+SubjectIBD652	37	441.0	not applicable	not applicable	not applicable	09/22/2010	SubjectIBD652	UC	1629:634	9606	UC	634	not applicable	3	male	Left sided (E2)	1999
+SubjectIBD653	28	678.0	not applicable	not applicable	not applicable	12/09/2010	SubjectIBD653	UC	1629:304	9606	UC	304	not applicable	4	male	Left sided (E2)	1999
+SubjectIBD654	22	142.0	not applicable	not applicable	not applicable	07/14/2010	SubjectIBD654	UC	1629:789	9606	UC	789	not applicable	2	female	Extensive (E3)	1989
+SubjectIBD656	18	593.0	Stricturing (B2)	Ileocolonic (L3)	yes	10/14/2010	SubjectIBD656	CD	1629:191	9606	ICD_r	191	no	7	female	not applicable	1990
+SubjectIBD657	21	11.9	not applicable	not applicable	not applicable	04/14/2010	SubjectIBD657	HC	1629:893	9606	HC	893	not applicable	3	female	not applicable	not applicable
+SubjectIBD659	23	15.8	not applicable	not applicable	not applicable	10/04/2010	SubjectIBD659	HC	1629:906	9606	HC	906	not applicable	6	male	not applicable	not applicable
+SubjectIBD660	26	20.0	not applicable	not applicable	not applicable	07/30/2009	SubjectIBD660	UC	1629:138	9606	UC	138	not applicable	2	male	Left sided (E2)	2007
+SubjectIBD661	21	834.0	Stricturing (B2)	Ileal (L1)	yes	09/30/2010	SubjectIBD661	CD	1629:671	9606	ICD_r	671	yes	3	male	not applicable	2000
+SubjectIBD662	22	345.0	Non-stricturing, non-penetrating (B1)	Ileocolonic (L3)	yes	03/08/2010	SubjectIBD662	CD	1629:74	9606	ICD_r	74	no	5	female	not applicable	1973
+SubjectIBD663	missing: not provided	57.0	not applicable	not applicable	not applicable	01/20/2010	SubjectIBD663	CC	1629:1008	9606	CC	1008	not applicable	2	female	not applicable	not applicable
+SubjectIBD664	missing: not provided	not applicable	not applicable	not applicable	not applicable	05/05/2010	SubjectIBD664	CC	1629:1008	9606	CC	1008	not applicable	4	female	not applicable	not applicable
+SubjectIBD665	28	150.0	not applicable	not applicable	not applicable	03/15/2010	SubjectIBD665	UC	1629:842	9606	UC	842	not applicable	5	female	Extensive (E3)	1966
+SubjectIBD666	missing: not provided	29.0	not applicable	not applicable	not applicable	04/01/2009	SubjectIBD666	CC	1629:1016	9606	CC	1016	not applicable	1	male	not applicable	not applicable
+SubjectIBD667	missing: not provided	25.0	not applicable	not applicable	not applicable	10/14/2009	SubjectIBD667	LC	1629:1015	9606	LC	1015	not applicable	3	female	not applicable	not applicable
+SubjectIBD669	missing: not provided	55.0	not applicable	not applicable	not applicable	10/13/2009	SubjectIBD669	CC	1629:1008	9606	CC	1008	not applicable	1	female	not applicable	not applicable
+SubjectIBD670	38	561.0	Stricturing (B2)	Ileal (L1)	yes	06/10/2010	SubjectIBD670	CD	1629:416	9606	ICD_r	416	no	3	male	not applicable	1994
+SubjectIBD671	missing: not provided	35.0	not applicable	not applicable	not applicable	01/27/2010	SubjectIBD671	LC	1629:1015	9606	LC	1015	not applicable	4	female	not applicable	not applicable
+SubjectIBD672	missing: not provided	127.0	not applicable	not applicable	not applicable	04/20/2010	SubjectIBD672	LC	1629:1001	9606	LC	1001	not applicable	2	female	not applicable	not applicable
+SubjectIBD674	missing: not provided	207.0	not applicable	not applicable	not applicable	07/01/2009	SubjectIBD674	CC	1629:1016	9606	CC	1016	not applicable	2	male	not applicable	not applicable
+SubjectIBD675	missing: not provided	75.0	not applicable	not applicable	not applicable	04/15/2010	SubjectIBD675	CC	1629:1008	9606	CC	1008	not applicable	3	female	not applicable	not applicable
+SubjectIBD676	29	84.0	Stricturing (B2)	Ileal (L1)	yes	03/17/2010	SubjectIBD676	CD	1629:318	9606	ICD_r	318	no	1	male	not applicable	2001
+SubjectIBD677	28	268.0	not applicable	not applicable	not applicable	03/09/2010	SubjectIBD677	UC	1629:623	9606	UC	623	not applicable	5	male	Left sided (E2)	2007
+SubjectIBD678	missing: not provided	445.0	not applicable	not applicable	not applicable	05/10/2010	SubjectIBD678	CC	1629:249	9606	CC	249	not applicable	2	female	not applicable	not applicable
+SubjectIBD679	missing: not provided	37.0	not applicable	not applicable	not applicable	04/15/2009	SubjectIBD679	LC	1629:1015	9606	LC	1015	not applicable	1	female	not applicable	not applicable
+SubjectIBD680	31	27.0	Stricturing (B2)	Ileal (L1)	yes	09/08/2010	SubjectIBD680	CD	1629:245	9606	ICD_r	245	no	6	female	not applicable	1965
+SubjectIBD682	23	28.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD682	UC	1629:552	9606	UC	552	not applicable	2	female	Proctitis (E1)	2003
+SubjectIBD684	32	13.3	not applicable	not applicable	not applicable	01/12/2011	SubjectIBD684	UC	1629:251	9606	UC	251	not applicable	4	female	Proctitis (E1)	2005
+SubjectIBD687	29	2058.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	02/26/2009	SubjectIBD687	CD	1629:875	9606	CCD	875	no	1	female	not applicable	1995
+SubjectIBD689	28	1662.0	not applicable	not applicable	not applicable	12/09/2010	SubjectIBD689	UC	1629:623	9606	UC	623	not applicable	8	male	Left sided (E2)	2007
+SubjectIBD690	28	1080.0	not applicable	not applicable	not applicable	06/21/2010	SubjectIBD690	UC	1629:385	9606	UC	385	not applicable	3	male	Extensive (E3)	1998
+SubjectIBD691	missing: not provided	42.0	not applicable	not applicable	not applicable	05/19/2010	SubjectIBD691	CC	1629:1011	9606	CC	1011	not applicable	2	female	not applicable	not applicable
+SubjectIBD692	28	40.0	not applicable	not applicable	not applicable	12/14/2010	SubjectIBD692	UC	1629:862	9606	UC	862	not applicable	7	male	Extensive (E3)	1998
+SubjectIBD694	34	21.0	not applicable	not applicable	not applicable	10/07/2009	SubjectIBD694	UC	1629:450	9606	UC	450	not applicable	1	female	Left sided (E2)	2003
+SubjectIBD695	missing: not provided	296.0	not applicable	not applicable	not applicable	12/07/2009	SubjectIBD695	LC	1629:1003	9606	LC	1003	not applicable	1	female	not applicable	not applicable
+SubjectIBD696	missing: not provided	21.0	not applicable	not applicable	not applicable	07/09/2009	SubjectIBD696	CC	1629:1017	9606	CC	1017	not applicable	2	female	not applicable	not applicable
+SubjectIBD698	25	54.0	not applicable	not applicable	not applicable	09/03/2009	SubjectIBD698	UC	1629:21	9606	UC	21	not applicable	3	female	Extensive (E3)	1971
+SubjectIBD699	28	212.0	Stricturing (B2)	Ileocolonic (L3)	no	11/23/2011	SubjectIBD699	CD	1629:651	9606	ICD_nr	651	no	8	male	not applicable	1972
+SubjectIBD701	26	41.0	Stricturing (B2)	Ileal (L1)	yes	10/05/2010	SubjectIBD701	CD	1629:390	9606	ICD_r	390	yes	4	male	not applicable	1991
+SubjectIBD702	25	212.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/16/2010	SubjectIBD702	CD	1629:1	9606	CCD	1	no	3	male	not applicable	1988
+SubjectIBD703	22	553.0	not applicable	not applicable	not applicable	10/12/2010	SubjectIBD703	UC	1629:467	9606	UC	467	not applicable	4	male	Left sided (E2)	1983
+SubjectIBD704	29	836.0	not applicable	not applicable	not applicable	06/10/2010	SubjectIBD704	UC	1629:768	9606	UC	768	not applicable	2	female	Left sided (E2)	2007
+SubjectIBD705	29	19.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	03/17/2009	SubjectIBD705	CD	1629:427	9606	CCD	427	yes	1	female	not applicable	1985
+SubjectIBD706	missing: not provided	82.0	not applicable	not applicable	not applicable	12/15/2009	SubjectIBD706	CC	1629:1010	9606	CC	1010	not applicable	1	male	not applicable	not applicable
+SubjectIBD707	missing: not provided	34.0	not applicable	not applicable	not applicable	02/18/2010	SubjectIBD707	UC	1629:19	9606	UC	19	not applicable	3	female	Left sided (E2)	1998
+SubjectIBD708	missing: not provided	619.0	not applicable	not applicable	not applicable	07/02/2009	SubjectIBD708	CC	1629:1018	9606	CC	1018	not applicable	1	female	not applicable	not applicable
+SubjectIBD710	30	532.0	not applicable	not applicable	not applicable	12/02/2010	SubjectIBD710	UC	1629:152	9606	UC	152	not applicable	5	female	Left sided (E2)	1977
+SubjectIBD711	21	54.0	not applicable	not applicable	not applicable	09/20/2010	SubjectIBD711	UC	1629:521	9606	UC	521	not applicable	3	female	Left sided (E2)	1977
+SubjectIBD712	29	416.0	Non-stricturing, non-penetrating (B1)	Ileocolonic and Upper-GI (L3+L4)	no	03/12/2010	SubjectIBD712	CD	1629:372	9606	ICD_nr	372	no	1	male	not applicable	2000
+SubjectIBD713	missing: not provided	not applicable	not applicable	not applicable	not applicable	08/25/2010	SubjectIBD713	UC	1629:264	9606	UC	264	not applicable	8	male	Left sided (E2)	1978
+SubjectIBD715	missing: not provided	180.0	not applicable	not applicable	not applicable	05/25/2010	SubjectIBD715	LC	1629:1003	9606	LC	1003	not applicable	3	female	not applicable	not applicable
+SubjectIBD716	24	40.0	not applicable	not applicable	not applicable	08/04/2010	SubjectIBD716	UC	1629:235	9606	UC	235	not applicable	4	female	Left sided (E2)	2002
+SubjectIBD718	23	141.0	not applicable	not applicable	not applicable	06/10/2009	SubjectIBD718	HC	1629:906	9606	HC	906	not applicable	2	male	not applicable	not applicable
+SubjectIBD719	22	126.0	Non-stricturing, non-penetrating (B1)	Colonic (L2)	no	09/29/2010	SubjectIBD719	CD	1629:193	9606	CCD	193	no	6	female	not applicable	1989
+SubjectIBD720	missing: not provided	26.0	not applicable	not applicable	not applicable	05/26/2010	SubjectIBD720	CC	1629:1018	9606	CC	1018	not applicable	2	female	not applicable	not applicable
+SubjectIBD721	missing: not provided	81.0	not applicable	not applicable	not applicable	07/14/2009	SubjectIBD721	LC	1629:1015	9606	LC	1015	not applicable	2	female	not applicable	not applicable
+SubjectIBD723	22	161.0	not applicable	not applicable	not applicable	12/27/2010	SubjectIBD723	HC	1629:908	9606	HC	908	not applicable	7	female	not applicable	not applicable
+SubjectIBD724	missing: not provided	112.0	not applicable	not applicable	not applicable	04/22/2010	SubjectIBD724	CC	1629:1004	9606	CC	1004	not applicable	2	female	not applicable	not applicable
+SubjectIBD725	27	69.0	Stricturing (B2)	Ileal (L1)	yes	06/23/2009	SubjectIBD725	CD	1629:739	9606	ICD_r	739	yes	2	male	not applicable	1966
